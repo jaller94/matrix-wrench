@@ -151,6 +151,10 @@ function StateExplorer({identity}) {
     const handleGet = async event => {
         event.preventDefault();
         event.stopPropagation();
+        if (!type) {
+            const answer = confirm('Room states can be REALLY big.\nConfirm, if you don\'t want to filter for a type.');
+            if (!answer) return;
+        }
         setBusy(true);
         try {
             const data = await getState(identity, room, type || undefined, stateKey || undefined);
@@ -165,7 +169,7 @@ function StateExplorer({identity}) {
                 <input disabled=${busy} pattern="[#!].+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
             </label>
             <label>Type
-                <input disabled=${busy} value=${type} oninput=${({target}) => setType(target.value)}/>
+                <input disabled=${busy} list="state-types" value=${type} oninput=${({target}) => setType(target.value)}/>
             </label>
             <label>State Key
                 <input disabled=${busy} value=${stateKey} oninput=${({target}) => setStateKey(target.value)}/>
@@ -175,13 +179,6 @@ function StateExplorer({identity}) {
         <label>State
             <textarea disabled=${busy}>${data}</textarea>
         </label>
-    `;
-}
-
-function StateInput({type, value}) {
-    return html`
-        <label>${type}</label>
-        <textarea>${value}</textarea>
     `;
 }
 
