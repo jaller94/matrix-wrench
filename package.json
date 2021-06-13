@@ -1,0 +1,15 @@
+{
+  "name": "matrix-navigator",
+  "description": "Webapp to explore Matrix rooms",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "python -m http.server --directory src 1234",
+    "test": "jest"
+  },
+  "author": "Christian Paul",
+  "license": "UNLICENSED",
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
