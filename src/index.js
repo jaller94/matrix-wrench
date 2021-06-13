@@ -1,4 +1,5 @@
 import { html, render, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
+import { getState, resolveAlias } from './matrix.js';
 
 const IDENTITIES = [];
 
@@ -17,13 +18,13 @@ function IdentityEditor({identity, onAbort, onSave}) {
         <h1>Identity Editor</h1>
         <form onsubmit=${handleSubmit}>
             <div><label>Name (just an identifier within this app)
-                <input value=${name} oninput=${({target}) => setName(target.value)}/>
+                <input required value=${name} oninput=${({target}) => setName(target.value)}/>
             </label></div>
             <div><label>Server address (e.g. "https://matrix-client.matrix.org")
-                <input value=${serverAddress} oninput=${({target}) => setServerAddress(target.value)}/>
+                <input required value=${serverAddress} oninput=${({target}) => setServerAddress(target.value)}/>
             </label></div>
             <div><label>Access token
-                <input value=${accessToken} oninput=${({target}) => setAccessToken(target.value)}/>
+                <input required value=${accessToken} oninput=${({target}) => setAccessToken(target.value)}/>
             </label></div>
             <button type="button" onclick=${onAbort}>Abort</button>
             <button type="submit">Save</button>
@@ -48,16 +49,37 @@ function IdentitySelector({identities, onDelete, onEdit, onSelect}) {
     `;
 }
 
-function AliasResolver() {
+function AliasResolver({identity}) {
     const [alias, setAlias] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [roomId, setRoomId] = useState('');
+
+    const handleSubmit = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        try {
+            const data = await resolveAlias(identity, alias);
+            console.log(data);
+            setRoomId(data.room_id);
+        } catch {}
+        setBusy(false);
+    };
 
     return html`
-        <form onsubmit>
+        <form onsubmit=${handleSubmit}>
             <label>Alias
-                <input value=${accessToken} oninput=${(target.value)}/>
+                <input
+                    disabled=${busy}
+                    pattern="#.+:.+"
+                    required
+                    title="A room alias starting with a number sign, e.g. #matrixhq:matrix.org"
+                    value=${alias}
+                    oninput=${({target}) => setAlias(target.value)}
+                />
             </label>
+            <button type="submit">Resolve</button>
         </form>
-        <button>
         <label>Room id (read only)
             <input value=${roomId} readonly/>
         </label>
@@ -112,24 +134,48 @@ function App() {
     return html`
         <h1>Acting as ${identity.name}</h1>
         <button type="button" onclick=${() => setIdentity(null)}>Use different identity</button>
-        <button type="button" onclick=${() => setIdentity(null)}>List rooms</button>
-        <${StateInput} />
+        <h2>Alias -> Room ID</h2>
+        <${AliasResolver} identity=${identity}/>
+        <h2>State</h2>
+        <${StateExplorer} identity=${identity}/>
     `;
 }
 
-async function getState(accessToken, roomId, type, stateKey) {
-    const response = await fetch(`${serverAddress}/_matrix/client/r0/rooms/${roomId}/state`, {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        }
-    });
-    if (!response.ok) {
-        console.error('Request failed', response);
-        return;
-    }
-    const data = await response.json();
-    console.log(data);
+function StateExplorer({identity}) {
+    const [room, setRoom] = useState('');
+    const [type, setType] = useState('');
+    const [stateKey, setStateKey] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [data, setData] = useState('');
+
+    const handleGet = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        try {
+            const data = await getState(identity, room, type || undefined, stateKey || undefined);
+            setData(JSON.stringify(data, null, 2));
+        } catch {}
+        setBusy(false);
+    };
+
+    return html`
+        <form onsubmit=${handleGet}>
+            <label>Room alias or ID
+                <input disabled=${busy} pattern="[#!].+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
+            </label>
+            <label>Type
+                <input disabled=${busy} value=${type} oninput=${({target}) => setType(target.value)}/>
+            </label>
+            <label>State Key
+                <input disabled=${busy} value=${stateKey} oninput=${({target}) => setStateKey(target.value)}/>
+            </label>
+            <button type="submit">Query</button>
+        </form>
+        <label>State
+            <textarea disabled=${busy}>${data}</textarea>
+        </label>
+    `;
 }
 
 function StateInput({type, value}) {
