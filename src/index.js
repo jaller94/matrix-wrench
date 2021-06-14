@@ -1,5 +1,5 @@
 import { html, render, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
-import { getState, resolveAlias } from './matrix.js';
+import { getMembers, getState, resolveAlias } from './matrix.js';
 
 const IDENTITIES = [];
 
@@ -60,17 +60,15 @@ function AliasResolver({identity}) {
         setBusy(true);
         try {
             const data = await resolveAlias(identity, alias);
-            console.log(data);
             setRoomId(data.room_id);
         } catch {}
         setBusy(false);
     };
 
     return html`
-        <form onsubmit=${handleSubmit}>
+        <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
             <label>Alias
                 <input
-                    disabled=${busy}
                     pattern="#.+:.+"
                     required
                     title="A room alias starting with a number sign, e.g. #matrixhq:matrix.org"
@@ -79,7 +77,7 @@ function AliasResolver({identity}) {
                 />
             </label>
             <button type="submit">Resolve</button>
-        </form>
+        </fieldset></form>
         <label>Room id (read only)
             <input value=${roomId} readonly/>
         </label>
@@ -138,6 +136,8 @@ function App() {
         <${AliasResolver} identity=${identity}/>
         <h2>State</h2>
         <${StateExplorer} identity=${identity}/>
+        <h2>Member list</h2>
+        <${MemberList} identity=${identity}/>
     `;
 }
 
@@ -164,21 +164,55 @@ function StateExplorer({identity}) {
     };
 
     return html`
-        <form onsubmit=${handleGet}>
+        <form onsubmit=${handleGet}><fieldset disabled=${busy}>
             <label>Room alias or ID
-                <input disabled=${busy} pattern="[#!].+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
+                <input pattern="[#!].+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
             </label>
             <label>Type
-                <input disabled=${busy} list="state-types" value=${type} oninput=${({target}) => setType(target.value)}/>
+                <input list="state-types" value=${type} oninput=${({target}) => setType(target.value)}/>
             </label>
             <label>State Key
-                <input disabled=${busy} value=${stateKey} oninput=${({target}) => setStateKey(target.value)}/>
+                <input value=${stateKey} oninput=${({target}) => setStateKey(target.value)}/>
             </label>
             <button type="submit">Query</button>
-        </form>
+        </fieldset></form>
         <label>State
             <textarea disabled=${busy}>${data}</textarea>
         </label>
+    `;
+}
+
+function MemberList({identity, roomId}) {
+    const [room, setRoom] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [members, setMembers] = useState([]);
+
+    const handleGet = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        try {
+            const data = await getMembers(identity, room);
+            setMembers([...data.chunk]);
+        } catch {}
+        setBusy(false);
+    };
+
+    return html`
+        <form onsubmit=${handleGet}><fieldset disabled=${busy}>
+            <label>Room ID
+                <input pattern="!.+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
+            </label>
+            <button type="submit">Get members</button>
+        </fieldset></form>
+        <ul>
+            ${members.map(memberEvent => {
+                return html`<li>
+                    ${memberEvent.state_key} (${memberEvent.content.membership})
+                    <button type="button" onclick=${() => onDelete(identity)}>Kick</button>
+                </li>`;
+            })}
+        </ul>
     `;
 }
 

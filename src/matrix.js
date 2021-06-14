@@ -1,4 +1,25 @@
 /**
+ * Get the members of a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @returns {object}
+ */
+export async function getMembers(identity, roomId, type, stateKey) {
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        }
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error('Request failed');
+    }
+    return await response.json();
+}
+
+/**
  * Get the state of a room.
  * @param {object} identity
  * @param {string} roomId
