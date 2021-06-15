@@ -37,6 +37,7 @@ function IdentityEditor({identity, onAbort, onSave}) {
             </label></div>
             <button type="button" onclick=${onAbort}>Abort</button>
             <button type="submit">Save</button>
+            ${!!localStorage && html`<p>Use Incognito mode, if you don't want access token to be stored in localStorage!</p>`}
         </form>
     `;
 }
@@ -146,12 +147,18 @@ function App() {
     return html`
         <h1>Acting as ${identity.name}</h1>
         <button type="button" onclick=${() => setIdentity(null)}>Use different identity</button>
-        <h2>Alias -> Room ID</h2>
-        <${AliasResolver} identity=${identity}/>
-        <h2>State</h2>
-        <${StateExplorer} identity=${identity}/>
-        <h2>Member list</h2>
-        <${MembersExplorer} identity=${identity}/>
+        <details open>
+            <summary><h2>Alias -> Room ID</h2></summary>
+            <${AliasResolver} identity=${identity}/>
+        </details>
+        <details open>
+            <summary><h2>State</h2></summary>
+            <${StateExplorer} identity=${identity}/>
+        </details>
+        <details open>
+            <summary><h2>Member list</h2></summary>
+            <${MembersExplorer} identity=${identity}/>
+        </details>
     `;
 }
 
@@ -211,7 +218,7 @@ function MemberList({members}) {
 function MembersExplorer({identity, roomId}) {
     const [room, setRoom] = useState('');
     const [busy, setBusy] = useState(false);
-    const [members, setMembers] = useState([]);
+    const [members, setMembers] = useState(null);
 
     const handleGet = async event => {
         event.preventDefault();
@@ -231,12 +238,14 @@ function MembersExplorer({identity, roomId}) {
             </label>
             <button type="submit">Get members</button>
         </fieldset></form>
-        <h3>Joined</h3>
-        <${MemberList} members=${members.filter(e => e.content.membership === 'join')}>
-        <h3>Invited</h3>
-        <${MemberList} members=${members.filter(e => e.content.membership === 'invite')}>
-        <h3>Left</h3>
-        <${MemberList} members=${members.filter(e => e.content.membership === 'leave')}>
+        ${Array.isArray(members) && (html`
+            <h3>Joined</h3>
+            <${MemberList} members=${members.filter(e => e.content.membership === 'join')} />
+            <h3>Invited</h3>
+            <${MemberList} members=${members.filter(e => e.content.membership === 'invite')} />
+            <h3>Left</h3>
+            <${MemberList} members=${members.filter(e => e.content.membership === 'leave')} />
+        `)}
     `;
 }
 
