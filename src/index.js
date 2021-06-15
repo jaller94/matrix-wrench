@@ -210,12 +210,15 @@ function StateExplorer({identity}) {
 }
 
 function MemberList({members}) {
+    if (members.length === 0) {
+        return html`
+            <p>There's no one in this list.</p>
+        `;
+    }
     return html`
         <ul>
             ${members.map(memberEvent => {
-                return html`<li>
-                    ${memberEvent.state_key} (${memberEvent.content.membership})
-                </li>`;
+                return html`<li>${memberEvent.state_key}</li>`;
             })}
         </ul>
     `;
@@ -243,18 +246,25 @@ function MembersExplorer({identity}) {
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
+            <p>Doesn't support pagination yet. Up to 1000 users seems safe.</p>
             <label>Room alias or ID
                 <input pattern="[#!].+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
             </label>
             <button type="submit">Get members</button>
         </fieldset></form>
         ${Array.isArray(members) && (html`
-            <h3>Joined</h3>
-            <${MemberList} members=${members.filter(e => e.content.membership === 'join')} />
-            <h3>Invited</h3>
-            <${MemberList} members=${members.filter(e => e.content.membership === 'invite')} />
-            <h3>Left</h3>
-            <${MemberList} members=${members.filter(e => e.content.membership === 'leave')} />
+            <details open>
+                <summary><h3>Joined</h3></summary>
+                <${MemberList} members=${members.filter(e => e.content.membership === 'join')} />
+            </details>
+            <details open>
+                <summary><h3>Invited</h3></summary>
+                <${MemberList} members=${members.filter(e => e.content.membership === 'invite')} />
+            </details>
+            <details>
+                <summary><h3>Left</h3></summary>
+                <${MemberList} members=${members.filter(e => e.content.membership === 'leave')} />
+            </details>
         `)}
     `;
 }
