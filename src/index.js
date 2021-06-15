@@ -1,7 +1,16 @@
-import { html, render, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
+import { html, render, useState } from './node_modules/htm/preact/standalone.module.js';
 import { getMembers, getState, resolveAlias } from './matrix.js';
 
-const IDENTITIES = [];
+let IDENTITIES = [];
+try {
+    const identities = JSON.parse(localStorage.getItem('identities'));
+    if (!Array.isArray(identities)) {
+        throw Error(`Expected an array, got ${typeof identities}`);
+    }
+    IDENTITIES = identities;
+} catch (error) {
+    console.warn('No stored identities found in localStorage.', error);
+}
 
 function IdentityEditor({identity, onAbort, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
@@ -113,6 +122,11 @@ function App() {
             setIdentities(newIdentities);
         }
         setEditedIdentity(null);
+        try {
+            localStorage.setItem('identities', JSON.stringify(newIdentities));
+        } catch (error) {
+            console.warn('Failed to store identities in localStorage', error);
+        }
     }
 
     if (editedIdentity) {
@@ -137,7 +151,7 @@ function App() {
         <h2>State</h2>
         <${StateExplorer} identity=${identity}/>
         <h2>Member list</h2>
-        <${MemberList} identity=${identity}/>
+        <${MembersExplorer} identity=${identity}/>
     `;
 }
 
@@ -182,7 +196,19 @@ function StateExplorer({identity}) {
     `;
 }
 
-function MemberList({identity, roomId}) {
+function MemberList({members}) {
+    return html`
+        <ul>
+            ${members.map(memberEvent => {
+                return html`<li>
+                    ${memberEvent.state_key} (${memberEvent.content.membership})
+                </li>`;
+            })}
+        </ul>
+    `;
+}
+
+function MembersExplorer({identity, roomId}) {
     const [room, setRoom] = useState('');
     const [busy, setBusy] = useState(false);
     const [members, setMembers] = useState([]);
@@ -205,14 +231,12 @@ function MemberList({identity, roomId}) {
             </label>
             <button type="submit">Get members</button>
         </fieldset></form>
-        <ul>
-            ${members.map(memberEvent => {
-                return html`<li>
-                    ${memberEvent.state_key} (${memberEvent.content.membership})
-                    <button type="button" onclick=${() => onDelete(identity)}>Kick</button>
-                </li>`;
-            })}
-        </ul>
+        <h3>Joined</h3>
+        <${MemberList} members=${members.filter(e => e.content.membership === 'join')}>
+        <h3>Invited</h3>
+        <${MemberList} members=${members.filter(e => e.content.membership === 'invite')}>
+        <h3>Left</h3>
+        <${MemberList} members=${members.filter(e => e.content.membership === 'leave')}>
     `;
 }
 

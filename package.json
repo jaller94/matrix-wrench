@@ -4,12 +4,12 @@
   "version": "0.0.0",
   "scripts": {
     "start": "python -m http.server --directory src 1234",
+    "prepare": "mkdir -p src/node_modules/htm/preact/ && cp node_modules/htm/preact/standalone.module.js src/node_modules/htm/preact/",
     "test": "jest"
   },
   "author": "Christian Paul",
   "license": "UNLICENSED",
-  "dependencies": {
-  },
   "devDependencies": {
+    "htm": "^3.0.4"
   }
 }
