@@ -14,7 +14,7 @@ export async function getMembers(identity, roomId, type, stateKey) {
     });
     if (!response.ok) {
         console.warn(response);
-        throw Error('Request failed');
+        throw Error(`Request failed: ${(await response.json()).error}`);
     }
     return await response.json();
 }
@@ -43,7 +43,7 @@ export async function getState(identity, roomId, type, stateKey) {
     });
     if (!response.ok) {
         console.warn(response);
-        throw Error('Request failed');
+        throw Error(`Request failed: ${(await response.json()).error}`);
     }
     return await response.json();
 }
@@ -74,7 +74,7 @@ export async function setState(identity, roomId, type, stateKey, body) {
     });
     if (!response.ok) {
         console.warn(response);
-        throw Error('Request failed');
+        throw Error(`Request failed: ${(await response.json()).error}`);
     }
     return await response.json();
 }
@@ -95,7 +95,7 @@ export async function resolveAlias(identity, roomAlias) {
     });
     if (!response.ok) {
         console.warn(response);
-        throw Error('Request failed');
+        throw Error(`Request failed: ${(await response.json()).error}`);
     }
     return await response.json();
 }

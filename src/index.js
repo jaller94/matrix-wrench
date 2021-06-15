@@ -189,6 +189,7 @@ function StateExplorer({identity}) {
             setData(JSON.stringify(data, null, 2));
         } catch (error) {
             console.error(error);
+            setData(error.message);
         } finally {
             setBusy(false);
         }
