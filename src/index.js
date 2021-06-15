@@ -1,5 +1,5 @@
 import { html, render, useState } from './node_modules/htm/preact/standalone.module.js';
-import { getMembers, getState, resolveAlias } from './matrix.js';
+import { getMembers, getState, resolveAlias, setState } from './matrix.js';
 
 let IDENTITIES = [];
 try {
@@ -71,8 +71,11 @@ function AliasResolver({identity}) {
         try {
             const data = await resolveAlias(identity, alias);
             setRoomId(data.room_id);
-        } catch {}
-        setBusy(false);
+        } catch {
+
+        } finally {
+            setBusy(false);
+        }
     };
 
     return html`
@@ -186,8 +189,44 @@ function StateExplorer({identity}) {
             setData(JSON.stringify(data, null, 2));
         } catch (error) {
             console.error(error);
+        } finally {
+            setBusy(false);
         }
-        setBusy(false);
+    };
+
+    const handlePut = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        if (!type) {
+            alert('type is required when setting a state!');
+        }
+        try {
+            let roomId = room;
+            if (room.startsWith('#')) {
+                roomId = (await resolveAlias(identity, room)).room_id;
+            }
+            let body;
+            try {
+                body = JSON.parse(data);
+            } catch (error) {
+                alert('Invalid JSON', error);
+                return;
+            }
+            let warning = `Do you want to set ${type} `;
+            if (stateKey) {
+                warning += `with state_key ${stateKey} `;
+            }
+            warning += `in room ${roomId}?`;
+            const confirmed = confirm(warning);
+            if (!confirmed) return;
+            await setState(identity, roomId, type, stateKey || undefined, body);
+        } catch (error) {
+            console.error(error);
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
     };
 
     return html`
@@ -203,9 +242,12 @@ function StateExplorer({identity}) {
             </label>
             <button type="submit">Query</button>
         </fieldset></form>
-        <label>State
-            <textarea disabled=${busy}>${data}</textarea>
-        </label>
+        <form onsubmit=${handlePut}><fieldset disabled=${busy}>
+            <label>State
+                <textarea>${data}</textarea>
+            </label>
+            <div><button type="submit">Overwrite state</button></div>
+        </fieldset></form>
     `;
 }
 
@@ -240,8 +282,11 @@ function MembersExplorer({identity}) {
             }
             const data = await getMembers(identity, roomId);
             setMembers([...data.chunk]);
-        } catch {}
-        setBusy(false);
+        } catch {
+
+        } finally {
+            setBusy(false);
+        }
     };
 
     return html`

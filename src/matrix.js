@@ -49,6 +49,37 @@ export async function getState(identity, roomId, type, stateKey) {
 }
 
 /**
+ * Get the state of a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @param {string} type
+ * @param {string?} stateKey
+ * @param {object} body
+ * @returns {object}
+ */
+export async function setState(identity, roomId, type, stateKey, body) {
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
+    if (type) {
+        url += `/${type}`;
+    }
+    if (stateKey) {
+        url += `/${stateKey}`;
+    }
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        },
+        body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error('Request failed');
+    }
+    return await response.json();
+}
+
+/**
  * Resolves a room alias to a room ID.
  * @param {object} identity
  * @param {string} roomAlias
