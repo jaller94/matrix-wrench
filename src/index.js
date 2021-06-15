@@ -178,9 +178,15 @@ function StateExplorer({identity}) {
         }
         setBusy(true);
         try {
-            const data = await getState(identity, room, type || undefined, stateKey || undefined);
+            let roomId = room;
+            if (room.startsWith('#')) {
+                roomId = (await resolveAlias(identity, room)).room_id;
+            }
+            const data = await getState(identity, roomId, type || undefined, stateKey || undefined);
             setData(JSON.stringify(data, null, 2));
-        } catch {}
+        } catch (error) {
+            console.error(error);
+        }
         setBusy(false);
     };
 
@@ -215,7 +221,7 @@ function MemberList({members}) {
     `;
 }
 
-function MembersExplorer({identity, roomId}) {
+function MembersExplorer({identity}) {
     const [room, setRoom] = useState('');
     const [busy, setBusy] = useState(false);
     const [members, setMembers] = useState(null);
@@ -225,7 +231,11 @@ function MembersExplorer({identity, roomId}) {
         event.stopPropagation();
         setBusy(true);
         try {
-            const data = await getMembers(identity, room);
+            let roomId = room;
+            if (room.startsWith('#')) {
+                roomId = (await resolveAlias(identity, room)).room_id;
+            }
+            const data = await getMembers(identity, roomId);
             setMembers([...data.chunk]);
         } catch {}
         setBusy(false);
@@ -233,8 +243,8 @@ function MembersExplorer({identity, roomId}) {
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <label>Room ID
-                <input pattern="!.+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
+            <label>Room alias or ID
+                <input pattern="[#!].+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
             </label>
             <button type="submit">Get members</button>
         </fieldset></form>
