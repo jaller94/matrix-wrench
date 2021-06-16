@@ -1,10 +1,31 @@
 /**
+ * Gets a list of joined members of a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @returns {{joined: Record<string, object>}}
+ */
+export async function getJoinedMembers(identity, roomId) {
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/joined_members`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        }
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error(`Request failed: ${(await response.json()).error}`);
+    }
+    return await response.json();
+}
+
+/**
  * Get the members of a room.
  * @param {object} identity
  * @param {string} roomId
  * @returns {object}
  */
-export async function getMembers(identity, roomId, type, stateKey) {
+export async function getMembers(identity, roomId) {
     let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`;
     const response = await fetch(url, {
         method: 'GET',
@@ -49,7 +70,7 @@ export async function getState(identity, roomId, type, stateKey) {
 }
 
 /**
- * Get the state of a room.
+ * Set the state of a room.
  * @param {object} identity
  * @param {string} roomId
  * @param {string} type
@@ -71,6 +92,31 @@ export async function setState(identity, roomId, type, stateKey, body) {
             Authorization: `Bearer ${identity.accessToken}`,
         },
         body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error(`Request failed: ${(await response.json()).error}`);
+    }
+    return await response.json();
+}
+
+/**
+ * Send an event to a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @param {string} type
+ * @param {object} body
+ * @returns {object}
+ */
+export async function sendEvent(identity, roomId, type, content, transactionId) {
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/send/${type}/${transactionId}`;
+    debugger;
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        },
+        body: JSON.stringify(content),
     });
     if (!response.ok) {
         console.warn(response);

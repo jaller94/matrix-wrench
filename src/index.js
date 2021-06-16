@@ -245,7 +245,7 @@ function StateExplorer({identity}) {
         </fieldset></form>
         <form onsubmit=${handlePut}><fieldset disabled=${busy}>
             <label>State
-                <textarea>${data}</textarea>
+                <textarea oninput=${({target}) => setData(target.value)}>${data}</textarea>
             </label>
             <div><button type="submit">Overwrite state</button></div>
         </fieldset></form>
