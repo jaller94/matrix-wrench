@@ -4,8 +4,50 @@
  * @param {string} roomId
  * @returns {object}
  */
-export async function getMembers(identity, roomId, type, stateKey) {
+export async function getMembers(identity, roomId) {
     let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        }
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error('Request failed');
+    }
+    return await response.json();
+}
+
+/**
+ * Join a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @returns {object}
+ */
+export async function joinRoom(identity, roomId) {
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/join`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        }
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error('Request failed');
+    }
+    return await response.json();
+}
+
+/**
+ * Leave a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @returns {object}
+ */
+export async function leaveRoom(identity, roomId) {
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/leave`;
     const response = await fetch(url, {
         method: 'GET',
         headers: {
