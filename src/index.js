@@ -61,8 +61,9 @@ function AliasResolver({identity}) {
         try {
             const data = await resolveAlias(identity, alias);
             setRoomId(data.room_id);
-        } catch {}
-        setBusy(false);
+        } finally {
+            setBusy(false);
+        }
     };
 
     return html`
@@ -134,15 +135,50 @@ function App() {
         <button type="button" onclick=${() => setIdentity(null)}>Use different identity</button>
         <h2>Alias -> Room ID</h2>
         <${AliasResolver} identity=${identity}/>
-        <h2>State</h2>
-        <${StateExplorer} identity=${identity}/>
-        <h2>Member list</h2>
-        <${MemberList} identity=${identity}/>
+        <h2>Room management</h2>
+        <${RoomSelector} identity=${identity}/>
     `;
 }
 
-function StateExplorer({identity}) {
+function RoomSelector({identity}) {
     const [room, setRoom] = useState('');
+    const [roomId, setRoomId] = useState(null);
+    const [recentRooms, setRecentRooms] = useState([]);
+    const [busy, setBusy] = useState(false);
+
+    if (roomId) {
+        return html`
+            <button onclick=${() => setRoomId(null)}>Unselect room</button>
+            <${RoomPage} roomId=${roomId}/>
+        `;
+    }
+
+    const handleGet = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setRoomId(room);
+    };
+
+    return html`
+        <form onsubmit=${handleGet}><fieldset disabled=${busy}>
+            <label>Room ID
+                <input pattern="!.+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
+            </label>
+            <button type="submit">Go</button>
+        </fieldset></form>
+    `;
+}
+
+function RoomPage({identity, roomId}) {
+    return html`
+        <h2>State</h2>
+        <${StateExplorer} identity=${identity} roomId=${roomId}/>
+        <h2>Member list</h2>
+        <${MemberList} identity=${identity} roomId=${roomId}/>
+    `;
+}
+
+function StateExplorer({identity, roomId}) {
     const [type, setType] = useState('');
     const [stateKey, setStateKey] = useState('');
     const [busy, setBusy] = useState(false);
@@ -157,17 +193,15 @@ function StateExplorer({identity}) {
         }
         setBusy(true);
         try {
-            const data = await getState(identity, room, type || undefined, stateKey || undefined);
+            const data = await getState(identity, roomId, type || undefined, stateKey || undefined);
             setData(JSON.stringify(data, null, 2));
-        } catch {}
-        setBusy(false);
+        } finally {
+            setBusy(false);
+        }
     };
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <label>Room alias or ID
-                <input pattern="[#!].+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
-            </label>
             <label>Type
                 <input list="state-types" value=${type} oninput=${({target}) => setType(target.value)}/>
             </label>
@@ -183,7 +217,6 @@ function StateExplorer({identity}) {
 }
 
 function MemberList({identity, roomId}) {
-    const [room, setRoom] = useState('');
     const [busy, setBusy] = useState(false);
     const [members, setMembers] = useState([]);
 
@@ -192,17 +225,15 @@ function MemberList({identity, roomId}) {
         event.stopPropagation();
         setBusy(true);
         try {
-            const data = await getMembers(identity, room);
+            const data = await getMembers(identity, roomId);
             setMembers([...data.chunk]);
-        } catch {}
-        setBusy(false);
+        } finally {
+            setBusy(false);
+        }
     };
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <label>Room ID
-                <input pattern="!.+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
-            </label>
             <button type="submit">Get members</button>
         </fieldset></form>
         <ul>
