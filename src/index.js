@@ -1,7 +1,16 @@
-import { html, render, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
-import { getMembers, getState, resolveAlias } from './matrix.js';
+import { html, render, useState } from './node_modules/htm/preact/standalone.module.js';
+import { getMembers, getState, resolveAlias, setState } from './matrix.js';
 
-const IDENTITIES = [];
+let IDENTITIES = [];
+try {
+    const identities = JSON.parse(localStorage.getItem('identities'));
+    if (!Array.isArray(identities)) {
+        throw Error(`Expected an array, got ${typeof identities}`);
+    }
+    IDENTITIES = identities;
+} catch (error) {
+    console.warn('No stored identities found in localStorage.', error);
+}
 
 function IdentityEditor({identity, onAbort, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
@@ -28,6 +37,7 @@ function IdentityEditor({identity, onAbort, onSave}) {
             </label></div>
             <button type="button" onclick=${onAbort}>Abort</button>
             <button type="submit">Save</button>
+            ${!!localStorage && html`<p>Use Incognito mode, if you don't want access token to be stored in localStorage!</p>`}
         </form>
     `;
 }
@@ -100,7 +110,6 @@ function App() {
     }
 
     const handleSave = (identity) => {
-        console.log('Save', identity);
         const newIdentities = [...identities];
         const index = newIdentities.findIndex(obj => obj.name === editedIdentity.name);
         if (index === -1) {
@@ -110,10 +119,14 @@ function App() {
         } else {
             // Replace existing identity
             newIdentities.splice(index, 1, identity)
-            console.log('replace', newIdentities);
             setIdentities(newIdentities);
         }
         setEditedIdentity(null);
+        try {
+            localStorage.setItem('identities', JSON.stringify(newIdentities));
+        } catch (error) {
+            console.warn('Failed to store identities in localStorage', error);
+        }
     }
 
     if (editedIdentity) {
@@ -149,7 +162,7 @@ function RoomSelector({identity}) {
     if (roomId) {
         return html`
             <button onclick=${() => setRoomId(null)}>Unselect room</button>
-            <${RoomPage} roomId=${roomId}/>
+            <${RoomPage} identity=${identity} roomId=${roomId}/>
         `;
     }
 
@@ -171,10 +184,14 @@ function RoomSelector({identity}) {
 
 function RoomPage({identity, roomId}) {
     return html`
-        <h2>State</h2>
-        <${StateExplorer} identity=${identity} roomId=${roomId}/>
-        <h2>Member list</h2>
-        <${MemberList} identity=${identity} roomId=${roomId}/>
+        <details open>
+            <summary><h2>State</h2></summary>
+            <${StateExplorer} identity=${identity} roomId=${roomId}/>
+        </details>
+        <details open>
+            <summary><h2>Member list</h2></summary>
+            <${MembersExplorer} identity=${identity} roomId=${roomId}/>
+        </details>
     `;
 }
 
@@ -195,6 +212,40 @@ function StateExplorer({identity, roomId}) {
         try {
             const data = await getState(identity, roomId, type || undefined, stateKey || undefined);
             setData(JSON.stringify(data, null, 2));
+        } catch (error) {
+            console.error(error);
+            setData(error.message);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const handlePut = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        if (!type) {
+            alert('type is required when setting a state!');
+        }
+        try {
+            let body;
+            try {
+                body = JSON.parse(data);
+            } catch (error) {
+                alert('Invalid JSON', error);
+                return;
+            }
+            let warning = `Do you want to set ${type} `;
+            if (stateKey) {
+                warning += `with state_key ${stateKey} `;
+            }
+            warning += `in room ${roomId}?`;
+            const confirmed = confirm(warning);
+            if (!confirmed) return;
+            await setState(identity, roomId, type, stateKey || undefined, body);
+        } catch (error) {
+            console.error(error);
+            alert(error);
         } finally {
             setBusy(false);
         }
@@ -210,15 +261,33 @@ function StateExplorer({identity, roomId}) {
             </label>
             <button type="submit">Query</button>
         </fieldset></form>
-        <label>State
-            <textarea disabled=${busy}>${data}</textarea>
-        </label>
+        <form onsubmit=${handlePut}><fieldset disabled=${busy}>
+            <label>State
+                <textarea oninput=${({target}) => setData(target.value)}>${data}</textarea>
+            </label>
+            <div><button type="submit">Overwrite state</button></div>
+        </fieldset></form>
     `;
 }
 
-function MemberList({identity, roomId}) {
+function MemberList({members}) {
+    if (members.length === 0) {
+        return html`
+            <p>There's no one in this list.</p>
+        `;
+    }
+    return html`
+        <ul>
+            ${members.map(memberEvent => {
+                return html`<li>${memberEvent.state_key}</li>`;
+            })}
+        </ul>
+    `;
+}
+
+function MembersExplorer({identity, roomId}) {
     const [busy, setBusy] = useState(false);
-    const [members, setMembers] = useState([]);
+    const [members, setMembers] = useState(null);
 
     const handleGet = async event => {
         event.preventDefault();
@@ -234,16 +303,23 @@ function MemberList({identity, roomId}) {
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
+            <p>Doesn't support pagination yet. Up to 1000 users seems safe.</p>
             <button type="submit">Get members</button>
         </fieldset></form>
-        <ul>
-            ${members.map(memberEvent => {
-                return html`<li>
-                    ${memberEvent.state_key} (${memberEvent.content.membership})
-                    <button type="button" onclick=${() => onDelete(identity)}>Kick</button>
-                </li>`;
-            })}
-        </ul>
+        ${Array.isArray(members) && (html`
+            <details open>
+                <summary><h3>Joined</h3></summary>
+                <${MemberList} members=${members.filter(e => e.content.membership === 'join')} />
+            </details>
+            <details open>
+                <summary><h3>Invited</h3></summary>
+                <${MemberList} members=${members.filter(e => e.content.membership === 'invite')} />
+            </details>
+            <details>
+                <summary><h3>Left</h3></summary>
+                <${MemberList} members=${members.filter(e => e.content.membership === 'leave')} />
+            </details>
+        `)}
     `;
 }
 

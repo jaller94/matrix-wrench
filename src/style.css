@@ -1,0 +1,8 @@
+details {
+    border: 2px grey solid;
+}
+
+summary>h2,
+summary>h3 {
+    display: inline-block;
+}
