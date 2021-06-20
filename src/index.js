@@ -1,5 +1,12 @@
-import { html, render, useState } from './node_modules/htm/preact/standalone.module.js';
-import { getMembers, getState, resolveAlias, setState } from './matrix.js';
+import { html, render, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
+import {
+    getMembers,
+    getState,
+    joinRoom,
+    leaveRoom,
+    resolveAlias,
+    setState
+} from './matrix.js';
 
 let IDENTITIES = [];
 try {
@@ -158,10 +165,11 @@ function RoomSelector({identity}) {
     const [roomId, setRoomId] = useState(null);
     const [recentRooms, setRecentRooms] = useState([]);
     const [busy, setBusy] = useState(false);
+    const roomRef = useRef();
 
     if (roomId) {
         return html`
-            <button onclick=${() => setRoomId(null)}>Unselect room</button>
+            <button onclick=${() => setRoomId(null)}>Switch to a different room</button>
             <${RoomPage} identity=${identity} roomId=${roomId}/>
         `;
     }
@@ -169,13 +177,32 @@ function RoomSelector({identity}) {
     const handleGet = async event => {
         event.preventDefault();
         event.stopPropagation();
-        setRoomId(room);
+        let roomId = room;
+        if (room.startsWith('#')) {
+            setBusy(true);
+            try {
+                roomId = (await resolveAlias(identity, room)).room_id;
+            } catch (error) {
+                console.warn(error);
+                roomRef.current.setCustomValidity(`Couldn't resolve alias! ${error}`);
+                roomRef.current.reportValidity();
+            } finally {
+                setBusy(false);
+            }
+        }
+        setRoomId(roomId);
     };
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <label>Room ID
-                <input pattern="!.+:.+" required value=${room} oninput=${({target}) => setRoom(target.value)}/>
+            <label>Room alias or ID
+                <input
+                    pattern="[!#].+:.+"
+                    ref=${roomRef}
+                    required
+                    value=${room}
+                    oninput=${({target}) => setRoom(target.value)}
+                />
             </label>
             <button type="submit">Go</button>
         </fieldset></form>
@@ -183,7 +210,35 @@ function RoomSelector({identity}) {
 }
 
 function RoomPage({identity, roomId}) {
+    const handleJoin = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!answer) return;
+        try {
+            await joinRoom(identity, roomId);
+        } catch (error) {
+            console.error(error);
+            alert(error);
+        }
+    };
+
+    const handleLeave = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const answer = confirm(`Leave room ${roomId}?`);
+        if (!answer) return;
+        try {
+            await leaveRoom(identity, roomId);
+        } catch (error) {
+            console.error(error);
+            alert(error);
+        }
+    };
+
     return html`
+        <h3>${roomId}</h3>
+        <button type="button" onclick=${handleJoin}>Join</button>
+        <button type="button" onclick=${handleLeave}>Leave</button>
         <details open>
             <summary><h2>State</h2></summary>
             <${StateExplorer} identity=${identity} roomId=${roomId}/>
