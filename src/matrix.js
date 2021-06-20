@@ -2,10 +2,10 @@
  * Gets a list of joined members of a room.
  * @param {object} identity
  * @param {string} roomId
- * @returns {{joined: Record<string, object>}}
+ * @returns {Promise<{joined: Record<string, object>}>}
  */
 export async function getJoinedMembers(identity, roomId) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/joined_members`;
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/joined_members`;
     const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -23,10 +23,10 @@ export async function getJoinedMembers(identity, roomId) {
  * Get the members of a room.
  * @param {object} identity
  * @param {string} roomId
- * @returns {object}
+ * @returns {Promise<object>}
  */
 export async function getMembers(identity, roomId) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`;
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`;
     const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -41,54 +41,12 @@ export async function getMembers(identity, roomId) {
 }
 
 /**
- * Join a room.
- * @param {object} identity
- * @param {string} roomId
- * @returns {object}
- */
-export async function joinRoom(identity, roomId) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/join`;
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
-        }
-    });
-    if (!response.ok) {
-        console.warn(response);
-        throw Error('Request failed');
-    }
-    return await response.json();
-}
-
-/**
- * Leave a room.
- * @param {object} identity
- * @param {string} roomId
- * @returns {object}
- */
-export async function leaveRoom(identity, roomId) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/leave`;
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
-        }
-    });
-    if (!response.ok) {
-        console.warn(response);
-        throw Error('Request failed');
-    }
-    return await response.json();
-}
-
-/**
  * Get the state of a room.
  * @param {object} identity
  * @param {string} roomId
  * @param {string?} type
  * @param {string?} stateKey
- * @returns {object}
+ * @returns {Promise<object>}
  */
 export async function getState(identity, roomId, type, stateKey) {
     let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
@@ -112,28 +70,22 @@ export async function getState(identity, roomId, type, stateKey) {
 }
 
 /**
- * Set the state of a room.
+ * Get the state of a room.
  * @param {object} identity
  * @param {string} roomId
- * @param {string} type
- * @param {string?} stateKey
- * @param {object} body
- * @returns {object}
+ * @returns {Promise<object>}
  */
-export async function setState(identity, roomId, type, stateKey, body) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
-    if (type) {
-        url += `/${type}`;
-    }
-    if (stateKey) {
-        url += `/${stateKey}`;
-    }
+export async function inviteUser(identity, roomId, userId) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/invite`;
     const response = await fetch(url, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
+            'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+            user_id: userId,
+        }),
     });
     if (!response.ok) {
         console.warn(response);
@@ -143,26 +95,43 @@ export async function setState(identity, roomId, type, stateKey, body) {
 }
 
 /**
- * Send an event to a room.
+ * Join a room.
  * @param {object} identity
  * @param {string} roomId
- * @param {string} type
- * @param {object} body
- * @returns {object}
+ * @returns {Promise<object>}
  */
-export async function sendEvent(identity, roomId, type, content, transactionId) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/send/${type}/${transactionId}`;
-    debugger;
+export async function joinRoom(identity, roomId) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/join`;
     const response = await fetch(url, {
-        method: 'PUT',
+        method: 'GET',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
-        },
-        body: JSON.stringify(content),
+        }
     });
     if (!response.ok) {
         console.warn(response);
-        throw Error(`Request failed: ${(await response.json()).error}`);
+        throw Error('Request failed');
+    }
+    return await response.json();
+}
+
+/**
+ * Leave a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @returns {Promise<object>}
+ */
+export async function leaveRoom(identity, roomId) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/leave`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        }
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error('Request failed');
     }
     return await response.json();
 }
@@ -180,6 +149,67 @@ export async function resolveAlias(identity, roomAlias) {
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
         }
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error(`Request failed: ${(await response.json()).error}`);
+    }
+    return await response.json();
+}
+
+/**
+ * Send an event to a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @param {string} type
+ * @param {object} content
+ * @param {string=} transactionId
+ * @returns {Promise<object>}
+ */
+export async function sendEvent(identity, roomId, type, content, transactionId) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/send/${type}`;
+    if (transactionId) {
+        url += `/${transactionId}`;
+    }
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(content),
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error(`Request failed: ${(await response.json()).error}`);
+    }
+    return await response.json();
+}
+
+/**
+ * Set the state of a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @param {string} type
+ * @param {string?} stateKey
+ * @param {object} content
+ * @returns {Promise<object>}
+ */
+export async function setState(identity, roomId, type, stateKey, content) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
+    if (type) {
+        url += `/${type}`;
+    }
+    if (stateKey) {
+        url += `/${stateKey}`;
+    }
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(content),
     });
     if (!response.ok) {
         console.warn(response);

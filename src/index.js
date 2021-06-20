@@ -2,6 +2,7 @@ import { html, render, useRef, useState } from './node_modules/htm/preact/standa
 import {
     getMembers,
     getState,
+    inviteUser,
     joinRoom,
     leaveRoom,
     resolveAlias,
@@ -102,7 +103,6 @@ function AliasResolver({identity}) {
     `;
 }
 
-
 function App() {
     const [identities, setIdentities] = useState(IDENTITIES);
     const [identity, setIdentity] = useState(null);
@@ -148,6 +148,12 @@ function App() {
             <h1>Select an identity</h1>
             <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
             <button type="button" onclick=${() => setEditedIdentity({})}>Add identity</button>
+            <br /><br />
+            <details>
+                <summary><h2>Changelog</h2></summary>
+                <h3>v0.1.0</h3>
+                <p>Join rooms, leave rooms, invite to rooms. Separate page for room management.</p>
+            </details>
         `;
     }
     return html`
@@ -237,16 +243,50 @@ function RoomPage({identity, roomId}) {
 
     return html`
         <h3>${roomId}</h3>
-        <button type="button" onclick=${handleJoin}>Join</button>
-        <button type="button" onclick=${handleLeave}>Leave</button>
         <details open>
             <summary><h2>State</h2></summary>
             <${StateExplorer} identity=${identity} roomId=${roomId}/>
         </details>
+        <button type="button" onclick=${handleJoin}>Join</button>
+        <button type="button" onclick=${handleLeave}>Leave</button>
+        <${UserInvite} identity=${identity} roomId=${roomId}/>
         <details open>
             <summary><h2>Member list</h2></summary>
             <${MembersExplorer} identity=${identity} roomId=${roomId}/>
         </details>
+    `;
+}
+
+function UserInvite({ identity, roomId }) {
+    const [userId, setUserId] = useState('');
+    const [busy, setBusy] = useState(false);
+
+    const handleSubmit = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        try {
+            await inviteUser(identity, roomId, userId);
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return html`
+        <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
+            <label>Invite user:
+                <input
+                    pattern="@.+:.+"
+                    required
+                    title="A user to invite, e.g. @foo:matrix.org"
+                    value=${userId}
+                    oninput=${({target}) => setUserId(target.value)}
+                />
+            </label>
+            <button type="submit">Invite</button>
+        </fieldset></form>
     `;
 }
 
@@ -283,9 +323,9 @@ function StateExplorer({identity, roomId}) {
             alert('type is required when setting a state!');
         }
         try {
-            let body;
+            let content;
             try {
-                body = JSON.parse(data);
+                content = JSON.parse(data);
             } catch (error) {
                 alert('Invalid JSON', error);
                 return;
@@ -297,7 +337,7 @@ function StateExplorer({identity, roomId}) {
             warning += `in room ${roomId}?`;
             const confirmed = confirm(warning);
             if (!confirmed) return;
-            await setState(identity, roomId, type, stateKey || undefined, body);
+            await setState(identity, roomId, type, stateKey || undefined, content);
         } catch (error) {
             console.error(error);
             alert(error);
