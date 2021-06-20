@@ -1,0 +1,8 @@
+{
+  "name": "Matrix Navigator",
+  "short_name": "Navigator",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fff",
+  "description": "View and modify Matrix room states",
+}
