@@ -1,6 +1,6 @@
 {
   "name": "Matrix Navigator",
-  "short_name": "Navigator",
+  "short_name": "MatrixNav",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#fff",

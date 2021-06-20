@@ -1,7 +1,7 @@
 {
   "name": "matrix-navigator",
   "description": "Webapp to explore Matrix rooms",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "scripts": {
     "start": "python -m http.server --directory src 1234",
     "prepare": "mkdir -p src/node_modules/htm/preact/ && cp node_modules/htm/preact/standalone.module.js src/node_modules/htm/preact/",

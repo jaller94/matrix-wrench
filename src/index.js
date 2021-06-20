@@ -169,7 +169,7 @@ function App() {
 function RoomSelector({identity}) {
     const [room, setRoom] = useState('');
     const [roomId, setRoomId] = useState(null);
-    const [recentRooms, setRecentRooms] = useState([]);
+    // const [recentRooms, setRecentRooms] = useState([]);
     const [busy, setBusy] = useState(false);
     const roomRef = useRef();
 
