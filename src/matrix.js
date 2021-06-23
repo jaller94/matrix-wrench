@@ -103,7 +103,7 @@ export async function inviteUser(identity, roomId, userId) {
 export async function joinRoom(identity, roomId) {
     const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/join`;
     const response = await fetch(url, {
-        method: 'GET',
+        method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
         }
@@ -124,7 +124,7 @@ export async function joinRoom(identity, roomId) {
 export async function leaveRoom(identity, roomId) {
     const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/leave`;
     const response = await fetch(url, {
-        method: 'GET',
+        method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
         }
