@@ -167,7 +167,7 @@ export async function resolveAlias(identity, roomAlias) {
  * @returns {Promise<object>}
  */
 export async function sendEvent(identity, roomId, type, content, transactionId) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/send/${type}`;
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/send/${type}`;
     if (transactionId) {
         url += `/${transactionId}`;
     }
@@ -196,7 +196,7 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
  * @returns {Promise<object>}
  */
 export async function setState(identity, roomId, type, stateKey, content) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
     if (type) {
         url += `/${type}`;
     }
