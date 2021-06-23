@@ -219,7 +219,6 @@ function RoomPage({identity, roomId}) {
     const handleJoin = async event => {
         event.preventDefault();
         event.stopPropagation();
-        if (!answer) return;
         try {
             await joinRoom(identity, roomId);
         } catch (error) {
