@@ -242,17 +242,26 @@ function RoomPage({identity, roomId}) {
 
     return html`
         <h3>${roomId}</h3>
-        <details open>
-            <summary><h2>State</h2></summary>
-            <${StateExplorer} identity=${identity} roomId=${roomId}/>
-        </details>
-        <button type="button" onclick=${handleJoin}>Join</button>
-        <button type="button" onclick=${handleLeave}>Leave</button>
-        <${UserInvite} identity=${identity} roomId=${roomId}/>
-        <details open>
-            <summary><h2>Member list</h2></summary>
-            <${MembersExplorer} identity=${identity} roomId=${roomId}/>
-        </details>
+        <div class="page">
+            <div class="section">
+                <details open>
+                    <summary><h2>State</h2></summary>
+                    <${StateExplorer} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
+            <div class="section">
+                <h2>Membership</h2>
+                <button type="button" onclick=${handleJoin}>Join</button>
+                <button type="button" onclick=${handleLeave}>Leave</button>
+                <${UserInvite} identity=${identity} roomId=${roomId}/>
+            </div>
+            <div class="section">
+                <details open>
+                    <summary><h2>Members</h2></summary>
+                    <${MembersExplorer} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
+        </div>
     `;
 }
 

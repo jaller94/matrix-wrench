@@ -4,5 +4,16 @@
   "start_url": ".",
   "display": "standalone",
   "background_color": "#fff",
-  "description": "View and modify Matrix room states"
+  "description": "View and modify Matrix room states",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "32x32"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "32x32",
+      "purpose": "maskable"
+    }
+  ]
 }
