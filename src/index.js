@@ -111,9 +111,13 @@ function App() {
     const handleDelete = (identity) => {
         const confirmed = confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
         if (!confirmed) return;
-        const newIdentities = [...identities];
-        const index = newIdentities.findIndex(obj => obj.name === identity.name);
-        setIdentities(identities.splice(index, 1));
+        const newIdentities = identities.filter(obj => obj.name !== identity.name);
+        setIdentities(newIdentities);
+        try {
+            localStorage.setItem('identities', JSON.stringify(newIdentities));
+        } catch (error) {
+            console.warn('Failed to store identities in localStorage', error);
+        }
     }
 
     const handleSave = (identity) => {
