@@ -8,6 +8,10 @@ cache:
 before_script:
 - npm ci
 
+lint:
+  script:
+  - npm run lint
+
 pages:
   script:
   - mv src public
