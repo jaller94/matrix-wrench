@@ -155,6 +155,8 @@ function App() {
             <br /><br />
             <details>
                 <summary><h2>Changelog</h2></summary>
+                <h3>v0.1.1</h3>
+                <p>Allows to join, leave rooms and inviting users. Wide-screen layout for the room management and bug fixes.</p>
                 <h3>v0.1.0</h3>
                 <p>Join rooms, leave rooms, invite to rooms. Separate page for room management.</p>
             </details>
