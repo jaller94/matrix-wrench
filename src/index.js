@@ -57,7 +57,7 @@ function IdentitySelector({identities, onDelete, onEdit, onSelect}) {
     return html`
         <ul>
             ${identities.map(identity => {
-                return html`<li>
+                return html`<li key=${identity.name}>
                     <button type="button" onclick=${() => onSelect(identity)}>${identity.name}</button>
                     <button type="button" title="Edit" onclick=${() => onEdit(identity)}>✏️</button>
                     <button type="button" title="Delete" onclick=${() => onDelete(identity)}>❌</button>
@@ -172,10 +172,25 @@ function App() {
     `;
 }
 
+function RoomList({roomIds}) {
+    if (roomIds.length === 0) {
+        return html`
+            <p>There's no room in this list.</p>
+        `;
+    }
+    return html`
+        <ul>
+            ${roomIds.map(roomId =>
+                html`<li key=${roomId}>${roomId}</li>`
+            )}
+        </ul>
+    `;
+}
+
 function RoomSelector({identity}) {
     const [room, setRoom] = useState('');
     const [roomId, setRoomId] = useState(null);
-    // const [recentRooms, setRecentRooms] = useState([]);
+    const [recentRooms, setRecentRooms] = useState([]);
     const [busy, setBusy] = useState(false);
     const roomRef = useRef();
 
@@ -186,7 +201,7 @@ function RoomSelector({identity}) {
         `;
     }
 
-    const handleGet = async event => {
+    const handleSubmit = async event => {
         event.preventDefault();
         event.stopPropagation();
         let roomId = room;
@@ -203,10 +218,20 @@ function RoomSelector({identity}) {
             }
         }
         setRoomId(roomId);
+        if (!recentRooms.includes(roomId)) {
+            setRecentRooms([
+                roomId,
+                ...recentRooms,
+            ].slice(0, 4));
+        }
     };
 
     return html`
-        <form onsubmit=${handleGet}><fieldset disabled=${busy}>
+        ${recentRooms.length > 0 && html`
+            <h3>Recent rooms</h3>
+            <${RoomList} roomIds=${recentRooms}/>
+        `}
+        <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
             <label>Room alias or ID
                 <input
                     pattern="[!#].+:.+"
@@ -387,9 +412,9 @@ function MemberList({members}) {
     }
     return html`
         <ul>
-            ${members.map(memberEvent => {
-                return html`<li>${memberEvent.state_key}</li>`;
-            })}
+            ${members.map(memberEvent =>
+                html`<li key=${memberEvent.state_key}>${memberEvent.state_key}</li>`
+            )}
         </ul>
     `;
 }
