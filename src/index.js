@@ -425,8 +425,16 @@ function MembersExplorer({identity, roomId}) {
                 <${MemberList} members=${members.filter(e => e.content.membership === 'invite')} />
             </details>
             <details>
+                <summary><h3>Knocking</h3></summary>
+                <${MemberList} members=${members.filter(e => e.content.membership === 'knock')} />
+            </details>
+            <details>
                 <summary><h3>Left</h3></summary>
                 <${MemberList} members=${members.filter(e => e.content.membership === 'leave')} />
+            </details>
+            <details>
+                <summary><h3>Banned</h3></summary>
+                <${MemberList} members=${members.filter(e => e.content.membership === 'ban')} />
             </details>
         `)}
     `;
