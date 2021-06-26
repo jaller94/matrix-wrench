@@ -1,5 +1,6 @@
 import { html, render, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
+    forgetRoom,
     getMembers,
     getState,
     inviteUser,
@@ -247,6 +248,17 @@ function RoomSelector({identity}) {
 }
 
 function RoomPage({identity, roomId}) {
+    const handleForget = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        try {
+            await forgetRoom(identity, roomId);
+        } catch (error) {
+            console.error(error);
+            alert(error);
+        }
+    };
+    
     const handleJoin = async event => {
         event.preventDefault();
         event.stopPropagation();
@@ -284,6 +296,7 @@ function RoomPage({identity, roomId}) {
                 <h2>Membership</h2>
                 <button type="button" onclick=${handleJoin}>Join</button>
                 <button type="button" onclick=${handleLeave}>Leave</button>
+                <button type="button" onclick=${handleForget}>Forget</button>
                 <${UserInvite} identity=${identity} roomId=${roomId}/>
             </div>
             <div class="section">

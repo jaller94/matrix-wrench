@@ -1,4 +1,25 @@
 /**
+ * Forget about a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @returns {Promise<object>}
+ */
+export async function forgetRoom(identity, roomId) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/forget`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        }
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error('Request failed');
+    }
+    return await response.json();
+}
+
+/**
  * Gets a list of joined members of a room.
  * @param {object} identity
  * @param {string} roomId
@@ -15,6 +36,26 @@ export async function getJoinedMembers(identity, roomId) {
     if (!response.ok) {
         console.warn(response);
         throw Error(`Request failed: ${(await response.json()).error}`);
+    }
+    return await response.json();
+}
+
+/**
+ * Returns a list of the user's current rooms.
+ * @param {object} identity
+ * @returns {Promise<{joined_rooms: string[]}>}
+ */
+export async function getJoinedRooms(identity) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/joined_rooms`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        }
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error('Request failed');
     }
     return await response.json();
 }
