@@ -184,9 +184,9 @@ function RoomList({roomIds}) {
     }
     return html`
         <ul>
-            ${roomIds.map(roomId =>
-                html`<li key=${roomId}>${roomId}</li>`
-            )}
+            ${roomIds.map(roomId => {
+                return html`<li key=${roomId}>${roomId}</li>`;
+            })}
         </ul>
     `;
 }
@@ -448,9 +448,9 @@ function MemberList({members}) {
     }
     return html`
         <ul>
-            ${members.map(memberEvent =>
-                html`<li key=${memberEvent.state_key}>${memberEvent.state_key}</li>`
-            )}
+            ${members.map(memberEvent => {
+                return html`<li key=${memberEvent.state_key}>${memberEvent.state_key}</li>`;
+            })}
         </ul>
     `;
 }

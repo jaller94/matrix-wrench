@@ -32,9 +32,9 @@ export async function doRequest(resource, init) {
 export async function toCurlCommand(resource, init) {
     let cmd = 'curl';
     if (init.data) {
-        cmd += ` --data '${init.data.replace(/\'/g, '\\\'')}'`;
+        cmd += ` --data '${init.data.replace(/'/g, '\\\'')}'`;
     }
-    return `${cmd} '${resource.replace(/\'/g, '\\\'')}'`;
+    return `${cmd} '${resource.replace(/'/g, '\\\'')}'`;
 }
 
 /* END Helper functions */
