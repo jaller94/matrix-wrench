@@ -2,7 +2,7 @@ const dryRun = false;
 
 export class MatrixError extends Error {
     constructor(content) {
-        super(content.message);
+        super(content.error);
         this.errcode = content.errcode;
         this.content = content;
     }
@@ -41,15 +41,14 @@ export async function toCurlCommand(resource, init) {
 
 /**
  * Ban a user from a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
  * @param {string} userId
  * @param {string?} reason
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function banUser(identity, roomId, userId, reason) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/ban`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/ban`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -64,9 +63,9 @@ export async function banUser(identity, roomId, userId, reason) {
 
 /**
  * Forget about a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function forgetRoom(identity, roomId) {
     const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/forget`;
@@ -80,13 +79,12 @@ export async function forgetRoom(identity, roomId) {
 
 /**
  * Gets a list of joined members of a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
- * @returns {Promise<{joined: Record<string, object>}>}
+ * @returns {Promise<{joined: Record<string, Object>}>}
  */
 export async function getJoinedMembers(identity, roomId) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/joined_members`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/joined_members`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -96,12 +94,11 @@ export async function getJoinedMembers(identity, roomId) {
 
 /**
  * Returns a list of the user's current rooms.
- * @param {object} identity
+ * @param {Object} identity
  * @returns {Promise<{joined_rooms: string[]}>}
  */
 export async function getJoinedRooms(identity) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/joined_rooms`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/joined_rooms`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -111,9 +108,9 @@ export async function getJoinedRooms(identity) {
 
 /**
  * Get the members of a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function getMembers(identity, roomId) {
     const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`;
@@ -127,11 +124,11 @@ export async function getMembers(identity, roomId) {
 
 /**
  * Get the state of a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
  * @param {string?} type
  * @param {string?} stateKey
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function getState(identity, roomId, type, stateKey) {
     let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
@@ -151,9 +148,9 @@ export async function getState(identity, roomId, type, stateKey) {
 
 /**
  * Invite a user to a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function inviteUser(identity, roomId, userId) {
     const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/invite`;
@@ -171,13 +168,12 @@ export async function inviteUser(identity, roomId, userId) {
 
 /**
  * Join a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function joinRoom(identity, roomId) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/join`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/join`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -187,15 +183,14 @@ export async function joinRoom(identity, roomId) {
 
 /**
  * Kick a user from a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
  * @param {string} userId
  * @param {string?} reason
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function kickUser(identity, roomId, userId, reason) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/kick`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/kick`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -210,13 +205,12 @@ export async function kickUser(identity, roomId, userId, reason) {
 
 /**
  * Leave a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function leaveRoom(identity, roomId) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/leave`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/leave`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -226,13 +220,12 @@ export async function leaveRoom(identity, roomId) {
 
 /**
  * Resolves a room alias to a room ID.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomAlias
  * @returns {{room_id: string, servers: string[]}}
  */
 export async function resolveAlias(identity, roomAlias) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/directory/room/${encodeURIComponent(roomAlias)}`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -242,12 +235,12 @@ export async function resolveAlias(identity, roomAlias) {
 
 /**
  * Send an event to a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
  * @param {string} type
- * @param {object} content
- * @param {string=} transactionId
- * @returns {Promise<object>}
+ * @param {Object} content
+ * @param {string?} transactionId
+ * @returns {Promise<Object>}
  */
 export async function sendEvent(identity, roomId, type, content, transactionId) {
     let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/send/${type}`;
@@ -266,12 +259,12 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
 
 /**
  * Set the state of a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
  * @param {string} type
  * @param {string?} stateKey
- * @param {object} content
- * @returns {Promise<object>}
+ * @param {Object} content
+ * @returns {Promise<Object>}
  */
 export async function setState(identity, roomId, type, stateKey, content) {
     let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
@@ -293,14 +286,13 @@ export async function setState(identity, roomId, type, stateKey, content) {
 
 /**
  * Unban a user to a room.
- * @param {object} identity
+ * @param {Object} identity
  * @param {string} roomId
  * @param {string} userId
- * @returns {Promise<object>}
+ * @returns {Promise<Object>}
  */
 export async function unbanUser(identity, roomId, userId) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/unban`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/unban`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
