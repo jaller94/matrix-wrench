@@ -7,10 +7,6 @@ body {
     flex-direction: column;
 }
 
-header {
-    height: 20px;
-}
-
 details {
     border: 2px grey solid;
 }
