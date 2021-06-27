@@ -108,6 +108,31 @@ function AliasResolver({identity}) {
     `;
 }
 
+function About() {
+    return html`
+        <details>
+            <summary><h2>About Matrix Navigator</h2></summary>
+            <ul>
+                <li>Code: <a href="https://gitlab.com/jaller94/matrix-navigator">Matrix Navigator on Gitlab.com</a></li>
+                <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
+                <li>License: Undecided, but you may inspect the code.</li>
+            </ul>
+        </details>
+    `;
+}
+
+function Changelog() {
+    return html`
+        <details>
+            <summary><h2>Changelog</h2></summary>
+            <h3>v0.1.1</h3>
+            <p>Allows to join, leave rooms and inviting users. Wide-screen layout for the room management and bug fixes.</p>
+            <h3>v0.1.0</h3>
+            <p>Join rooms, leave rooms, invite to rooms. Separate page for room management.</p>
+        </details>
+    `;
+}
+
 function App() {
     const [identities, setIdentities] = useState(IDENTITIES);
     const [identity, setIdentity] = useState(null);
@@ -154,26 +179,25 @@ function App() {
     }
     if (!identity) {
         return html`
-            <h1>Select an identity</h1>
+            <h1>Matrix Navigator</h1>
+            <button type="button" onclick=${() => setIdentity({serverAddress: 'https://matrix-client.matrix.org'})}>No auth on matrix.org</button>
+            <h2>Select an identity</h2>
             <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
             <button type="button" onclick=${() => setEditedIdentity({})}>Add identity</button>
             <br /><br />
-            <details>
-                <summary><h2>Changelog</h2></summary>
-                <h3>v0.1.1</h3>
-                <p>Allows to join, leave rooms and inviting users. Wide-screen layout for the room management and bug fixes.</p>
-                <h3>v0.1.0</h3>
-                <p>Join rooms, leave rooms, invite to rooms. Separate page for room management.</p>
-            </details>
+            <${Changelog} />
+            <${About} />
         `;
     }
     return html`
-        <h1>Acting as ${identity.name}</h1>
+        <h1>${identity.name ? `Acting as ${identity.name}` : 'No authentication'}</h1>
         <button type="button" onclick=${() => setIdentity(null)}>Use different identity</button>
         <h2>Alias -> Room ID</h2>
         <${AliasResolver} identity=${identity}/>
-        <h2>Room management</h2>
-        <${RoomSelector} identity=${identity}/>
+        ${identity.accessToken && html`
+            <h2>Room management</h2>
+            <${RoomSelector} identity=${identity}/>
+        `}
     `;
 }
 
