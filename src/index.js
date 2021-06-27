@@ -1,13 +1,16 @@
 import { html, render, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
+    banUser,
     forgetRoom,
     getMembers,
     getState,
     inviteUser,
     joinRoom,
+    kickUser,
     leaveRoom,
     resolveAlias,
-    setState
+    setState,
+    unbanUser,
 } from './matrix.js';
 
 let IDENTITIES = [];
@@ -297,7 +300,7 @@ function RoomPage({identity, roomId}) {
                 <button type="button" onclick=${handleJoin}>Join</button>
                 <button type="button" onclick=${handleLeave}>Leave</button>
                 <button type="button" onclick=${handleForget}>Forget</button>
-                <${UserInvite} identity=${identity} roomId=${roomId}/>
+                <${UserActions} identity=${identity} roomId=${roomId}/>
             </div>
             <div class="section">
                 <details open>
@@ -309,13 +312,39 @@ function RoomPage({identity, roomId}) {
     `;
 }
 
-function UserInvite({ identity, roomId }) {
+function UserActions({ identity, roomId }) {
     const [userId, setUserId] = useState('');
+    const [reason, setReason] = useState('');
     const [busy, setBusy] = useState(false);
 
     const handleSubmit = async event => {
         event.preventDefault();
         event.stopPropagation();
+    }
+
+    const handleBan = async() => {
+        setBusy(true);
+        try {
+            await banUser(identity, roomId, userId, reason);
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const handleKick = async() => {
+        setBusy(true);
+        try {
+            await kickUser(identity, roomId, userId, reason);
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const handleInvite = async() => {
         setBusy(true);
         try {
             await inviteUser(identity, roomId, userId);
@@ -326,18 +355,39 @@ function UserInvite({ identity, roomId }) {
         }
     };
 
+    const handleUnban = async() => {
+        setBusy(true);
+        try {
+            await unbanUser(identity, roomId, userId);
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    };
+
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <label>Invite user:
+            <label>User:
                 <input
                     pattern="@.+:.+"
                     required
-                    title="A user to invite, e.g. @foo:matrix.org"
+                    title="A user id, e.g. @foo:matrix.org"
                     value=${userId}
                     oninput=${({target}) => setUserId(target.value)}
                 />
             </label>
-            <button type="submit">Invite</button>
+            <label>Reason for kick or ban:
+                <input
+                    title="A reason why this user gets kicked or banned."
+                    value=${reason}
+                    oninput=${({target}) => setReason(target.value)}
+                />
+            </label>
+            <button type="button" onclick=${handleInvite}>Invite</button>
+            <button type="button" onclick=${handleKick}>Kick</button>
+            <button type="button" onclick=${handleBan}>Ban</button>
+            <button type="button" onclick=${handleUnban}>Unban</button>
         </fieldset></form>
     `;
 }

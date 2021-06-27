@@ -1,4 +1,32 @@
 /**
+ * Ban a user from a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @param {string} userId
+ * @param {string?} reason
+ * @returns {Promise<object>}
+ */
+export async function banUser(identity, roomId, userId, reason) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/ban`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            user_id: userId,
+            reason,
+        }),
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error(`Request failed: ${(await response.json()).error}`);
+    }
+    return await response.json();
+}
+
+/**
  * Forget about a room.
  * @param {object} identity
  * @param {string} roomId
@@ -111,7 +139,7 @@ export async function getState(identity, roomId, type, stateKey) {
 }
 
 /**
- * Get the state of a room.
+ * Invite a user to a room.
  * @param {object} identity
  * @param {string} roomId
  * @returns {Promise<object>}
@@ -152,6 +180,34 @@ export async function joinRoom(identity, roomId) {
     if (!response.ok) {
         console.warn(response);
         throw Error('Request failed');
+    }
+    return await response.json();
+}
+
+/**
+ * Kick a user from a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @param {string} userId
+ * @param {string?} reason
+ * @returns {Promise<object>}
+ */
+export async function kickUser(identity, roomId, userId, reason) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/kick`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            user_id: userId,
+            reason,
+        }),
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error(`Request failed: ${(await response.json()).error}`);
     }
     return await response.json();
 }
@@ -251,6 +307,32 @@ export async function setState(identity, roomId, type, stateKey, content) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(content),
+    });
+    if (!response.ok) {
+        console.warn(response);
+        throw Error(`Request failed: ${(await response.json()).error}`);
+    }
+    return await response.json();
+}
+
+/**
+ * Unban a user to a room.
+ * @param {object} identity
+ * @param {string} roomId
+ * @param {string} userId
+ * @returns {Promise<object>}
+ */
+export async function unbanUser(identity, roomId, userId) {
+    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/unban`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            user_id: userId,
+        }),
     });
     if (!response.ok) {
         console.warn(response);
