@@ -179,14 +179,16 @@ function App() {
     }
     if (!identity) {
         return html`
-            <h1>Matrix Navigator</h1>
-            <button type="button" onclick=${() => setIdentity({serverAddress: 'https://matrix-client.matrix.org'})}>No auth on matrix.org</button>
-            <h2>Select an identity</h2>
-            <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
-            <button type="button" onclick=${() => setEditedIdentity({})}>Add identity</button>
-            <br /><br />
-            <${Changelog} />
-            <${About} />
+            <main>
+                <h1>Select an identity</h1>
+                <button type="button" onclick=${() => setIdentity({serverAddress: 'https://matrix-client.matrix.org'})}>No auth on matrix.org</button>
+                <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
+                <button type="button" onclick=${() => setEditedIdentity({})}>Add identity</button>
+            </main>
+            <aside>
+                <${Changelog} />
+                <${About} />
+            </aside>
         `;
     }
     return html`
@@ -291,11 +293,13 @@ function RoomSelector({identity}) {
             </label>
             <button type="submit">Go</button>
         </fieldset></form>
-        ${recentRooms.length > 0 && html`
-            <h3>Recent rooms</h3>
-            <${RoomList} roomIds=${recentRooms}/>
-        `}
-        <${JoinedRoomList} identity=${identity}/>
+        <aside>
+            ${recentRooms.length > 0 && html`
+                <h3>Recent rooms</h3>
+                <${RoomList} roomIds=${recentRooms}/>
+            `}
+            <${JoinedRoomList} identity=${identity}/>
+        </aside>
     `;
 }
 
@@ -551,3 +555,16 @@ function MembersExplorer({identity, roomId}) {
 }
 
 render(html`<${App} />`, document.body);
+
+// if ('serviceWorker' in navigator) {
+//     window.addEventListener('load', function () {
+//         navigator.serviceWorker.register('/sw.js').then(function (registration) {
+//             // Registration was successful
+//             console.log('ServiceWorker registration successful with scope: ', registration.scope);
+//         }, function (err) {
+//             // registration failed :(
+//             console.log('ServiceWorker registration failed: ', err);
+//         });
+//     });
+// }
+
