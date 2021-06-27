@@ -320,51 +320,24 @@ function UserActions({ identity, roomId }) {
     const handleSubmit = async event => {
         event.preventDefault();
         event.stopPropagation();
+        const action = event.submitter.getAttribute('value');
+        setBusy(true);
+        try {
+            if (action === 'ban') {
+                await banUser(identity, roomId, userId, reason);
+            } else if (action === 'invite') {
+                await inviteUser(identity, roomId, userId);
+            } else if (action === 'kick') {
+                await kickUser(identity, roomId, userId, reason);
+            } else if (action === 'unban') {
+                await unbanUser(identity, roomId, userId);
+            }
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
     }
-
-    const handleBan = async() => {
-        setBusy(true);
-        try {
-            await banUser(identity, roomId, userId, reason);
-        } catch (error) {
-            alert(error);
-        } finally {
-            setBusy(false);
-        }
-    };
-
-    const handleKick = async() => {
-        setBusy(true);
-        try {
-            await kickUser(identity, roomId, userId, reason);
-        } catch (error) {
-            alert(error);
-        } finally {
-            setBusy(false);
-        }
-    };
-
-    const handleInvite = async() => {
-        setBusy(true);
-        try {
-            await inviteUser(identity, roomId, userId);
-        } catch (error) {
-            alert(error);
-        } finally {
-            setBusy(false);
-        }
-    };
-
-    const handleUnban = async() => {
-        setBusy(true);
-        try {
-            await unbanUser(identity, roomId, userId);
-        } catch (error) {
-            alert(error);
-        } finally {
-            setBusy(false);
-        }
-    };
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
@@ -384,10 +357,10 @@ function UserActions({ identity, roomId }) {
                     oninput=${({target}) => setReason(target.value)}
                 />
             </label>
-            <button type="button" onclick=${handleInvite}>Invite</button>
-            <button type="button" onclick=${handleKick}>Kick</button>
-            <button type="button" onclick=${handleBan}>Ban</button>
-            <button type="button" onclick=${handleUnban}>Unban</button>
+            <button type="submit" value="invite">Invite</button>
+            <button type="submit" value="kick">Kick</button>
+            <button type="submit" value="ban">Ban</button>
+            <button type="submit" value="unban">Unban</button>
         </fieldset></form>
     `;
 }
