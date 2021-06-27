@@ -1,27 +1,43 @@
 const dryRun = false;
 
+export class MatrixError extends Error {
+    constructor(content) {
+        super(content.message);
+        this.errcode = content.errcode;
+        this.content = content;
+    }
+}
+
+/* START Helper functions */
+
 export async function doRequest(resource, init) {
     if (dryRun) {
         console.log(resource, init);
+        console.log(toCurlCommand(resource, init));
         return {};
     }
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            user_id: userId,
-            reason,
-        }),
-    });
+    const response = await fetch(resource, init);
     if (!response.ok) {
-        console.warn(response);
-        throw Error(`Request failed: ${(await response.json()).error}`);
+        let error;
+        try {
+            error = new MatrixError(await response.json());
+        } catch {
+            throw Error(`Request failed: ${response}`);
+        }
+        throw error;
     }
     return await response.json();
 }
+
+export async function toCurlCommand(resource, init) {
+    let cmd = 'curl';
+    if (init.data) {
+        cmd += ` --data '${init.data.replace(/\'/g, '\\\'')}'`;
+    }
+    return `${cmd} '${resource.replace(/\'/g, '\\\'')}'`;
+}
+
+/* END Helper functions */
 
 /**
  * Ban a user from a room.
