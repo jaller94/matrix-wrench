@@ -2,6 +2,7 @@ import { html, render, useRef, useState } from './node_modules/htm/preact/standa
 import {
     banUser,
     forgetRoom,
+    getJoinedRooms,
     getMembers,
     getState,
     inviteUser,
@@ -191,6 +192,29 @@ function RoomList({roomIds}) {
     `;
 }
 
+function JoinedRoomList({identity}) {
+    const [roomIds, setRoomIds] = useState(null);
+    const [busy, setBusy] = useState(false);
+
+    const handleGet = async() => {
+        setBusy(true);
+        try {
+            const {joined_rooms} = await getJoinedRooms(identity);
+            setRoomIds(joined_rooms);
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return html`
+        <h3>Joined rooms</h3>
+        <button disabled=${busy} type="button" onclick=${handleGet}>Query</button>
+        ${roomIds && html`<${RoomList} roomIds=${roomIds}/>`}
+    `;
+}
+
 function RoomSelector({identity}) {
     const [room, setRoom] = useState('');
     const [roomId, setRoomId] = useState(null);
@@ -231,10 +255,6 @@ function RoomSelector({identity}) {
     };
 
     return html`
-        ${recentRooms.length > 0 && html`
-            <h3>Recent rooms</h3>
-            <${RoomList} roomIds=${recentRooms}/>
-        `}
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
             <label>Room alias or ID
                 <input
@@ -247,6 +267,11 @@ function RoomSelector({identity}) {
             </label>
             <button type="submit">Go</button>
         </fieldset></form>
+        ${recentRooms.length > 0 && html`
+            <h3>Recent rooms</h3>
+            <${RoomList} roomIds=${recentRooms}/>
+        `}
+        <${JoinedRoomList} identity=${identity}/>
     `;
 }
 
