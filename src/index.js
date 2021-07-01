@@ -25,6 +25,18 @@ try {
     console.warn('No stored identities found in localStorage.', error);
 }
 
+function Header() {
+    return html`
+        <header>
+            <nav>
+                <button type="button">Network Log</button>
+                <button type="button">Settings</button>
+                <button type="button">About</button>
+            </nav>
+        </header>
+    `;
+}
+
 function IdentityEditor({identity, onAbort, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
