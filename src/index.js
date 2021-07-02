@@ -125,8 +125,21 @@ function Changelog() {
     return html`
         <details>
             <summary><h2>Changelog</h2></summary>
+            <h3>v0.1.2</h3>
+            <ul>
+                <li>A global error catcher informs you of program failures.</li>
+                <li>Allows to forget rooms.</li>
+                <li>Allows to kick, ban and unban users.</li>
+                <li>The member list now also shows kocking and banned members, as well as a count for each membership type.</li>
+                <li>Added a button for a quick authless connection to matrix.org.</li>
+                <li>Added "About Matrix Navigator" section to the front-page.</li>
+            </ul>
             <h3>v0.1.1</h3>
-            <p>Allows to join, leave rooms and inviting users. Wide-screen layout for the room management and bug fixes.</p>
+            <ul>
+                <li>Allows to join and leave rooms.</li>
+                <li>Allows to invite users.</li>
+                <li>Added a wide-screen layout for the room management.</li>
+            </ul>
             <h3>v0.1.0</h3>
             <p>Join rooms, leave rooms, invite to rooms. Separate page for room management.</p>
         </details>
