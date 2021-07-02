@@ -29,12 +29,25 @@ export async function doRequest(resource, init) {
     return await response.json();
 }
 
+/**
+ * Constructs a curl command. Use it like fetch().
+ * @param {string} resource
+ * @param {{method?: string, body?: string, headers: Record<string, string>}} init
+ * @returns {string}
+ */
 export async function toCurlCommand(resource, init) {
-    let cmd = 'curl';
-    if (init.data) {
-        cmd += ` --data '${init.data.replace(/'/g, '\\\'')}'`;
+    let cmd = 'curl ';
+    if (init.method !== 'GET') {
+        cmd += `-X ${init.method} `;
     }
-    return `${cmd} '${resource.replace(/'/g, '\\\'')}'`;
+    if (init.body) {
+        cmd += `--data '${init.method.replace(/'/g, '\\\'')}' `;
+    }
+    for (const [key, value] of Object.entries(init.headers ?? {})) {
+        cmd += `-H '${key}: ${value.replace(/'/g, '\\\'')}'`;
+    }
+    cmd += `'${resource.replace(/'/g, '\\\'')}}`;
+    return cmd;
 }
 
 /* END Helper functions */
