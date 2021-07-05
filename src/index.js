@@ -43,7 +43,7 @@ function IdentityEditor({identity, onAbort, onSave}) {
                 <input required value=${name} oninput=${({target}) => setName(target.value)}/>
             </label></div>
             <div><label>Server address (e.g. "https://matrix-client.matrix.org")
-                <input required value=${serverAddress} oninput=${({target}) => setServerAddress(target.value)}/>
+                <input required type="url" value=${serverAddress} oninput=${({target}) => setServerAddress(target.value)}/>
             </label></div>
             <div><label>Access token
                 <input required value=${accessToken} oninput=${({target}) => setAccessToken(target.value)}/>
