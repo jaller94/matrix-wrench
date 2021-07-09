@@ -1,4 +1,5 @@
-import { html, render, useEffect, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
+import { html, render, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
+import { html, render, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
     banUser,
     forgetRoom,
@@ -67,7 +68,7 @@ function IdentityEditor({identity, onAbort, onSave}) {
                 <input required value=${name} oninput=${({target}) => setName(target.value)}/>
             </label></div>
             <div><label>Server address (e.g. "https://matrix-client.matrix.org")
-                <input required value=${serverAddress} oninput=${({target}) => setServerAddress(target.value)}/>
+                <input required type="url" value=${serverAddress} oninput=${({target}) => setServerAddress(target.value)}/>
             </label></div>
             <div><label>Access token
                 <input required value=${accessToken} oninput=${({target}) => setAccessToken(target.value)}/>
@@ -184,8 +185,21 @@ function Changelog() {
     return html`
         <details>
             <summary><h2>Changelog</h2></summary>
+            <h3>v0.1.2</h3>
+            <ul>
+                <li>A global error catcher informs you of program failures.</li>
+                <li>Allows to forget rooms.</li>
+                <li>Allows to kick, ban and unban users.</li>
+                <li>The member list now also shows kocking and banned members, as well as a count for each membership type.</li>
+                <li>Added a button for a quick authless connection to matrix.org.</li>
+                <li>Added "About Matrix Navigator" section to the front-page.</li>
+            </ul>
             <h3>v0.1.1</h3>
-            <p>Allows to join, leave rooms and inviting users. Wide-screen layout for the room management and bug fixes.</p>
+            <ul>
+                <li>Allows to join and leave rooms.</li>
+                <li>Allows to invite users.</li>
+                <li>Added a wide-screen layout for the room management.</li>
+            </ul>
             <h3>v0.1.0</h3>
             <p>Join rooms, leave rooms, invite to rooms. Separate page for room management.</p>
         </details>
@@ -596,31 +610,54 @@ function MembersExplorer({identity, roomId}) {
         }
     };
 
+    const groups = useMemo(
+        () => {
+            if (!Array.isArray(members)) {
+                return null;
+            }
+            const obj = {
+                join: [],
+                invite: [],
+                knock: [],
+                leave: [],
+                ban: [],
+            };
+            for (const e of members) {
+                if (obj[e.content.membership] === undefined) {
+                    obj[e.content.membership] = [];
+                }
+                obj[e.content.membership].push(e);
+            }
+            return obj;
+        },
+        [members],
+    );
+
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <p>Doesn't support pagination yet. Up to 1000 users seems safe.</p>
+            <p>Doesn't support pagination yet. Up to 5000 users seems safe.</p>
             <button type="submit">Get members</button>
         </fieldset></form>
-        ${Array.isArray(members) && (html`
+        ${groups && (html`
             <details open>
-                <summary><h3>Joined</h3></summary>
-                <${MemberList} members=${members.filter(e => e.content.membership === 'join')} />
+                <summary><h3>Joined (${groups.join.length})</h3></summary>
+                <${MemberList} members=${groups.join} />
             </details>
             <details open>
-                <summary><h3>Invited</h3></summary>
-                <${MemberList} members=${members.filter(e => e.content.membership === 'invite')} />
+                <summary><h3>Invited (${groups.invite.length})</h3></summary>
+                <${MemberList} members=${groups.invite} />
             </details>
             <details>
-                <summary><h3>Knocking</h3></summary>
-                <${MemberList} members=${members.filter(e => e.content.membership === 'knock')} />
+                <summary><h3>Knocking (${groups.knock.length})</h3></summary>
+                <${MemberList} members=${groups.knock} />
             </details>
             <details>
-                <summary><h3>Left</h3></summary>
-                <${MemberList} members=${members.filter(e => e.content.membership === 'leave')} />
+                <summary><h3>Left (${groups.leave.length})</h3></summary>
+                <${MemberList} members=${groups.leave} />
             </details>
             <details>
-                <summary><h3>Banned</h3></summary>
-                <${MemberList} members=${members.filter(e => e.content.membership === 'ban')} />
+                <summary><h3>Banned (${groups.ban.length})</h3></summary>
+                <${MemberList} members=${groups.ban} />
             </details>
         `)}
     `;
