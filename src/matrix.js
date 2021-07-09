@@ -29,7 +29,7 @@ export async function doRequest(resource, init) {
     return await response.json();
 }
 
-export async function toCurlCommand(resource, init) {
+export function toCurlCommand(resource, init) {
     let cmd = 'curl';
     if (init.data) {
         cmd += ` --data '${init.data.replace(/'/g, '\\\'')}'`;

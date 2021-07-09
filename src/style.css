@@ -5,6 +5,12 @@ html {
 body {
     display: flex;
     flex-direction: column;
+    margin: 0;
+}
+
+header {
+    background-color: grey;
+    border-bottom: 1px solid black;
 }
 
 details {

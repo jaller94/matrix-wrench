@@ -1,4 +1,4 @@
-import { html, render, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
+import { html, render, useEffect, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
     banUser,
     forgetRoom,
@@ -11,6 +11,7 @@ import {
     leaveRoom,
     resolveAlias,
     setState,
+    toCurlCommand,
     unbanUser,
 } from './matrix.js';
 
@@ -26,10 +27,21 @@ try {
 }
 
 function Header() {
+    const handleClick = () => {
+        const event = new CustomEvent('matrix-request', {
+            detail: {
+                resource: 'https://test',
+                init: {},
+            }
+        });
+        // dispatch the event
+        window.dispatchEvent(event);
+    };
+
     return html`
         <header>
             <nav>
-                <button type="button">Network Log</button>
+                <button type="button" onclick=${handleClick}>Network Log</button>
                 <button type="button">Settings</button>
                 <button type="button">About</button>
             </nav>
@@ -64,6 +76,41 @@ function IdentityEditor({identity, onAbort, onSave}) {
             <button type="submit">Save</button>
             ${!!localStorage && html`<p>Use Incognito mode, if you don't want access token to be stored in localStorage!</p>`}
         </form>
+    `;
+}
+
+function NetworkLog() {
+    const [requests, setRequests] = useState([]);
+
+
+
+    const handleMatrixRequest = (event) => {
+        const newRequests = [
+            ...requests,
+            {
+                id: Math.random(),
+                resource: event.detail.resource,
+                init: event.detail.init,
+            },
+        ];
+        console.log(event, this.requests, newRequests);
+        setRequests(newRequests);
+    };
+
+    useEffect(() => {
+        window.addEventListener('matrix-request', handleMatrixRequest);
+        return () => window.removeEventListener('matrix-request', handleMatrixRequest);
+    }, [requests]);
+
+    return html`
+        <h1>Network Log</h1>
+        <ol>
+            ${requests.map(request => (
+                html`
+                    <li key=${request.id}>${toCurlCommand(request.resource, request.init)}</li>
+                `
+            ))}
+        </ol>
     `;
 }
 
@@ -146,6 +193,14 @@ function Changelog() {
 }
 
 function App() {
+    return html`
+        <${Header} />
+        <${IdentityPage} />
+        <${NetworkLog} />
+    `;
+}
+
+function IdentityPage() {
     const [identities, setIdentities] = useState(IDENTITIES);
     const [identity, setIdentity] = useState(null);
     const [editedIdentity, setEditedIdentity] = useState(null);
@@ -193,7 +248,12 @@ function App() {
         return html`
             <main>
                 <h1>Select an identity</h1>
-                <button type="button" onclick=${() => setIdentity({serverAddress: 'https://matrix-client.matrix.org'})}>No auth on matrix.org</button>
+                <button
+                    type="button"
+                    onclick=${() => setIdentity({ serverAddress: 'https://matrix-client.matrix.org' })}
+                >
+                    No auth on matrix.org
+                </button>
                 <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
                 <button type="button" onclick=${() => setEditedIdentity({})}>Add identity</button>
             </main>
@@ -579,4 +639,3 @@ render(html`<${App} />`, document.body);
 //         });
 //     });
 // }
-
