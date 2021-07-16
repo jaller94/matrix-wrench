@@ -12,6 +12,6 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "eslint": "^7.30.0",
-    "htm": "^3.0.4"
+    "htm": "^3.1.0"
   }
 }
