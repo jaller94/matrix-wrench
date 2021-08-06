@@ -1,5 +1,4 @@
 import { html, render, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
-import { html, render, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
     banUser,
     forgetRoom,
@@ -108,7 +107,7 @@ function NetworkLog() {
         <ol>
             ${requests.map(request => (
                 html`
-                    <li key=${request.id}>${toCurlCommand(request.resource, request.init)}</li>
+                    <li key=${request.id}><code>${toCurlCommand(request.resource, request.init)}</code></li>
                 `
             ))}
         </ol>
