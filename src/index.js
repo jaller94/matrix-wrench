@@ -1,4 +1,4 @@
-import { html, render, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
+import { html, render, useCallback, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
     banUser,
     forgetRoom,
@@ -27,21 +27,10 @@ try {
 }
 
 function Header() {
-    const handleClick = () => {
-        const event = new CustomEvent('matrix-request', {
-            detail: {
-                resource: 'https://test',
-                init: {},
-            }
-        });
-        // dispatch the event
-        window.dispatchEvent(event);
-    };
-
     return html`
         <header>
             <nav>
-                <button type="button" onclick=${handleClick}>Network Log</button>
+                <button type="button">Network Log</button>
                 <button type="button">Settings</button>
                 <button type="button">About</button>
             </nav>
@@ -82,22 +71,20 @@ function IdentityEditor({identity, onAbort, onSave}) {
 function NetworkLog() {
     const [requests, setRequests] = useState([]);
 
-
-
-    const handleMatrixRequest = (event) => {
-        const newRequests = [
-            ...requests,
-            {
-                id: Math.random(),
-                resource: event.detail.resource,
-                init: event.detail.init,
-            },
-        ];
-        console.log(event, this.requests, newRequests);
-        setRequests(newRequests);
-    };
-
     useEffect(() => {
+        const handleMatrixRequest = (event) => {
+            const newRequests = [
+                ...requests,
+                {
+                    id: Math.random(),
+                    resource: event.detail.resource,
+                    init: event.detail.init,
+                },
+            ];
+            console.log(event, this.requests, newRequests);
+            setRequests(newRequests);
+        };
+
         window.addEventListener('matrix-request', handleMatrixRequest);
         return () => window.removeEventListener('matrix-request', handleMatrixRequest);
     }, [requests]);
@@ -170,9 +157,9 @@ function AliasResolver({identity}) {
 function About() {
     return html`
         <details>
-            <summary><h2>About Matrix Navigator</h2></summary>
+            <summary><h2>About Matrix Screwdriver</h2></summary>
             <ul>
-                <li>Code: <a href="https://gitlab.com/jaller94/matrix-navigator">Matrix Navigator on Gitlab.com</a></li>
+                <li>Code: <a href="https://gitlab.com/jaller94/matrix-screwdriver">Matrix Screwdriver on Gitlab.com</a></li>
                 <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
                 <li>License: Undecided, but you may inspect the code.</li>
             </ul>
@@ -191,7 +178,7 @@ function Changelog() {
                 <li>Allows to kick, ban and unban users.</li>
                 <li>The member list now also shows kocking and banned members, as well as a count for each membership type.</li>
                 <li>Added a button for a quick authless connection to matrix.org.</li>
-                <li>Added "About Matrix Navigator" section to the front-page.</li>
+                <li>Added "About Matrix Screwdriver" section to the front-page.</li>
             </ul>
             <h3>v0.1.1</h3>
             <ul>
@@ -206,8 +193,8 @@ function Changelog() {
 }
 
 function App() {
+    // <${Header} />
     return html`
-        <${Header} />
         <${IdentityPage} />
         <${NetworkLog} />
     `;

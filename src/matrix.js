@@ -16,6 +16,9 @@ export async function doRequest(resource, init) {
         console.log(toCurlCommand(resource, init));
         return {};
     }
+    window.dispatchEvent(new CustomEvent('matrix-request', {
+        detail: { resource, init },
+    }));
     const response = await fetch(resource, init);
     if (!response.ok) {
         let error;
@@ -37,16 +40,16 @@ export async function doRequest(resource, init) {
  */
 export function toCurlCommand(resource, init) {
     let cmd = 'curl ';
-    if (init.method !== 'GET') {
+    if (init.method !== undefined && init.method !== 'GET') {
         cmd += `-X ${init.method} `;
     }
     if (init.body) {
         cmd += `--data '${init.method.replace(/'/g, '\\\'')}' `;
     }
     for (const [key, value] of Object.entries(init.headers ?? {})) {
-        cmd += `-H '${key}: ${value.replace(/'/g, '\\\'')}'`;
+        cmd += `-H '${key}: ${value.replace(/'/g, '\\\'')}' `;
     }
-    cmd += `'${resource.replace(/'/g, '\\\'')}}`;
+    cmd += `'${resource.replace(/'/g, '\\\'')}'`;
     return cmd;
 }
 
@@ -75,14 +78,52 @@ export async function banUser(identity, roomId, userId, reason) {
 }
 
 /**
+ * Create a new room alias.
+ * @param {Object} identity
+ * @param {string} roomAlias
+ * @param {string} roomId
+ * @returns {Promise<Object>}
+ */
+export async function createRoomAlias(identity, roomAlias, roomId) {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${roomAlias}`, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            room_id: roomId,
+        }),
+    });
+}
+
+/**
+ * Delete a room alias.
+ * @param {Object} identity
+ * @param {string} roomAlias
+ * @returns {Promise<Object>}
+ */
+export async function deleteRoomAlias(identity, roomAlias) {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${roomAlias}`, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            room_id: roomId,
+        }),
+    });
+}
+
+/**
  * Forget about a room.
  * @param {Object} identity
  * @param {string} roomId
  * @returns {Promise<Object>}
  */
 export async function forgetRoom(identity, roomId) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/forget`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/forget`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -126,8 +167,7 @@ export async function getJoinedRooms(identity) {
  * @returns {Promise<Object>}
  */
 export async function getMembers(identity, roomId) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -166,8 +206,7 @@ export async function getState(identity, roomId, type, stateKey) {
  * @returns {Promise<Object>}
  */
 export async function inviteUser(identity, roomId, userId) {
-    const url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/invite`;
-    return doRequest(url, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/invite`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,

@@ -1,11 +1,11 @@
 {
-  "name": "matrix-navigator",
-  "description": "Webapp to explore Matrix rooms",
-  "version": "0.1.2",
+  "name": "matrix-screwdriver",
+  "description": "Webapp to tweak Matrix rooms",
+  "version": "0.2.0",
   "scripts": {
     "lint": "eslint 'src/**/*.js'",
-    "start": "python -m http.server --directory src 1234",
     "prepare": "mkdir -p src/node_modules/htm/preact/ && cp node_modules/htm/preact/standalone.module.js src/node_modules/htm/preact/",
+    "start": "python -m http.server --directory src 1234",
     "test": "jest"
   },
   "author": "Christian Paul",

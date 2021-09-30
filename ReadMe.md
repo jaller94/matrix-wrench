@@ -1,4 +1,4 @@
-# Matrix Navigator
+# Matrix Screwdriver
 A small, static webapp for viewing and modifying room states.
 
 ![](./docs/screenshot.png)
