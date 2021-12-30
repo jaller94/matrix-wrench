@@ -1,5 +1,6 @@
 import { html, render, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
+    MatrixError,
     banUser,
     forgetRoom,
     getJoinedRooms,
@@ -13,6 +14,7 @@ import {
     setState,
     toCurlCommand,
     unbanUser,
+    whoAmI,
 } from './matrix.js';
 
 let IDENTITIES = [];
@@ -37,6 +39,47 @@ try {
 //         </header>
 //     `;
 // }
+
+function WhoAmI({identity}) {
+    const [busy, setBusy] = useState(false);
+    const [info, setInfo] = useState(null);
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        try {
+            const data = await whoAmI(identity);
+            setInfo(data);
+        } catch(error) {
+            if (error instanceof MatrixError) {
+                if (error.content.errcode === 'M_UNKNOWN_TOKEN') {
+                    setInfo({
+                        device_id: 'Invalid access token',
+                        user_id: 'Invalid access token',
+                    });
+                }
+            } else {
+                alert(error);
+            }
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return html`
+        <button
+            disabled=${busy}
+            type="button"
+            onclick=${handleSubmit}
+        >Who am I?</button>
+        <p>
+            Matrix ID: ${(info || {}).user_id || 'unknown'}
+            <br/>
+            Device ID: ${(info || {}).device_id || 'unknown'}
+        </p>
+    `;
+}
 
 function IdentityEditor({identity, onAbort, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
@@ -242,6 +285,9 @@ function IdentityPage() {
     return html`
         <h1>${identity.name ? `Acting as ${identity.name}` : 'No authentication'}</h1>
         <button type="button" onclick=${() => setIdentity(null)}>Use different identity</button>
+        ${identity.accessToken && html`
+            <${WhoAmI} identity=${identity}/>
+        `}
         <h2>Alias -> Room ID</h2>
         <${AliasResolver} identity=${identity}/>
         ${identity.accessToken && html`

@@ -2,6 +2,7 @@
 
 ## Next release
 * Changed name from Matrix Navigator to Matrix Wrench.
+* Add "Who am I?" button to check access tokens.
 
 ## v0.1.2
 * A global error catcher informs you of program failures.

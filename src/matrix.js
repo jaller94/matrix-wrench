@@ -355,3 +355,20 @@ export async function unbanUser(identity, roomId, userId) {
         }),
     });
 }
+
+/**
+ * Gets information about the owner of a given access token.
+ * @param {Object} identity
+ * @param {string} roomId
+ * @param {string} userId
+ * @returns {Promise<Object>}
+ */
+export async function whoAmI(identity) {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/account/whoami`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${identity.accessToken}`,
+        },
+    });
+}
+
