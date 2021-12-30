@@ -111,7 +111,7 @@ export async function deleteRoomAlias(identity, roomAlias) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            room_id: roomId,
+            roomAlias,
         }),
     });
 }

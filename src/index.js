@@ -1,4 +1,4 @@
-import { html, render, useCallback, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
+import { html, render, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
     banUser,
     forgetRoom,
@@ -26,17 +26,17 @@ try {
     console.warn('No stored identities found in localStorage.', error);
 }
 
-function Header() {
-    return html`
-        <header>
-            <nav>
-                <button type="button">Network Log</button>
-                <button type="button">Settings</button>
-                <button type="button">About</button>
-            </nav>
-        </header>
-    `;
-}
+// function Header() {
+//     return html`
+//         <header>
+//             <nav>
+//                 <button type="button">Network Log</button>
+//                 <button type="button">Settings</button>
+//                 <button type="button">About</button>
+//             </nav>
+//         </header>
+//     `;
+// }
 
 function IdentityEditor({identity, onAbort, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
@@ -130,6 +130,8 @@ function AliasResolver({identity}) {
         try {
             const data = await resolveAlias(identity, alias);
             setRoomId(data.room_id);
+        } catch (error) {
+            alert(error);
         } finally {
             setBusy(false);
         }
@@ -161,33 +163,8 @@ function About() {
             <ul>
                 <li>Code: <a href="https://gitlab.com/jaller94/matrix-wrench">Matrix Wrench on Gitlab.com</a></li>
                 <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
-                <li>License: Undecided, but you may inspect the code.</li>
+                <li>License: <a href="https://choosealicense.com/licenses/apache-2.0/">Apache 2.0</a></li>
             </ul>
-        </details>
-    `;
-}
-
-function Changelog() {
-    return html`
-        <details>
-            <summary><h2>Changelog</h2></summary>
-            <h3>v0.1.2</h3>
-            <ul>
-                <li>A global error catcher informs you of program failures.</li>
-                <li>Allows to forget rooms.</li>
-                <li>Allows to kick, ban and unban users.</li>
-                <li>The member list now also shows kocking and banned members, as well as a count for each membership type.</li>
-                <li>Added a button for a quick authless connection to matrix.org.</li>
-                <li>Added "About Matrix Wrench" section to the front-page.</li>
-            </ul>
-            <h3>v0.1.1</h3>
-            <ul>
-                <li>Allows to join and leave rooms.</li>
-                <li>Allows to invite users.</li>
-                <li>Added a wide-screen layout for the room management.</li>
-            </ul>
-            <h3>v0.1.0</h3>
-            <p>Join rooms, leave rooms, invite to rooms. Separate page for room management.</p>
         </details>
     `;
 }
@@ -258,7 +235,6 @@ function IdentityPage() {
                 <button type="button" onclick=${() => setEditedIdentity({})}>Add identity</button>
             </main>
             <aside>
-                <${Changelog} />
                 <${About} />
             </aside>
         `;
