@@ -1,4 +1,4 @@
-# Matrix Screwdriver
+# Matrix Wrench
 A small, static webapp for viewing and modifying room states.
 
 ![](./docs/screenshot.png)

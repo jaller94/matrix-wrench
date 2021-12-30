@@ -157,9 +157,9 @@ function AliasResolver({identity}) {
 function About() {
     return html`
         <details>
-            <summary><h2>About Matrix Screwdriver</h2></summary>
+            <summary><h2>About Matrix Wrench</h2></summary>
             <ul>
-                <li>Code: <a href="https://gitlab.com/jaller94/matrix-screwdriver">Matrix Screwdriver on Gitlab.com</a></li>
+                <li>Code: <a href="https://gitlab.com/jaller94/matrix-wrench">Matrix Wrench on Gitlab.com</a></li>
                 <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
                 <li>License: Undecided, but you may inspect the code.</li>
             </ul>
@@ -178,7 +178,7 @@ function Changelog() {
                 <li>Allows to kick, ban and unban users.</li>
                 <li>The member list now also shows kocking and banned members, as well as a count for each membership type.</li>
                 <li>Added a button for a quick authless connection to matrix.org.</li>
-                <li>Added "About Matrix Screwdriver" section to the front-page.</li>
+                <li>Added "About Matrix Wrench" section to the front-page.</li>
             </ul>
             <h3>v0.1.1</h3>
             <ul>

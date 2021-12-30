@@ -1,5 +1,5 @@
 {
-  "name": "matrix-screwdriver",
+  "name": "matrix-wrench",
   "description": "Webapp to tweak Matrix rooms",
   "version": "0.2.0",
   "scripts": {
