@@ -1,9 +1,10 @@
 # Changelog for Matrix Wrench
 
 ## Next release
-* Changed name from Matrix Navigator to Matrix Wrench.
+* Allow to add and remove room aliases.
 * Add "Who am I?" button to check access tokens.
 * Basic network log shows curl commands.
+* Change name from Matrix Navigator to Matrix Wrench.
 * New input field design with a floating label.
 
 ## v0.1.2

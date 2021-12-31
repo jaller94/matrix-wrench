@@ -5,6 +5,8 @@ import {
 import {
     MatrixError,
     banUser,
+    createRoomAlias,
+    deleteRoomAlias,
     forgetRoom,
     getJoinedRooms,
     getMembers,
@@ -501,7 +503,59 @@ function RoomPage({identity, roomId}) {
                     <${MembersExplorer} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
+            <div class="section">
+                <details open>
+                    <summary><h2>Aliases</h2></summary>
+                    <${AliasActions} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
         </div>
+    `;
+}
+
+function AliasActions({ identity, roomId }) {
+    const [alias, setAlias] = useState('');
+    const [busy, setBusy] = useState(false);
+
+    const handleSubmit = async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const action = event.submitter.getAttribute('value');
+        setBusy(true);
+        try {
+            if (action === 'add') {
+                await createRoomAlias(identity, alias, roomId);
+            } else if (action === 'remove') {
+                const response = await resolveAlias(identity, alias);
+                if (response.room_id !== roomId) {
+                    let message = 'Alias is not mapped to this room.';
+                    if (response.room_id) {
+                        message += ` Instead, it's mapped to ${response.room_id}.`;
+                    }
+                    throw Error(message);
+                }
+                await deleteRoomAlias(identity, alias);
+            }
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return html`
+        <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
+            <${FloatingLabelInput}
+                label="Alias"
+                pattern="#.+:.+"
+                required
+                title="A room alias, e.g. #matrix:matrix.org"
+                value=${alias}
+                oninput=${({ target }) => setAlias(target.value)}
+            />
+            <button type="submit" value="add">Add</button>
+            <button type="submit" value="remove">Remove</button>
+        </fieldset></form>
     `;
 }
 

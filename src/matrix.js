@@ -79,7 +79,7 @@ export function summarizeFetch(resource, init) {
  * @returns {Promise<Object>}
  */
 export async function banUser(identity, roomId, userId, reason) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/ban`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/ban`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -100,7 +100,7 @@ export async function banUser(identity, roomId, userId, reason) {
  * @returns {Promise<Object>}
  */
 export async function createRoomAlias(identity, roomAlias, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${roomAlias}`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'PUT',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -119,7 +119,7 @@ export async function createRoomAlias(identity, roomAlias, roomId) {
  * @returns {Promise<Object>}
  */
 export async function deleteRoomAlias(identity, roomAlias) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${roomAlias}`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'DELETE',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -138,7 +138,7 @@ export async function deleteRoomAlias(identity, roomAlias) {
  * @returns {Promise<Object>}
  */
 export async function forgetRoom(identity, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/forget`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/forget`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -153,7 +153,7 @@ export async function forgetRoom(identity, roomId) {
  * @returns {Promise<{joined: Record<string, Object>}>}
  */
 export async function getJoinedMembers(identity, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/joined_members`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/joined_members`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -182,7 +182,7 @@ export async function getJoinedRooms(identity) {
  * @returns {Promise<Object>}
  */
 export async function getMembers(identity, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/members`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/members`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -199,7 +199,7 @@ export async function getMembers(identity, roomId) {
  * @returns {Promise<Object>}
  */
 export async function getState(identity, roomId, type, stateKey) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/state`;
     if (type) {
         url += `/${type}`;
     }
@@ -221,7 +221,7 @@ export async function getState(identity, roomId, type, stateKey) {
  * @returns {Promise<Object>}
  */
 export async function inviteUser(identity, roomId, userId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/invite`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/invite`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -240,7 +240,7 @@ export async function inviteUser(identity, roomId, userId) {
  * @returns {Promise<Object>}
  */
 export async function joinRoom(identity, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/join`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/join`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -257,7 +257,7 @@ export async function joinRoom(identity, roomId) {
  * @returns {Promise<Object>}
  */
 export async function kickUser(identity, roomId, userId, reason) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/kick`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/kick`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -277,7 +277,7 @@ export async function kickUser(identity, roomId, userId, reason) {
  * @returns {Promise<Object>}
  */
 export async function leaveRoom(identity, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/leave`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/leave`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
@@ -310,7 +310,7 @@ export async function resolveAlias(identity, roomAlias) {
  * @returns {Promise<Object>}
  */
 export async function sendEvent(identity, roomId, type, content, transactionId) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/send/${type}`;
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/send/${encodeURIComponent(type)}`;
     if (transactionId) {
         url += `/${transactionId}`;
     }
@@ -334,7 +334,7 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
  * @returns {Promise<Object>}
  */
 export async function setState(identity, roomId, type, stateKey, content) {
-    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/state`;
+    let url = `${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/state`;
     if (type) {
         url += `/${type}`;
     }
@@ -359,7 +359,7 @@ export async function setState(identity, roomId, type, stateKey, content) {
  * @returns {Promise<Object>}
  */
 export async function unbanUser(identity, roomId, userId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${roomId}/unban`, {
+    return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/unban`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${identity.accessToken}`,
