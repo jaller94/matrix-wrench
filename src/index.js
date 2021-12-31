@@ -1,5 +1,8 @@
 import { html, render, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
+    uniqueId,
+} from './helper.js';
+import {
     MatrixError,
     banUser,
     forgetRoom,
@@ -26,6 +29,18 @@ try {
     IDENTITIES = identities;
 } catch (error) {
     console.warn('No stored identities found in localStorage.', error);
+}
+
+const FloatingLabelInput = ({label, ...props}) => {
+    const [id] = useState(uniqueId());
+    return html`
+        <div class="floating-label-input">
+            <input id=${id} ...${props} placeholder="Text"/>
+            <label
+                for=${props.id || id}
+            >${label}${props.required && html`<span class="floating-label-input_required" title="required"> *</span>`}</label>
+        </div>
+    `;
 }
 
 // function Header() {
@@ -94,16 +109,30 @@ function IdentityEditor({identity, onAbort, onSave}) {
 
     return html`
         <h1>Identity Editor</h1>
-        <form onsubmit=${handleSubmit}>
-            <div><label>Name (just an identifier within this app)
-                <input required value=${name} oninput=${({target}) => setName(target.value)}/>
-            </label></div>
-            <div><label>Server address (e.g. "https://matrix-client.matrix.org")
-                <input required type="url" value=${serverAddress} oninput=${({target}) => setServerAddress(target.value)}/>
-            </label></div>
-            <div><label>Access token
-                <input required value=${accessToken} oninput=${({target}) => setAccessToken(target.value)}/>
-            </label></div>
+        <form class="identity-editor-form" onsubmit=${handleSubmit}>
+            <div>
+                <${FloatingLabelInput}
+                    label="Name (just an identifier within this app)"
+                    required
+                    value=${name}
+                    oninput=${({ target }) => setName(target.value)}
+                />
+            </div>
+            <div>
+                <${FloatingLabelInput}
+                    label="Server address (e.g. "https://matrix-client.matrix.org")"
+                    required
+                    value=${serverAddress}
+                    oninput=${({ target }) => setServerAddress(target.value)}
+                />
+            </div>
+            <div>
+                <${FloatingLabelInput}
+                    label="Access token"
+                    value=${accessToken}
+                    oninput=${({ target }) => setAccessToken(target.value)}
+                />
+            </div>
             <button type="button" onclick=${onAbort}>Abort</button>
             <button type="submit">Save</button>
             ${!!localStorage && html`<p>Use Incognito mode, if you don't want access token to be stored in localStorage!</p>`}
@@ -182,15 +211,14 @@ function AliasResolver({identity}) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <label>Alias
-                <input
-                    pattern="#.+:.+"
-                    required
-                    title="A room alias starting with a number sign, e.g. #matrixhq:matrix.org"
-                    value=${alias}
-                    oninput=${({target}) => setAlias(target.value)}
-                />
-            </label>
+            <${FloatingLabelInput}
+                label="Room alias"
+                pattern="#.+:.+"
+                required
+                title="A room alias starting with a number sign, e.g. #matrixhq:matrix.org"
+                value=${alias}
+                oninput=${({target}) => setAlias(target.value)}
+            />
             <button type="submit">Resolve</button>
         </fieldset></form>
         <label>Room id (read only)
@@ -359,8 +387,15 @@ function RoomSelector({identity}) {
                 roomId = (await resolveAlias(identity, room)).room_id;
             } catch (error) {
                 console.warn(error);
-                roomRef.current.setCustomValidity(`Couldn't resolve alias! ${error}`);
-                roomRef.current.reportValidity();
+                const input = roomRef.current.base.querySelector('input');
+                const message = `Couldn't resolve alias! ${error}`;
+                if (input) {
+                    input.setCustomValidity(`Couldn't resolve alias! ${error}`);
+                    input.reportValidity();
+                } else {
+                    alert(message);
+                }
+                return;
             } finally {
                 setBusy(false);
             }
@@ -376,15 +411,14 @@ function RoomSelector({identity}) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <label>Room alias or ID
-                <input
-                    pattern="[!#].+:.+"
-                    ref=${roomRef}
-                    required
-                    value=${room}
-                    oninput=${({target}) => setRoom(target.value)}
-                />
-            </label>
+            <${FloatingLabelInput}
+                label="Room alias or ID"
+                pattern="[!#].+:.+"
+                ref=${roomRef}
+                required
+                value=${room}
+                oninput=${({target}) => setRoom(target.value)}
+            />
             <button type="submit">Go</button>
         </fieldset></form>
         <aside>
@@ -438,16 +472,23 @@ function RoomPage({identity, roomId}) {
         <div class="page">
             <div class="section">
                 <details open>
+                    <summary><h2>Membership</h2></summary>
+                    <button type="button" onclick=${handleJoin}>Join</button>
+                    <button type="button" onclick=${handleLeave}>Leave</button>
+                    <button type="button" onclick=${handleForget}>Forget</button>
+                </details>
+            </div>
+            <div class="section">
+                <details open>
                     <summary><h2>State</h2></summary>
                     <${StateExplorer} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
             <div class="section">
-                <h2>Membership</h2>
-                <button type="button" onclick=${handleJoin}>Join</button>
-                <button type="button" onclick=${handleLeave}>Leave</button>
-                <button type="button" onclick=${handleForget}>Forget</button>
-                <${UserActions} identity=${identity} roomId=${roomId}/>
+                <details open>
+                    <summary><h2>Moderation</h2></summary>
+                    <${UserActions} identity=${identity} roomId=${roomId}/>
+                </details>
             </div>
             <div class="section">
                 <details open>
@@ -488,22 +529,20 @@ function UserActions({ identity, roomId }) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <label>User:
-                <input
-                    pattern="@.+:.+"
-                    required
-                    title="A user id, e.g. @foo:matrix.org"
-                    value=${userId}
-                    oninput=${({target}) => setUserId(target.value)}
-                />
-            </label>
-            <label>Reason for kick or ban:
-                <input
-                    title="A reason why this user gets kicked or banned."
-                    value=${reason}
-                    oninput=${({target}) => setReason(target.value)}
-                />
-            </label>
+            <${FloatingLabelInput}
+                label="User"
+                pattern="@.+:.+"
+                required
+                title="A user id, e.g. @foo:matrix.org"
+                value=${userId}
+                oninput=${({target}) => setUserId(target.value)}
+            />
+            <${FloatingLabelInput}
+                label="Reason for kick or ban"
+                title="A reason why this user gets kicked or banned."
+                value=${reason}
+                oninput=${({target}) => setReason(target.value)}
+            />
             <button type="submit" value="invite">Invite</button>
             <button type="submit" value="kick">Kick</button>
             <button type="submit" value="ban">Ban</button>
@@ -570,12 +609,17 @@ function StateExplorer({identity, roomId}) {
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <label>Type
-                <input list="state-types" value=${type} oninput=${({target}) => setType(target.value)}/>
-            </label>
-            <label>State Key
-                <input value=${stateKey} oninput=${({target}) => setStateKey(target.value)}/>
-            </label>
+            <${FloatingLabelInput}
+                label="Type"
+                list="state-types"
+                value=${type}
+                oninput=${({target}) => setType(target.value)}
+            />
+            <${FloatingLabelInput}
+                label="State Key"
+                value=${stateKey}
+                oninput=${({target}) => setStateKey(target.value)}
+            />
             <button type="submit">Query</button>
         </fieldset></form>
         <form onsubmit=${handlePut}><fieldset disabled=${busy}>

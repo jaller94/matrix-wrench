@@ -5,7 +5,7 @@ html {
 body {
     display: flex;
     flex-direction: column;
-    margin: 0;
+    margin: 0 6px;
 }
 
 header {
@@ -22,8 +22,8 @@ summary>h3 {
     display: inline-block;
 }
 
-input:not([type]),
-input[type="text"],
+/* input:not([type]),
+input[type="text"] */
 textarea {
     display: block;
     width: 100%;
@@ -46,4 +46,64 @@ textarea {
 
 .page > .section {
     width: 500px;
+}
+
+.identity-editor-form {
+    max-width: 500px;
+}
+
+.identity-editor-form>* {
+    margin-bottom: 1.1em;
+}
+
+.floating-label-input {
+    position: relative;
+}
+
+.floating-label-input>input +
+label {
+    position: absolute;
+    top: .75em;
+    left: .75em;
+    user-select: none;
+    margin: 0;
+    padding: .75em;
+    display: inline-block;
+    width: auto;
+    transition: transform .25s, opacity .25s, padding .25s ease-in-out;
+    transform-origin: 0 0;
+    background-color: white;
+    pointer-events: none;
+}
+
+.floating-label-input>input:focus +
+label,
+.floating-label-input>input:not(:placeholder-shown) +
+label {
+    transform: translate(0, -2em) scale(.9);
+}
+
+.floating-label-input>label,
+.floating-label-input>input {
+    font: inherit;
+    line-height: 1;
+    display: block;
+    width: 100%;
+}
+
+.floating-label-input>input {
+    background-color: transparent;
+    border-radius: 5px;
+    color: black;
+    padding: 1.5em;
+    border: 1px black solid;
+    box-sizing: border-box;
+}
+
+.floating-label-input>input::placeholder {
+    color: transparent;
+}
+
+.floating-label-input_required {
+    color: darkred;
 }
