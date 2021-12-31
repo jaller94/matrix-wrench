@@ -15,6 +15,7 @@ import {
     leaveRoom,
     resolveAlias,
     setState,
+    summarizeFetch,
     toCurlCommand,
     unbanUser,
     whoAmI,
@@ -166,7 +167,11 @@ function NetworkLog() {
         <ol>
             ${requests.map(request => (
                 html`
-                    <li key=${request.id}><code>${toCurlCommand(request.resource, request.init)}</code></li>
+                    <li key=${request.id}><details>
+                        <summary>${summarizeFetch(request.resource, request.init)}</summary>
+                        Curl command:<br/>
+                        <code>${toCurlCommand(request.resource, request.init)}</code>
+                    </details></li>
                 `
             ))}
         </ol>

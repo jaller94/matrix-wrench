@@ -53,6 +53,21 @@ export function toCurlCommand(resource, init) {
     return cmd;
 }
 
+/**
+ * Summarizes a network request. Use it like fetch().
+ * @param {string} resource
+ * @param {{method?: string, body?: string, headers: Record<string, string>}} init
+ * @returns {string}
+ */
+export function summarizeFetch(resource, init) {
+    const match = resource.match(/\/_matrix\/client\/.+?\/(?<command>.*)$/);
+    let url = resource;
+    if (match && match.groups.command) {
+        url = match.groups.command;
+    }
+    return `${init.method} ${url}`;
+}
+
 /* END Helper functions */
 
 /**
