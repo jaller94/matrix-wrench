@@ -1,6 +1,9 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+* _Nothing in the pipeline_
+
+## v0.2.0 (2021-12-31)
 * Allow to add and remove room aliases.
 * Add "Who am I?" button to check access tokens.
 * Basic network log shows curl commands.
