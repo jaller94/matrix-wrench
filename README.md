@@ -16,10 +16,8 @@ Maturity: Alpha
   * 100 kb gziped bundle limit
 
 ## Roadmap
-* List joined rooms (planned)
-* List recent rooms (planned)
-* API call history (planned)
-* Print all API calls as `curl` commands (planned)
+* Hire someone for UI/Layout design (idea)
+* Improve API call history (idea)
 * Dry-run mode (idea)
 * Validation of state events before sending them (idea)
 * Perform bulk actions in rooms (idea)
