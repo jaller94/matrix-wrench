@@ -9,27 +9,55 @@ export class MatrixError extends Error {
 }
 
 /* START Helper functions */
-
+let nextRequestId = 0;
 export async function doRequest(resource, init) {
+    const requestId = nextRequestId;
+    nextRequestId++;
+    window.dispatchEvent(new CustomEvent('matrix-request', {
+        detail: {
+            init,
+            resource,
+            requestId,
+        },
+    }));
     if (dryRun) {
-        console.log(resource, init);
-        console.log(toCurlCommand(resource, init));
+        window.dispatchEvent(new CustomEvent('matrix-response', {
+            detail: { requestId, },
+        }));
         return {};
     }
-    window.dispatchEvent(new CustomEvent('matrix-request', {
-        detail: { resource, init },
-    }));
-    const response = await fetch(resource, init);
-    if (!response.ok) {
-        let error;
-        try {
-            error = new MatrixError(await response.json());
-        } catch {
-            throw Error(`Request failed: ${response}`);
+    try {
+        const response = await fetch(resource, init);
+        if (!response.ok) {
+            let error;
+            try {
+                error = new MatrixError(await response.json());
+            } catch {
+                throw Error(`Request failed: ${response}`);
+            }
+            window.dispatchEvent(new CustomEvent('matrix-response', {
+                detail: {
+                    requestId,
+                    status: response.status,
+                },
+            }));
+            throw error;
         }
+        window.dispatchEvent(new CustomEvent('matrix-response', {
+            detail: {
+                requestId,
+                status: response.status,
+            },
+        }));
+        return await response.json();
+    } catch (error) {
+        window.dispatchEvent(new CustomEvent('matrix-response', {
+            detail: {
+                requestId,
+            },
+        }));
         throw error;
     }
-    return await response.json();
 }
 
 /**
@@ -82,7 +110,9 @@ export async function banUser(identity, roomId, userId, reason) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/ban`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -103,7 +133,9 @@ export async function createRoomAlias(identity, roomAlias, roomId) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'PUT',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -122,7 +154,9 @@ export async function deleteRoomAlias(identity, roomAlias) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'DELETE',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -141,7 +175,9 @@ export async function forgetRoom(identity, roomId) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/forget`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         }
     });
 }
@@ -156,7 +192,9 @@ export async function getJoinedMembers(identity, roomId) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/joined_members`, {
         method: 'GET',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         }
     });
 }
@@ -170,7 +208,9 @@ export async function getJoinedRooms(identity) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/joined_rooms`, {
         method: 'GET',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         }
     });
 }
@@ -185,7 +225,9 @@ export async function getMembers(identity, roomId) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/members`, {
         method: 'GET',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         }
     });
 }
@@ -209,7 +251,9 @@ export async function getState(identity, roomId, type, stateKey) {
     return doRequest(url, {
         method: 'GET',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         }
     });
 }
@@ -224,7 +268,9 @@ export async function inviteUser(identity, roomId, userId) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/invite`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -243,7 +289,9 @@ export async function joinRoom(identity, roomId) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/join`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         }
     });
 }
@@ -260,7 +308,9 @@ export async function kickUser(identity, roomId, userId, reason) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/kick`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -280,7 +330,9 @@ export async function leaveRoom(identity, roomId) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/leave`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         }
     });
 }
@@ -295,7 +347,9 @@ export async function resolveAlias(identity, roomAlias) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'GET',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         }
     });
 }
@@ -317,7 +371,9 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
     return doRequest(url, {
         method: 'PUT',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(content),
@@ -344,7 +400,9 @@ export async function setState(identity, roomId, type, stateKey, content) {
     return doRequest(url, {
         method: 'PUT',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(content),
@@ -362,7 +420,9 @@ export async function unbanUser(identity, roomId, userId) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/rooms/${encodeURIComponent(roomId)}/unban`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -382,7 +442,9 @@ export async function whoAmI(identity) {
     return doRequest(`${identity.serverAddress}/_matrix/client/r0/account/whoami`, {
         method: 'GET',
         headers: {
-            Authorization: `Bearer ${identity.accessToken}`,
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
         },
     });
 }

@@ -1,5 +1,6 @@
 import { html, render, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
+    classnames,
     uniqueId,
 } from './helper.js';
 import {
@@ -22,6 +23,11 @@ import {
     unbanUser,
     whoAmI,
 } from './matrix.js';
+
+function alert(...args) {
+    console.warn(...args);
+    window.alert(...args);
+}
 
 let IDENTITIES = [];
 try {
@@ -143,38 +149,91 @@ function IdentityEditor({identity, onAbort, onSave}) {
     `;
 }
 
+function ResponseStatus({status}) {
+    return html`
+        <span
+            class=${classnames(
+                'network-log-request_status',
+                {
+                    'network-log-request_status--success': status === 200,
+                    'network-log-request_status--error': status >= 400,
+                    'network-log-request_status--network': status === null,
+                    'network-log-request_status--pending': status === undefined,
+                },
+            )}
+        >${status === null ? 'NET' : status || '...'}</span>
+    `;
+}
+
+function NetworkLogRequest({request}) {
+    return html`
+        <li><details>
+            <summary>
+                ${summarizeFetch(request.resource, request.init)}
+                <${ResponseStatus} status=${request.status}/>
+                ${request.sent.toLocaleTimeString()}
+            </summary>
+            <div>
+                Sent: ${request.sent.toLocaleString()}
+            </div>
+            <div>
+                Curl command:<br/>
+                <code>${toCurlCommand(request.resource, request.init)}</code>
+            </div>
+        </details></li>
+    `;
+}
+
 function NetworkLog() {
     const [requests, setRequests] = useState([]);
 
     useEffect(() => {
         const handleMatrixRequest = (event) => {
-            const newRequests = [
+            setRequests(requests => ([
                 ...requests,
                 {
-                    id: Math.random(),
-                    resource: event.detail.resource,
+                    id: event.detail.requestId,
                     init: event.detail.init,
+                    resource: event.detail.resource,
+                    sent: new Date(),
                 },
-            ];
-            console.log(event, this.requests, newRequests);
-            setRequests(newRequests);
+            ]));
+        };
+
+        const handleMatrixResponse = (event) => {
+            setRequests(requests => {
+                const index = requests.findIndex(r => r.id === event.detail.requestId);
+                if (index === -1) {
+                    return requests;
+                }
+                console.log(index, requests[index]);
+                const newRequest = {
+                    ...requests[index],
+                    status: event.detail.status || null,
+                };
+                return [
+                    ...requests.slice(0, index),
+                    newRequest,
+                    ...requests.slice(index + 1),
+                ];
+            });
         };
 
         window.addEventListener('matrix-request', handleMatrixRequest);
-        return () => window.removeEventListener('matrix-request', handleMatrixRequest);
-    }, [requests]);
+        window.addEventListener('matrix-response', handleMatrixResponse);
+        return () => {
+            window.removeEventListener('matrix-request', handleMatrixRequest);
+            window.removeEventListener('matrix-response', handleMatrixResponse);
+        };
+    }, []);
+
+    console.log(requests);
 
     return html`
         <h1>Network Log</h1>
         <ol>
             ${requests.map(request => (
-                html`
-                    <li key=${request.id}><details>
-                        <summary>${summarizeFetch(request.resource, request.init)}</summary>
-                        Curl command:<br/>
-                        <code>${toCurlCommand(request.resource, request.init)}</code>
-                    </details></li>
-                `
+                html`<${NetworkLogRequest} key=${request.id} request=${request}/>`
             ))}
         </ol>
     `;
@@ -246,6 +305,16 @@ function About() {
         </details>
     `;
 }
+
+// function DesignTest() {
+//     return html`
+//         <${ResponseStatus} status=${undefined}/>
+//         <${ResponseStatus} status=${null}/>
+//         <${ResponseStatus} status=${200}/>
+//         <${ResponseStatus} status=${403}/>
+//         <${ResponseStatus} status=${503}/>
+//     `;
+// }
 
 function App() {
     // <${Header} />

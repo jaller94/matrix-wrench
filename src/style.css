@@ -106,3 +106,32 @@ label {
 .floating-label-input_required {
     color: darkred;
 }
+
+.network-log-request_status {
+    background-color: lightslategray;
+    border-radius: .5em;
+    display: inline-block;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    height: 1em;
+    margin: 0 .5em;
+    padding: .3em .5em;
+    width: 2em;
+}
+
+.network-log-request_status--success {
+    background-color: green;
+}
+
+.network-log-request_status--error {
+    background-color: red;
+}
+
+.network-log-request_status--network {
+    background-color: darkslategray;
+    color: lightgray;
+}
+
+.network-log-request_status--pending {
+    background-color: lightslategray;
+}
