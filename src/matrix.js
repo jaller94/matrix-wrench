@@ -12,7 +12,7 @@ export class MatrixError extends Error {
 let nextRequestId = 0;
 export async function doRequest(resource, init) {
     const requestId = nextRequestId;
-    nextRequestId++;
+    nextRequestId += 1;
     window.dispatchEvent(new CustomEvent('matrix-request', {
         detail: {
             init,

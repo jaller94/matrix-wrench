@@ -1,4 +1,4 @@
-import { html, render, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
+import { html, render, useCallback, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
     classnames,
     uniqueId,
@@ -68,7 +68,7 @@ function WhoAmI({identity}) {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState(null);
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = useCallback(async (event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -89,7 +89,7 @@ function WhoAmI({identity}) {
         } finally {
             setBusy(false);
         }
-    };
+    }, [identity]);
 
     return html`
         <button
@@ -110,11 +110,11 @@ function IdentityEditor({identity, onAbort, onSave}) {
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
 
-    const handleSubmit = event => {
+    const handleSubmit = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
         onSave({name, serverAddress, accessToken});
-    };
+    }, [accessToken, name, onSave, serverAddress]);
 
     return html`
         <h1>Identity Editor</h1>
@@ -124,7 +124,7 @@ function IdentityEditor({identity, onAbort, onSave}) {
                     label="Name (just an identifier within this app)"
                     required
                     value=${name}
-                    oninput=${({ target }) => setName(target.value)}
+                    oninput=${useCallback(({ target }) => setName(target.value), [])}
                 />
             </div>
             <div>
@@ -132,14 +132,14 @@ function IdentityEditor({identity, onAbort, onSave}) {
                     label="Server address (e.g. "https://matrix-client.matrix.org")"
                     required
                     value=${serverAddress}
-                    oninput=${({ target }) => setServerAddress(target.value)}
+                    oninput=${useCallback(({ target }) => setServerAddress(target.value), [])}
                 />
             </div>
             <div>
                 <${FloatingLabelInput}
                     label="Access token"
                     value=${accessToken}
-                    oninput=${({ target }) => setAccessToken(target.value)}
+                    oninput=${useCallback(({ target }) => setAccessToken(target.value), [])}
                 />
             </div>
             <button type="button" onclick=${onAbort}>Abort</button>
@@ -227,8 +227,6 @@ function NetworkLog() {
         };
     }, []);
 
-    console.log(requests);
-
     return html`
         <h1>Network Log</h1>
         <ol>
@@ -261,7 +259,7 @@ function AliasResolver({identity}) {
     const [busy, setBusy] = useState(false);
     const [roomId, setRoomId] = useState('');
 
-    const handleSubmit = async event => {
+    const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -273,7 +271,7 @@ function AliasResolver({identity}) {
         } finally {
             setBusy(false);
         }
-    };
+    }, [alias, identity]);
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
@@ -283,7 +281,7 @@ function AliasResolver({identity}) {
                 required
                 title="A room alias starting with a number sign, e.g. #matrixhq:matrix.org"
                 value=${alias}
-                oninput=${({target}) => setAlias(target.value)}
+                oninput=${useCallback(({target}) => setAlias(target.value), [])}
             />
             <button type="submit">Resolve</button>
         </fieldset></form>
@@ -329,37 +327,40 @@ function IdentityPage() {
     const [identity, setIdentity] = useState(null);
     const [editedIdentity, setEditedIdentity] = useState(null);
 
-    const handleDelete = (identity) => {
+    const handleDelete = useCallback((identity) => {
         const confirmed = confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
         if (!confirmed) return;
-        const newIdentities = identities.filter(obj => obj.name !== identity.name);
-        setIdentities(newIdentities);
-        try {
-            localStorage.setItem('identities', JSON.stringify(newIdentities));
-        } catch (error) {
-            console.warn('Failed to store identities in localStorage', error);
-        }
-    }
+        setIdentities((identities) => {
+            const newIdentities = identities.filter(obj => obj.name !== identity.name);
+            try {
+                localStorage.setItem('identities', JSON.stringify(newIdentities));
+            } catch (error) {
+                console.warn('Failed to store identities in localStorage', error);
+            }
+            return identities;
+        });
+    }, []);
 
-    const handleSave = (identity) => {
-        const newIdentities = [...identities];
-        const index = newIdentities.findIndex(obj => obj.name === editedIdentity.name);
-        if (index === -1) {
-            // Add new identity
-            newIdentities.push(identity);
-            setIdentities(newIdentities);
-        } else {
-            // Replace existing identity
-            newIdentities.splice(index, 1, identity)
-            setIdentities(newIdentities);
-        }
+    const handleSave = useCallback((identity) => {
+        setIdentities(identities => {
+            const newIdentities = [...identities];
+            const index = newIdentities.findIndex(obj => obj.name === editedIdentity.name);
+            if (index === -1) {
+                // Add new identity
+                newIdentities.push(identity);
+            } else {
+                // Replace existing identity
+                newIdentities.splice(index, 1, identity)
+            }
+            try {
+                localStorage.setItem('identities', JSON.stringify(newIdentities));
+            } catch (error) {
+                console.warn('Failed to store identities in localStorage', error);
+            }
+            return identities;
+        });
         setEditedIdentity(null);
-        try {
-            localStorage.setItem('identities', JSON.stringify(newIdentities));
-        } catch (error) {
-            console.warn('Failed to store identities in localStorage', error);
-        }
-    }
+    }, [editedIdentity]);
 
     if (editedIdentity) {
         return html`<${IdentityEditor}
@@ -420,7 +421,7 @@ function JoinedRoomList({identity}) {
     const [roomIds, setRoomIds] = useState(null);
     const [busy, setBusy] = useState(false);
 
-    const handleGet = async() => {
+    const handleGet = useCallback(async() => {
         setBusy(true);
         try {
             const {joined_rooms} = await getJoinedRooms(identity);
@@ -430,7 +431,7 @@ function JoinedRoomList({identity}) {
         } finally {
             setBusy(false);
         }
-    }
+    }, [identity]);
 
     return html`
         <h3>Joined rooms</h3>
@@ -446,14 +447,7 @@ function RoomSelector({identity}) {
     const [busy, setBusy] = useState(false);
     const roomRef = useRef();
 
-    if (roomId) {
-        return html`
-            <button onclick=${() => setRoomId(null)}>Switch to a different room</button>
-            <${RoomPage} identity=${identity} roomId=${roomId}/>
-        `;
-    }
-
-    const handleSubmit = async event => {
+    const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         let roomId = room;
@@ -477,13 +471,22 @@ function RoomSelector({identity}) {
             }
         }
         setRoomId(roomId);
-        if (!recentRooms.includes(roomId)) {
-            setRecentRooms([
-                roomId,
-                ...recentRooms,
-            ].slice(0, 4));
-        }
-    };
+        setRecentRooms(recentRooms => ([
+            roomId,
+            ...recentRooms.filter(r => r !== roomId),
+        ]).slice(0, 4));
+    }, [identity, room]);
+
+    const handleResetRoomId = useCallback(() => {
+        setRoomId(null);
+    }, []);
+
+    if (roomId) {
+        return html`
+            <button onclick=${handleResetRoomId}>Switch to a different room</button>
+            <${RoomPage} identity=${identity} roomId=${roomId}/>
+        `;
+    }
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
@@ -508,7 +511,7 @@ function RoomSelector({identity}) {
 }
 
 function RoomPage({identity, roomId}) {
-    const handleForget = async event => {
+    const handleForget = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         try {
@@ -517,9 +520,9 @@ function RoomPage({identity, roomId}) {
             console.error(error);
             alert(error);
         }
-    };
+    }, [identity, roomId]);
     
-    const handleJoin = async event => {
+    const handleJoin = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         try {
@@ -528,9 +531,9 @@ function RoomPage({identity, roomId}) {
             console.error(error);
             alert(error);
         }
-    };
+    }, [identity, roomId]);
 
-    const handleLeave = async event => {
+    const handleLeave = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         const answer = confirm(`Leave room ${roomId}?`);
@@ -541,7 +544,7 @@ function RoomPage({identity, roomId}) {
             console.error(error);
             alert(error);
         }
-    };
+    }, [identity, roomId]);
 
     return html`
         <h3>${roomId}</h3>
@@ -586,7 +589,7 @@ function AliasActions({ identity, roomId }) {
     const [alias, setAlias] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const handleSubmit = async event => {
+    const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         const action = event.submitter.getAttribute('value');
@@ -610,7 +613,7 @@ function AliasActions({ identity, roomId }) {
         } finally {
             setBusy(false);
         }
-    }
+    }, [alias, identity, roomId]);
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
@@ -633,7 +636,7 @@ function UserActions({ identity, roomId }) {
     const [reason, setReason] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const handleSubmit = async event => {
+    const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         const action = event.submitter.getAttribute('value');
@@ -653,7 +656,7 @@ function UserActions({ identity, roomId }) {
         } finally {
             setBusy(false);
         }
-    }
+    }, [identity, reason, roomId, userId]);
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
@@ -663,13 +666,13 @@ function UserActions({ identity, roomId }) {
                 required
                 title="A user id, e.g. @foo:matrix.org"
                 value=${userId}
-                oninput=${({target}) => setUserId(target.value)}
+                oninput=${useCallback(({target}) => setUserId(target.value), [])}
             />
             <${FloatingLabelInput}
                 label="Reason for kick or ban"
                 title="A reason why this user gets kicked or banned."
                 value=${reason}
-                oninput=${({target}) => setReason(target.value)}
+                oninput=${useCallback(({target}) => setReason(target.value), [])}
             />
             <button type="submit" value="invite">Invite</button>
             <button type="submit" value="kick">Kick</button>
@@ -685,7 +688,7 @@ function StateExplorer({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [data, setData] = useState('');
 
-    const handleGet = async event => {
+    const handleGet = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         if (!type) {
@@ -702,9 +705,9 @@ function StateExplorer({identity, roomId}) {
         } finally {
             setBusy(false);
         }
-    };
+    }, [identity, roomId, stateKey, type]);
 
-    const handlePut = async event => {
+    const handlePut = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -733,7 +736,7 @@ function StateExplorer({identity, roomId}) {
         } finally {
             setBusy(false);
         }
-    };
+    }, [data, identity, roomId, stateKey, type]);
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
@@ -741,18 +744,18 @@ function StateExplorer({identity, roomId}) {
                 label="Type"
                 list="state-types"
                 value=${type}
-                oninput=${({target}) => setType(target.value)}
+                oninput=${useCallback(({target}) => setType(target.value), [])}
             />
             <${FloatingLabelInput}
                 label="State Key"
                 value=${stateKey}
-                oninput=${({target}) => setStateKey(target.value)}
+                oninput=${useCallback(({target}) => setStateKey(target.value), [])}
             />
             <button type="submit">Query</button>
         </fieldset></form>
         <form onsubmit=${handlePut}><fieldset disabled=${busy}>
             <label>State
-                <textarea oninput=${({target}) => setData(target.value)}>${data}</textarea>
+                <textarea oninput=${useCallback(({target}) => setData(target.value), [])}>${data}</textarea>
             </label>
             <div><button type="submit">Overwrite state</button></div>
         </fieldset></form>
@@ -778,7 +781,7 @@ function MembersExplorer({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [members, setMembers] = useState(null);
 
-    const handleGet = async event => {
+    const handleGet = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -788,34 +791,31 @@ function MembersExplorer({identity, roomId}) {
         } finally {
             setBusy(false);
         }
-    };
+    }, [identity, roomId]);
 
-    const groups = useMemo(
-        () => {
-            if (!Array.isArray(members)) {
-                return null;
+    const groups = useMemo(() => {
+        if (!Array.isArray(members)) {
+            return null;
+        }
+        const membersByMembership = {
+            join: [],
+            invite: [],
+            knock: [],
+            leave: [],
+            ban: [],
+        };
+        for (const event of members) {
+            if (membersByMembership[event.content.membership] === undefined) {
+                membersByMembership[event.content.membership] = [];
             }
-            const obj = {
-                join: [],
-                invite: [],
-                knock: [],
-                leave: [],
-                ban: [],
-            };
-            for (const e of members) {
-                if (obj[e.content.membership] === undefined) {
-                    obj[e.content.membership] = [];
-                }
-                obj[e.content.membership].push(e);
-            }
-            return obj;
-        },
-        [members],
-    );
+            membersByMembership[event.content.membership].push(event);
+        }
+        return membersByMembership;
+    }, [members]);
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <p>Doesn't support pagination yet. Up to 5000 users seems safe.</p>
+            <p>Doesn't support pagination yet. Up to 60.000 users seems safe.</p>
             <button type="submit">Get members</button>
         </fieldset></form>
         ${groups && (html`
