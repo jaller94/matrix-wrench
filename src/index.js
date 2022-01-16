@@ -105,7 +105,7 @@ function WhoAmI({identity}) {
     `;
 }
 
-function IdentityEditor({identity, onAbort, onSave}) {
+function IdentityEditor({error, identity, onAbort, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
@@ -142,6 +142,7 @@ function IdentityEditor({identity, onAbort, onSave}) {
                     oninput=${useCallback(({ target }) => setAccessToken(target.value), [])}
                 />
             </div>
+            ${!!error && html`<p>${error}</p>`}
             <button type="button" onclick=${onAbort}>Abort</button>
             <button type="submit">Save</button>
             ${!!localStorage && html`<p>Use Incognito mode, if you don't want access token to be stored in localStorage!</p>`}
@@ -326,6 +327,7 @@ function IdentityPage() {
     const [identities, setIdentities] = useState(IDENTITIES);
     const [identity, setIdentity] = useState(null);
     const [editedIdentity, setEditedIdentity] = useState(null);
+    const [editingError, setEditingError] = useState(null);
 
     const handleDelete = useCallback((identity) => {
         const confirmed = confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
@@ -337,33 +339,43 @@ function IdentityPage() {
             } catch (error) {
                 console.warn('Failed to store identities in localStorage', error);
             }
-            return identities;
+            return newIdentities;
         });
     }, []);
 
     const handleSave = useCallback((identity) => {
         setIdentities(identities => {
             const newIdentities = [...identities];
-            const index = newIdentities.findIndex(obj => obj.name === editedIdentity.name);
+            if (!identity.name) {
+                setEditingError('Identity must have a name!');
+                return identities;
+            }
+            if (-1 !== newIdentities.findIndex(ident => ident.name === identity.name)) {
+                setEditingError('Identity name taken!');
+                return identities;
+            }
+            const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
             if (index === -1) {
                 // Add new identity
                 newIdentities.push(identity);
             } else {
                 // Replace existing identity
-                newIdentities.splice(index, 1, identity)
+                newIdentities.splice(index, 1, identity);
             }
             try {
                 localStorage.setItem('identities', JSON.stringify(newIdentities));
             } catch (error) {
                 console.warn('Failed to store identities in localStorage', error);
             }
-            return identities;
+            setEditedIdentity(null);
+            setEditingError(null);
+            return newIdentities;
         });
-        setEditedIdentity(null);
     }, [editedIdentity]);
 
     if (editedIdentity) {
         return html`<${IdentityEditor}
+            error=${editingError}
             identity=${editedIdentity}
             onAbort=${() => setEditedIdentity(null)}
             onSave=${handleSave}
