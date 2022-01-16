@@ -158,7 +158,8 @@ function ResponseStatus({status}) {
                 'network-log-request_status',
                 {
                     'network-log-request_status--success': status === 200,
-                    'network-log-request_status--error': status >= 400,
+                    'network-log-request_status--client-error': status >= 400 && status < 500,
+                    'network-log-request_status--server-error': status >= 500,
                     'network-log-request_status--network': status === null,
                     'network-log-request_status--pending': status === undefined,
                 },
