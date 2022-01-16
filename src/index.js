@@ -130,6 +130,7 @@ function IdentityEditor({error, identity, onAbort, onSave}) {
             <div>
                 <${FloatingLabelInput}
                     label="Server address (e.g. "https://matrix-client.matrix.org")"
+                    type="url"
                     required
                     value=${serverAddress}
                     oninput=${useCallback(({ target }) => setServerAddress(target.value), [])}
@@ -207,7 +208,6 @@ function NetworkLog() {
                 if (index === -1) {
                     return requests;
                 }
-                console.log(index, requests[index]);
                 const newRequest = {
                     ...requests[index],
                     status: event.detail.status || null,
@@ -350,7 +350,7 @@ function IdentityPage() {
                 setEditingError('Identity must have a name!');
                 return identities;
             }
-            if (-1 !== newIdentities.findIndex(ident => ident.name === identity.name)) {
+            if (!editedIdentity.name && -1 !== newIdentities.findIndex(ident => ident.name === identity.name)) {
                 setEditingError('Identity name taken!');
                 return identities;
             }
