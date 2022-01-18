@@ -3,12 +3,18 @@
 ## Next release
 * _Nothing in the pipeline_
 
+## v0.3.0 (2022-01-18)
+* Added: The network log now shows the HTTP response status.
+* Changed: The network log is limited to 500 entries.
+* Fixed: Don't allow two identities to have the same name. 
+* Fixed: Removed "Bearer undefined" for curl commands without authentication.
+
 ## v0.2.0 (2021-12-31)
-* Allow to add and remove room aliases.
-* Add "Who am I?" button to check access tokens.
-* Basic network log shows curl commands.
-* Change name from Matrix Navigator to Matrix Wrench.
-* New input field design with a floating label.
+* Added: Allow to add and remove room aliases.
+* Added: Add "Who am I?" button to check access tokens.
+* Added: Basic network log shows curl commands.
+* Changed: Change name from Matrix Navigator to Matrix Wrench.
+* Changed: New input field design with a floating label.
 
 ## v0.1.2
 * A global error catcher informs you of program failures.
