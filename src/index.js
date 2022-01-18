@@ -29,6 +29,8 @@ function alert(...args) {
     window.alert(...args);
 }
 
+const NETWORKLOG_MAX_ENTRIES = 500;
+
 let IDENTITIES = [];
 try {
     const identities = JSON.parse(localStorage.getItem('identities'));
@@ -46,7 +48,7 @@ const FloatingLabelInput = ({label, ...props}) => {
         <div class="floating-label-input">
             <input id=${id} ...${props} placeholder="Text"/>
             <label
-                for=${props.id || id}
+                for=${props.id ?? id}
             >${label}${props.required && html`<span class="floating-label-input_required" title="required"> *</span>`}</label>
         </div>
     `;
@@ -94,6 +96,7 @@ function WhoAmI({identity}) {
     return html`
         <button
             disabled=${busy}
+            style="width: 120px"
             type="button"
             onclick=${handleSubmit}
         >Who am I?</button>
@@ -164,7 +167,7 @@ function ResponseStatus({status}) {
                     'network-log-request_status--pending': status === undefined,
                 },
             )}
-        >${status === null ? 'NET' : status || '...'}</span>
+        >${status === null ? 'NET' : status ?? '...'}</span>
     `;
 }
 
@@ -188,19 +191,26 @@ function NetworkLogRequest({request}) {
 }
 
 function NetworkLog() {
+    const [isShortened, setIsShortened] = useState(false);
     const [requests, setRequests] = useState([]);
 
     useEffect(() => {
         const handleMatrixRequest = (event) => {
-            setRequests(requests => ([
-                ...requests,
-                {
-                    id: event.detail.requestId,
-                    init: event.detail.init,
-                    resource: event.detail.resource,
-                    sent: new Date(),
-                },
-            ]));
+            setRequests(requests => {
+                if (requests.length >= NETWORKLOG_MAX_ENTRIES) {
+                    setIsShortened(true);
+                }
+                
+                return [
+                    ...requests,
+                    {
+                        id: event.detail.requestId,
+                        init: event.detail.init,
+                        resource: event.detail.resource,
+                        sent: new Date(),
+                    },
+                ].slice(-NETWORKLOG_MAX_ENTRIES);
+            });
         };
 
         const handleMatrixResponse = (event) => {
@@ -231,6 +241,7 @@ function NetworkLog() {
 
     return html`
         <h1>Network Log</h1>
+        ${isShortened && html`<p>Older entries have been removed.</p>`}
         <ol>
             ${requests.map(request => (
                 html`<${NetworkLogRequest} key=${request.id} request=${request}/>`
@@ -324,6 +335,15 @@ function App() {
     `;
 }
 
+function AppHeader({backLabel = 'Back', children, onBack}) {
+    return html`
+        <div class="app-header">
+            ${onBack && html`<button class="app-header_back" type="button" onclick=${onBack}>${backLabel}</button>`}
+            <h1 class="app-header_label">${children}</h1>
+        </div>
+    `;
+}
+
 function IdentityPage() {
     const [identities, setIdentities] = useState(IDENTITIES);
     const [identity, setIdentity] = useState(null);
@@ -401,8 +421,10 @@ function IdentityPage() {
         `;
     }
     return html`
-        <h1>${identity.name ? `Acting as ${identity.name}` : 'No authentication'}</h1>
-        <button type="button" onclick=${() => setIdentity(null)}>Use different identity</button>
+        <${AppHeader}
+            backLabel="Switch identity"
+            onBack=${() => setIdentity(null)}
+        >${identity.name ?? 'No authentication'}</>
         ${identity.accessToken && html`
             <${WhoAmI} identity=${identity}/>
         `}

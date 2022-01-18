@@ -38,6 +38,17 @@ textarea {
     min-height: 300px;
 }
 
+.app-header {
+    display: flex;
+}
+
+.app-header_back {
+    height: 50px;
+    width: 70px;
+    margin-right: 1em;
+    align-self: center;
+}
+
 .page {
     display: flex;
     flex-wrap: wrap;
