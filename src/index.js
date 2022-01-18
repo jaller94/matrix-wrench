@@ -371,11 +371,13 @@ function IdentityPage() {
                 setEditingError('Identity must have a name!');
                 return identities;
             }
-            if (!editedIdentity.name && -1 !== newIdentities.findIndex(ident => ident.name === identity.name)) {
+            const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
+            // When creating a new identity or changing an existing's identity name,
+            // we check if the new name is already taken.
+            if ((!editedIdentity.name || !editedIdentity.name !== identity.name) && index !== -1) {
                 setEditingError('Identity name taken!');
                 return identities;
             }
-            const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
             if (index === -1) {
                 // Add new identity
                 newIdentities.push(identity);
