@@ -175,16 +175,16 @@ function NetworkLogRequest({request}) {
     return html`
         <li><details>
             <summary>
-                ${summarizeFetch(request.resource, request.init)}
+                <span class="network-log-request_summarized-fetch">${summarizeFetch(request.resource, request.init)}</span>
+                <span class="network-log-request_time">${request.sent.toLocaleTimeString()}</span>
                 <${ResponseStatus} status=${request.status}/>
-                ${request.sent.toLocaleTimeString()}
             </summary>
             <div>
-                Sent: ${request.sent.toLocaleString()}
+                <strong>Sent:</strong> ${request.sent.toLocaleString()}
             </div>
             <div>
-                Curl command:<br/>
-                <code>${toCurlCommand(request.resource, request.init)}</code>
+                <strong>Curl command:</strong>
+                <code class="network-log-request_curl">${toCurlCommand(request.resource, request.init)}</code>
             </div>
         </details></li>
     `;
@@ -242,7 +242,7 @@ function NetworkLog() {
     return html`
         <h1>Network Log</h1>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
-        <ol>
+        <ol class="network-log_list">
             ${requests.map(request => (
                 html`<${NetworkLogRequest} key=${request.id} request=${request}/>`
             ))}
@@ -298,9 +298,10 @@ function AliasResolver({identity}) {
             />
             <button type="submit">Resolve</button>
         </fieldset></form>
-        <label>Room id (read only)
-            <input value=${roomId} readonly/>
-        </label>
+        <div>
+            <strong>Room id:</strong>
+            <code style="border: 2px black dotted; user-select:all; margin-left: .5em">${roomId || 'N/A'}</code>
+        </div>
     `;
 }
 

@@ -17,6 +17,19 @@ details {
     border: 2px grey solid;
 }
 
+details {
+  border: 2px grey solid;
+  border-radius: .5em;
+  padding: .5em;
+  margin-bottom: .5em;
+  margin-right: .5em;
+}
+
+summary {
+  display: flex;
+  cursor: pointer;
+}
+
 summary>h2,
 summary>h3 {
     display: inline-block;
@@ -118,6 +131,26 @@ label {
     color: darkred;
 }
 
+.network-log_list {
+    max-width: 1200px;
+}
+
+.network-log-request_summarized-fetch {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
+.network-log-request_time {
+    white-space: nowrap;
+}
+
+.network-log-request_curl {
+    display: block;
+    border: 2px black dotted;
+}
+
 .network-log-request_status {
     background-color: lightslategray;
     border-radius: .5em;
@@ -127,7 +160,6 @@ label {
     height: 1em;
     margin: 0 .5em;
     padding: .3em .5em;
-    width: 2em;
 }
 
 .network-log-request_status--success {
