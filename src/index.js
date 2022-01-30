@@ -631,6 +631,12 @@ function RoomPage({identity, roomId}) {
                     <${AliasActions} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
+            <div class="section">
+                <details>
+                    <summary><h2>Media (Synapse Admin)</h2></summary>
+                    <${MediaExplorer} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
         </div>
     `;
 }
@@ -827,6 +833,21 @@ function MemberList({members}) {
     `;
 }
 
+function MediaList({ list }) {
+    if (list.length === 0) {
+        return html`
+            <p>There's no media in this list.</p>
+        `;
+    }
+    return html`
+        <ul>
+            ${list.map(mediaUrl => {
+                return html`<li key=${mediaUrl}>${mediaUrl}</li>`;
+            })}
+        </ul>
+    `;
+}
+
 function MembersExplorer({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [members, setMembers] = useState(null);
@@ -888,6 +909,39 @@ function MembersExplorer({identity, roomId}) {
             <details>
                 <summary><h3>Banned (${groups.ban.length})</h3></summary>
                 <${MemberList} members=${groups.ban} />
+            </details>
+        `)}
+    `;
+}
+
+function MediaExplorer({ identity, roomId }) {
+    const [busy, setBusy] = useState(false);
+    const [media, setMedia] = useState(null);
+
+    const handleGet = useCallback(async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        try {
+            const data = await getMediaByRoom(identity, roomId);
+            setMedia(data.chunk);
+        } finally {
+            setBusy(false);
+        }
+    }, [identity, roomId]);
+
+    return html`
+        <form onsubmit=${handleGet}><fieldset disabled=${busy}>
+            <button type="submit">Get media</button>
+        </fieldset></form>
+        ${media && (html`
+            <details open>
+                <summary><h3>Local (${media.local.length})</h3></summary>
+                <${MediaList} list=${media.local} />
+            </details>
+            <details open>
+                <summary><h3>Remote (${media.remote.length})</h3></summary>
+                <${MediaList} list=${media.remote} />
             </details>
         `)}
     `;
