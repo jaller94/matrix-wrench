@@ -26,30 +26,9 @@ export async function doRequest(resource, init) {
         }));
         return {};
     }
+    let response, data, isNotJson = false;
     try {
-        const response = await fetch(resource, init);
-        if (!response.ok) {
-            let error;
-            try {
-                error = new MatrixError(await response.json());
-            } catch {
-                throw Error(`Request failed: ${response}`);
-            }
-            window.dispatchEvent(new CustomEvent('matrix-response', {
-                detail: {
-                    requestId,
-                    status: response.status,
-                },
-            }));
-            throw error;
-        }
-        window.dispatchEvent(new CustomEvent('matrix-response', {
-            detail: {
-                requestId,
-                status: response.status,
-            },
-        }));
-        return await response.json();
+        response = await fetch(resource, init);
     } catch (error) {
         window.dispatchEvent(new CustomEvent('matrix-response', {
             detail: {
@@ -58,6 +37,25 @@ export async function doRequest(resource, init) {
         }));
         throw error;
     }
+    try {
+        data = await response.json();
+    } catch (error) {
+        isNotJson = true;
+    }
+    window.dispatchEvent(new CustomEvent('matrix-response', {
+        detail: {
+            isNotJson,
+            requestId,
+            status: response.status,
+        },
+    }));
+    if (isNotJson) {
+        throw new Error(`Didn't receive valid JSON: ${resource}`);
+    }
+    if (!response.ok) {
+        throw new MatrixError(data);
+    }
+    return data;
 }
 
 /**
