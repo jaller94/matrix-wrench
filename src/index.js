@@ -154,7 +154,17 @@ function IdentityEditor({error, identity, onAbort, onSave}) {
     `;
 }
 
-function ResponseStatus({status}) {
+function ResponseStatus({invalid, status}) {
+    let label = status;
+    let title = `HTTP ${status}`;
+    if (!status) {
+        label = 'NET';
+        title = 'Network error';
+    }
+    if (invalid) {
+        label = '!{}';
+        title = 'Invalid JSON response';
+    }
     return html`
         <span
             class=${classnames(
@@ -162,12 +172,13 @@ function ResponseStatus({status}) {
                 {
                     'network-log-request_status--success': status === 200,
                     'network-log-request_status--client-error': status >= 400 && status < 500,
-                    'network-log-request_status--server-error': status >= 500,
+                    'network-log-request_status--server-error': status >= 500 || invalid,
                     'network-log-request_status--network': status === null,
                     'network-log-request_status--pending': status === undefined,
                 },
             )}
-        >${status === null ? 'NET' : status ?? '...'}</span>
+            title=${title}
+        >${label}</span>
     `;
 }
 
@@ -176,7 +187,7 @@ function NetworkLogRequest({request}) {
         <li><details>
             <summary>
                 ${summarizeFetch(request.resource, request.init)}
-                <${ResponseStatus} status=${request.status}/>
+                <${ResponseStatus} invalid=${request.isNotJson} status=${request.status}/>
                 ${request.sent.toLocaleTimeString()}
             </summary>
             <div>
@@ -243,7 +254,7 @@ function NetworkLog() {
         <h1>Network Log</h1>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
         <ol>
-            ${requests.map(request => (
+            ${requests.reverse().map(request => (
                 html`<${NetworkLogRequest} key=${request.id} request=${request}/>`
             ))}
         </ol>
@@ -320,6 +331,7 @@ function About() {
 // function DesignTest() {
 //     return html`
 //         <${ResponseStatus} status=${undefined}/>
+//         <${ResponseStatus} invalid=${true} status=${undefined}/>
 //         <${ResponseStatus} status=${null}/>
 //         <${ResponseStatus} status=${200}/>
 //         <${ResponseStatus} status=${403}/>
