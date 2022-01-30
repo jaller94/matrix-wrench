@@ -1,7 +1,8 @@
 # Changelog for Matrix Wrench
 
 ## Next release
-* _Nothing in the pipeline_
+* Changed: Design of all collapsible components 
+* Changed: Network Log design
 
 ## v0.3.0 (2022-01-18)
 * Added: The network log now shows the HTTP response status.
