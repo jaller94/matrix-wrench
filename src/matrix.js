@@ -26,7 +26,9 @@ export async function doRequest(resource, init) {
         }));
         return {};
     }
-    let response, data, isNotJson = false;
+    let response;
+    let data;
+    let isNotJson = false;
     try {
         response = await fetch(resource, init);
     } catch (error) {
