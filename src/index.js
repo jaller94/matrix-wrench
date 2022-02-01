@@ -132,7 +132,7 @@ function IdentityEditor({error, identity, onAbort, onSave}) {
             </div>
             <div>
                 <${FloatingLabelInput}
-                    label="Server address (e.g. "https://matrix-client.matrix.org")"
+                    label="Server address (e.g. https://matrix-client.matrix.org)"
                     type="url"
                     required
                     value=${serverAddress}
@@ -253,7 +253,7 @@ function NetworkLog() {
     return html`
         <h1>Network Log</h1>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
-        <ol>
+        <ol class="network-log_list">
             ${requests.reverse().map(request => (
                 html`<${NetworkLogRequest} key=${request.id} request=${request}/>`
             ))}

@@ -1,6 +1,8 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+
+## v0.4.0 (2022-02-01)
 * Changed: Design of all collapsible components 
 * Changed: Network Log design
 * Fixed: All errors showed up as network errors in the Network Log
