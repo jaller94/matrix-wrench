@@ -1,8 +1,14 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+
+## v0.4.1 (2022-02-04)
+* Fixed: Pending requests showed as network errors
+
+## v0.4.0 (2022-02-01)
 * Changed: Design of all collapsible components 
 * Changed: Network Log design
+* Fixed: All errors showed up as network errors in the Network Log
 
 ## v0.3.0 (2022-01-18)
 * Added: The network log now shows the HTTP response status.
