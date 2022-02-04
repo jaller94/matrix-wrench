@@ -155,11 +155,14 @@ function IdentityEditor({error, identity, onAbort, onSave}) {
 }
 
 function ResponseStatus({invalid, status}) {
-    let label = status;
-    let title = `HTTP ${status}`;
-    if (!status) {
+    let label = '...';
+    let title = 'Fetching data…';
+    if (status === null) {
         label = 'NET';
         title = 'Network error';
+    } else if (status) {
+        label = status;
+        title = `HTTP ${status}`;
     }
     if (invalid) {
         label = '!{}';

@@ -1,7 +1,7 @@
 {
   "name": "matrix-wrench",
   "description": "Webapp to tweak Matrix rooms",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "scripts": {
     "lint": "eslint 'src/**/*.js'",
     "prepare": "mkdir -p src/node_modules/htm/preact/ && cp node_modules/htm/preact/standalone.module.js src/node_modules/htm/preact/",
