@@ -25,10 +25,45 @@ details {
   margin-right: .5em;
 }
 
+
+/*
+ Details Summary marker.
+ Adapted from https://codepen.io/MoritzGiessmann/pen/PobErJB
+*/
 summary {
-  display: flex;
+  display: block;
+  padding-left: 2.2rem;
+  position: relative;
   cursor: pointer;
 }
+
+summary:before {
+  content: '';
+  border-width: .4rem;
+  border-style: solid;
+  border-color: transparent transparent transparent #000;
+  position: absolute;
+  top: calc(50% - .4rem);
+  left: 1rem;
+  transform: rotate(0);
+  transform-origin: .2rem 50%;
+  transition: .25s transform ease;
+}
+
+details[open] > summary:before {
+  transform: rotate(90deg);
+}
+
+details summary::-webkit-details-marker {
+  display:none;
+}
+
+details > ul {
+  padding-bottom: 1rem;
+  margin-bottom: 0;
+}
+
+/**/
 
 summary>h2,
 summary>h3 {
@@ -53,6 +88,19 @@ textarea {
 
 .app-header {
     display: flex;
+    background-color: #eee;
+    margin: 0 -6px 24px;
+    padding: 0 6px;
+    height: 50px;
+    box-shadow: gray 0 -6px 12px 4px;
+}
+
+.app-header h1 {
+    margin: 0;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .app-header_back {
@@ -60,6 +108,8 @@ textarea {
     width: 70px;
     margin-right: 1em;
     align-self: center;
+    font-size: 2em;
+    font-weight: bold;
 }
 
 .page {
@@ -133,6 +183,10 @@ label {
 
 .network-log_list {
     max-width: 1200px;
+}
+
+.network-log-request_header {
+  display: flex;
 }
 
 .network-log-request_summarized-fetch {

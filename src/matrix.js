@@ -72,7 +72,7 @@ export function toCurlCommand(resource, init) {
         cmd += `-X ${init.method} `;
     }
     if (init.body) {
-        cmd += `--data '${init.method.replace(/'/g, '\\\'')}' `;
+        cmd += `--data '${init.body.replace(/'/g, '\\\'')}' `;
     }
     for (const [key, value] of Object.entries(init.headers ?? {})) {
         cmd += `-H '${key}: ${value.replace(/'/g, '\\\'')}' `;
@@ -178,7 +178,7 @@ export async function forgetRoom(identity, roomId) {
             ...(identity.accessToken && {
                 Authorization: `Bearer ${identity.accessToken}`,
             }),
-        }
+        },
     });
 }
 
@@ -195,7 +195,7 @@ export async function getJoinedMembers(identity, roomId) {
             ...(identity.accessToken && {
                 Authorization: `Bearer ${identity.accessToken}`,
             }),
-        }
+        },
     });
 }
 
@@ -211,7 +211,25 @@ export async function getJoinedRooms(identity) {
             ...(identity.accessToken && {
                 Authorization: `Bearer ${identity.accessToken}`,
             }),
-        }
+        },
+    });
+}
+
+/**
+ * Gets a list of known media in a room. However, it only shows media from unencrypted events or rooms.
+ * Synapse Admin API
+ * @param {Object} identity
+ * @param {string} roomId
+ * @returns {Promise<Object>}
+ */
+export async function getMediaByRoom(identity, roomId) {
+    return doRequest(`${identity.serverAddress}/_synapse/admin/v1/room/${encodeURIComponent(roomId)}/media`, {
+        method: 'GET',
+        headers: {
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
+        },
     });
 }
 
@@ -228,7 +246,7 @@ export async function getMembers(identity, roomId) {
             ...(identity.accessToken && {
                 Authorization: `Bearer ${identity.accessToken}`,
             }),
-        }
+        },
     });
 }
 
@@ -254,7 +272,7 @@ export async function getState(identity, roomId, type, stateKey) {
             ...(identity.accessToken && {
                 Authorization: `Bearer ${identity.accessToken}`,
             }),
-        }
+        },
     });
 }
 
@@ -292,7 +310,7 @@ export async function joinRoom(identity, roomId) {
             ...(identity.accessToken && {
                 Authorization: `Bearer ${identity.accessToken}`,
             }),
-        }
+        },
     });
 }
 
@@ -333,7 +351,7 @@ export async function leaveRoom(identity, roomId) {
             ...(identity.accessToken && {
                 Authorization: `Bearer ${identity.accessToken}`,
             }),
-        }
+        },
     });
 }
 
@@ -350,7 +368,7 @@ export async function resolveAlias(identity, roomAlias) {
             ...(identity.accessToken && {
                 Authorization: `Bearer ${identity.accessToken}`,
             }),
-        }
+        },
     });
 }
 

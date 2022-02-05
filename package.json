@@ -1,12 +1,13 @@
 {
   "name": "matrix-wrench",
   "description": "Webapp to tweak Matrix rooms",
-  "version": "0.4.1",
+  "version": "0.5.0",
+  "type": "module",
   "scripts": {
     "lint": "eslint 'src/**/*.js'",
     "prepare": "mkdir -p src/node_modules/htm/preact/ && cp node_modules/htm/preact/standalone.module.js src/node_modules/htm/preact/",
     "start": "python -m http.server --directory src 1234",
-    "test": "jest"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "author": "Christian Paul",
   "license": "Apache-2.0",
