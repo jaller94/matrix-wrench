@@ -11,6 +11,7 @@ import {
     deleteRoomAlias,
     doRequest,
     getJoinedRooms,
+    getMediaByRoom,
     getMembers,
     getState,
     inviteUser,
@@ -65,10 +66,14 @@ const FloatingLabelInput = ({label, ...props}) => {
 //     `;
 // }
 
-function CustomButton({ identity, label, method, url, variables }) {
-    const handlePress = useCallback(async event => {
+function CustomForm({ body, children, identity, method, requiresConfirmation, url, variables, ...props }) {
+    const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
+        if (requiresConfirmation) {
+            const confirmed = confirm(`This is a high-risk action!\nAre you sure?`);
+            if (!confirmed) return;
+        }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
         try {
             await doRequest(actualUrl, {
@@ -78,12 +83,45 @@ function CustomButton({ identity, label, method, url, variables }) {
                         Authorization: `Bearer ${identity.accessToken}`,
                     }),
                 },
+                ...(body && {
+                    body: typeof body === 'string' ? body : JSON.stringify(body),
+                }),
             });
         } catch (error) {
-            console.error(error);
             alert(error);
         }
-    }, [identity, method, url, variables]);
+    }, [body, identity, method, requiresConfirmation, url, variables]);
+
+    return html`
+        <form onsubmit=${handleSubmit} ...${props}>${children}</form>
+    `;
+}
+
+function CustomButton({ body, identity, label, method, requiresConfirmation, url, variables }) {
+    const handlePress = useCallback(async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (requiresConfirmation) {
+            const confirmed = confirm(`This is a high-risk action and may not be reversible!\nAre you sure?`);
+            if (!confirmed) return;
+        }
+        let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
+        try {
+            await doRequest(actualUrl, {
+                method,
+                headers: {
+                    ...(identity.accessToken && {
+                        Authorization: `Bearer ${identity.accessToken}`,
+                    }),
+                },
+                ...(body && {
+                    body: typeof body === 'string' ? body : JSON.stringify(body),
+                }),
+            });
+        } catch (error) {
+            alert(error);
+        }
+    }, [body, identity, method, requiresConfirmation, url, variables]);
 
     return html`
         <button type="button" onclick=${handlePress}>${label}</button>
@@ -120,6 +158,38 @@ function RoomActions({ identity, roomId }) {
     `;
 }
 
+function MakeRoomAdminButton({ identity, roomId }) {
+    const [userId, setUserId] = useState('');
+
+    const body = useMemo(() => ({
+        user_id: userId,
+    }), [userId]);
+
+    const variables = useMemo(() => ({
+        roomId,
+    }), [roomId]);
+
+    return html`
+        <${CustomForm}
+            body=${body}
+            identity=${identity}
+            method="POST"
+            requiresConfirmation=${true}
+            url="/_synapse/admin/v1/rooms/!{roomId}/make_room_admin"
+            variables=${variables}
+        >
+            <${FloatingLabelInput}
+                label="User"
+                pattern="@.+:.+"
+                required
+                title="A user id, e.g. @foo:matrix.org"
+                value=${userId}
+                oninput=${useCallback(({ target }) => setUserId(target.value), [])}
+            />
+            <button>Make them a room admin</button>
+        </>
+    `;
+}
 
 function WhoAmI({identity}) {
     const [busy, setBusy] = useState(false);
@@ -409,8 +479,9 @@ function App() {
 function AppHeader({backLabel = 'Back', children, onBack}) {
     return html`
         <div class="app-header">
-            ${onBack && html`<button class="app-header_back" type="button" onclick=${onBack}>${backLabel}</button>`}
+            ${onBack && html`<button aria-label=${backLabel} class="app-header_back" type="button" onclick=${onBack}>${'<'}</button>`}
             <h1 class="app-header_label">${children}</h1>
+            <button>Log</button>
         </div>
     `;
 }
@@ -478,7 +549,7 @@ function IdentityPage() {
     if (!identity) {
         return html`
             <main>
-                <h1>Select an identity</h1>
+                <${AppHeader}>Identities</>
                 <button
                     type="button"
                     onclick=${() => setIdentity({ serverAddress: 'https://matrix-client.matrix.org' })}
@@ -565,14 +636,14 @@ function RoomSelector({identity}) {
                 roomId = (await resolveAlias(identity, room)).room_id;
             } catch (error) {
                 console.warn(error);
-                const input = roomRef.current.base.querySelector('input');
+                // const input = roomRef.current.base.querySelector('input');
                 const message = `Couldn't resolve alias! ${error}`;
-                if (input) {
-                    input.setCustomValidity(`Couldn't resolve alias! ${error}`);
-                    input.reportValidity();
-                } else {
+                // if (input) {
+                //     input.setCustomValidity(`Couldn't resolve alias! ${error}`);
+                //     input.reportValidity();
+                // } else {
                     alert(message);
-                }
+                // }
                 return;
             } finally {
                 setBusy(false);
@@ -650,6 +721,12 @@ function RoomPage({identity, roomId}) {
                 <details open>
                     <summary><h2>Aliases</h2></summary>
                     <${AliasActions} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
+            <div class="section">
+                <details>
+                    <summary><h2>Synapse Admin</h2></summary>
+                    <${MakeRoomAdminButton} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
             <div class="section">
@@ -777,7 +854,7 @@ function StateExplorer({identity, roomId}) {
             const data = await getState(identity, roomId, type || undefined, stateKey || undefined);
             setData(JSON.stringify(data, null, 2));
         } catch (error) {
-            console.error(error);
+            console.warn(error);
             setData(error.message);
         } finally {
             setBusy(false);
@@ -808,7 +885,6 @@ function StateExplorer({identity, roomId}) {
             if (!confirmed) return;
             await setState(identity, roomId, type, stateKey || undefined, content);
         } catch (error) {
-            console.error(error);
             alert(error);
         } finally {
             setBusy(false);
@@ -880,6 +956,8 @@ function MembersExplorer({identity, roomId}) {
         try {
             const data = await getMembers(identity, roomId);
             setMembers([...data.chunk]);
+        } catch (error) {
+            alert(error);
         } finally {
             setBusy(false);
         }
@@ -946,6 +1024,8 @@ function MediaExplorer({ identity, roomId }) {
         try {
             const data = await getMediaByRoom(identity, roomId);
             setMedia(data.chunk);
+        } catch (error) {
+            alert(error);
         } finally {
             setBusy(false);
         }

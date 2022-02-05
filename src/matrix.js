@@ -72,7 +72,7 @@ export function toCurlCommand(resource, init) {
         cmd += `-X ${init.method} `;
     }
     if (init.body) {
-        cmd += `--data '${init.method.replace(/'/g, '\\\'')}' `;
+        cmd += `--data '${init.body.replace(/'/g, '\\\'')}' `;
     }
     for (const [key, value] of Object.entries(init.headers ?? {})) {
         cmd += `-H '${key}: ${value.replace(/'/g, '\\\'')}' `;

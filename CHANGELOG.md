@@ -1,6 +1,11 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+* Added: Make someone a room admin via the Synapse Admin API
+* Added: List media in a room via the Synapse Admin API
+* Changed: Redesined the 
+* Fixed: Curl commands with `--data` value had it set to the HTTP method
+* Fixed: Ordering flickering for pending network requests
 
 ## v0.4.1 (2022-02-04)
 * Fixed: Pending requests showed as network errors
