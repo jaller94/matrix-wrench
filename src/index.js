@@ -314,9 +314,11 @@ function NetworkLogRequest({request}) {
     return html`
         <li><details>
             <summary>
-                <span class="network-log-request_summarized-fetch">${summarizeFetch(request.resource, request.init)}</span>
-                <span class="network-log-request_time">${request.sent.toLocaleTimeString()}</span>
-                <${ResponseStatus} invalid=${request.isNotJson} status=${request.status}/>
+                <div class="network-log-request_header">
+                    <span class="network-log-request_summarized-fetch">${summarizeFetch(request.resource, request.init)}</span>
+                    <span class="network-log-request_time">${request.sent.toLocaleTimeString()}</span>
+                    <${ResponseStatus} invalid=${request.isNotJson} status=${request.status}/>
+                </div>
             </summary>
             <div>
                 <strong>Sent:</strong> ${request.sent.toLocaleString()}
@@ -481,7 +483,6 @@ function AppHeader({backLabel = 'Back', children, onBack}) {
         <div class="app-header">
             ${onBack && html`<button aria-label=${backLabel} class="app-header_back" type="button" onclick=${onBack}>${'<'}</button>`}
             <h1 class="app-header_label">${children}</h1>
-            <button>Log</button>
         </div>
     `;
 }
@@ -572,7 +573,7 @@ function IdentityPage() {
         ${identity.accessToken && html`
             <${WhoAmI} identity=${identity}/>
         `}
-        <h2>Alias -> Room ID</h2>
+        <h2>Alias to Room ID</h2>
         <${AliasResolver} identity=${identity}/>
         ${identity.accessToken && html`
             <h2>Room management</h2>
