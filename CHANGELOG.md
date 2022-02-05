@@ -1,6 +1,8 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+
+## v0.5.0 (2022-02-05)
 * Added: Make someone a room admin via the Synapse Admin API
 * Added: List media in a room via the Synapse Admin API
 * Changed: Redesined the 
