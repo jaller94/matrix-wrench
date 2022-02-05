@@ -1,6 +1,7 @@
 import { html, render, useCallback, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
     classnames,
+    fillInVariables,
     uniqueId,
 } from './helper.js';
 import {
@@ -8,14 +9,12 @@ import {
     banUser,
     createRoomAlias,
     deleteRoomAlias,
-    forgetRoom,
+    doRequest,
     getJoinedRooms,
     getMembers,
     getState,
     inviteUser,
-    joinRoom,
     kickUser,
-    leaveRoom,
     resolveAlias,
     setState,
     summarizeFetch,
@@ -65,6 +64,62 @@ const FloatingLabelInput = ({label, ...props}) => {
 //         </header>
 //     `;
 // }
+
+function CustomButton({ identity, label, method, url, variables }) {
+    const handlePress = useCallback(async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
+        try {
+            await doRequest(actualUrl, {
+                method,
+                headers: {
+                    ...(identity.accessToken && {
+                        Authorization: `Bearer ${identity.accessToken}`,
+                    }),
+                },
+            });
+        } catch (error) {
+            console.error(error);
+            alert(error);
+        }
+    }, [identity, method, url, variables]);
+
+    return html`
+        <button type="button" onclick=${handlePress}>${label}</button>
+    `;
+}
+
+function RoomActions({ identity, roomId }) {
+    const variables = useMemo(() => ({
+        roomId,
+    }), [roomId]);
+
+    return html`
+        <${CustomButton}
+            identity=${identity}
+            label="Join"
+            method="POST"
+            url="/_matrix/client/r0/rooms/!{roomId}/join"
+            variables=${variables}
+        />
+        <${CustomButton}
+            identity=${identity}
+            label="Leave"
+            method="POST"
+            url="/_matrix/client/r0/rooms/!{roomId}/leave"
+            variables=${variables}
+        />
+        <${CustomButton}
+            identity=${identity}
+            label="Forget"
+            method="POST"
+            url="/_matrix/client/r0/rooms/!{roomId}/forget"
+            variables=${variables}
+        />
+    `;
+}
+
 
 function WhoAmI({identity}) {
     const [busy, setBusy] = useState(false);
@@ -257,7 +312,7 @@ function NetworkLog() {
         <h1>Network Log</h1>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
         <ol class="network-log_list">
-            ${requests.reverse().map(request => (
+            ${requests.map(request => (
                 html`<${NetworkLogRequest} key=${request.id} request=${request}/>`
             ))}
         </ol>
@@ -564,50 +619,13 @@ function RoomSelector({identity}) {
 }
 
 function RoomPage({identity, roomId}) {
-    const handleForget = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        try {
-            await forgetRoom(identity, roomId);
-        } catch (error) {
-            console.error(error);
-            alert(error);
-        }
-    }, [identity, roomId]);
-    
-    const handleJoin = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        try {
-            await joinRoom(identity, roomId);
-        } catch (error) {
-            console.error(error);
-            alert(error);
-        }
-    }, [identity, roomId]);
-
-    const handleLeave = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        const answer = confirm(`Leave room ${roomId}?`);
-        if (!answer) return;
-        try {
-            await leaveRoom(identity, roomId);
-        } catch (error) {
-            console.error(error);
-            alert(error);
-        }
-    }, [identity, roomId]);
-
     return html`
         <h3>${roomId}</h3>
         <div class="page">
             <div class="section">
                 <details open>
                     <summary><h2>Membership</h2></summary>
-                    <button type="button" onclick=${handleJoin}>Join</button>
-                    <button type="button" onclick=${handleLeave}>Leave</button>
-                    <button type="button" onclick=${handleForget}>Forget</button>
+                    <${RoomActions} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
             <div class="section">
