@@ -71,7 +71,7 @@ function CustomForm({ body, children, identity, method, requiresConfirmation, ur
         event.preventDefault();
         event.stopPropagation();
         if (requiresConfirmation) {
-            const confirmed = confirm(`This is a high-risk action!\nAre you sure?`);
+            const confirmed = confirm('This is a high-risk action!\nAre you sure?');
             if (!confirmed) return;
         }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
@@ -102,7 +102,7 @@ function CustomButton({ body, identity, label, method, requiresConfirmation, url
         event.preventDefault();
         event.stopPropagation();
         if (requiresConfirmation) {
-            const confirmed = confirm(`This is a high-risk action and may not be reversible!\nAre you sure?`);
+            const confirmed = confirm('This is a high-risk action!\nAre you sure?');
             if (!confirmed) return;
         }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;

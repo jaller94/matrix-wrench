@@ -19,14 +19,15 @@ export function classnames(...arr) {
  * Takes a string and fills placeholders with variables values.
  * e.g. "I like !{softwareProject}." could become "I like Matrix."
  */
-const variablePattern = /!{(.+?)}/;
+const variablePattern = /!{(?<key>.+?)}/;
 export function fillInVariables(template, variables) {
-    let match = template.match(variablePattern);
+    let result = template;
+    let match = result.match(variablePattern);
     while (match) {
-        template = template.slice(0, match.index) + encodeURIComponent(variables[match[1]]) + template.slice(match.index + match[0].length);
-        match = template.match(variablePattern);
+        result = result.slice(0, match.index) + encodeURIComponent(variables[match.groups.key]) + result.slice(match.index + match[0].length);
+        match = result.match(variablePattern);
     }
-    return template;
+    return result;
 }
 
 let lastId = 0;
