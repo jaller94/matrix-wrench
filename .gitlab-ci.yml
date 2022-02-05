@@ -8,9 +8,10 @@ cache:
 before_script:
 - npm ci
 
-lint:
+test:
   script:
   - npm run lint
+  - npm run test
 
 pages:
   script:
