@@ -5,7 +5,7 @@
 ## v0.5.0 (2022-02-05)
 * Added: Make someone a room admin via the Synapse Admin API
 * Added: List media in a room via the Synapse Admin API
-* Changed: Redesined the 
+* Changed: Changed the design of the Network Log some more 
 * Fixed: Curl commands with `--data` value had it set to the HTTP method
 * Fixed: Ordering flickering for pending network requests
 
