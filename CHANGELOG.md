@@ -1,6 +1,7 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+* Fixed: Clear validation errors after pressing Cancel in the Identity Editor
 
 ## v0.5.0 (2022-02-05)
 * Added: Make someone a room admin via the Synapse Admin API

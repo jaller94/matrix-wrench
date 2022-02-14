@@ -233,7 +233,7 @@ function WhoAmI({identity}) {
     `;
 }
 
-function IdentityEditor({error, identity, onAbort, onSave}) {
+function IdentityEditor({error, identity, onCancel, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
@@ -272,7 +272,7 @@ function IdentityEditor({error, identity, onAbort, onSave}) {
                 />
             </div>
             ${!!error && html`<p>${error}</p>`}
-            <button type="button" onclick=${onAbort}>Abort</button>
+            <button type="button" onclick=${onCancel}>Cancel</button>
             <button type="submit">Save</button>
             ${!!localStorage && html`<p>Use Incognito mode, if you don't want access token to be stored in localStorage!</p>`}
         </form>
@@ -493,6 +493,11 @@ function IdentityPage() {
     const [editedIdentity, setEditedIdentity] = useState(null);
     const [editingError, setEditingError] = useState(null);
 
+    const handleCancel = useCallback(() => {
+        setEditingError(null);
+        setEditedIdentity(null);
+    }, []);
+
     const handleDelete = useCallback((identity) => {
         const confirmed = confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
         if (!confirmed) return;
@@ -543,7 +548,7 @@ function IdentityPage() {
         return html`<${IdentityEditor}
             error=${editingError}
             identity=${editedIdentity}
-            onAbort=${() => setEditedIdentity(null)}
+            onCancel=${handleCancel}
             onSave=${handleSave}
         />`;
     }
