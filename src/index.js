@@ -245,11 +245,13 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
     }, [accessToken, name, onSave, serverAddress]);
 
     return html`
-        <h1>Identity Editor</h1>
+        <${AppHeader}
+            onBack=${onCancel}
+        >Identity Editor</>
         <form class="identity-editor-form" onsubmit=${handleSubmit}>
             <div>
                 <${FloatingLabelInput}
-                    label="Name (just an identifier within this app)"
+                    label="Name"
                     required
                     value=${name}
                     oninput=${useCallback(({ target }) => setName(target.value), [])}
