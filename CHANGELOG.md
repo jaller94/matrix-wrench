@@ -2,11 +2,15 @@
 
 ## Next release
 
+## v0.5.2 (2022-02-15)
+* Fixed: Don't allow two identities to have the same name.
+* Internal: Added some integration tests.
+
 ## v0.5.1 (2022-02-15)
-* Changed: Design of the Identity Selector
-* Fixed: Editing an identity showed "Identity name taken!"
-* Fixed: Clear validation errors after pressing Cancel in the Identity Editor
-* Fixed: The heading of the Network Log is no longer a level 1 heading
+* Changed: Redesigned the Identity Selector and App Header.
+* Fixed: Editing an identity showed "Identity name taken!".
+* Fixed: Clear validation errors after pressing Cancel in the Identity Editor.
+* Fixed: The heading of the Network Log is no longer a level 1 heading.
 
 ## v0.5.0 (2022-02-05)
 * Added: Make someone a room admin via the Synapse Admin API
@@ -21,7 +25,7 @@
 ## v0.4.0 (2022-02-01)
 * Changed: Design of all collapsible components 
 * Changed: Network Log design
-* Fixed: All errors showed up as network errors in the Network Log
+* Fixed: All errors showed up as network errors in the Network Log.
 
 ## v0.3.0 (2022-01-18)
 * Added: The network log now shows the HTTP response status.

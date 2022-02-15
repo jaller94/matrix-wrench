@@ -252,6 +252,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
             <div>
                 <${FloatingLabelInput}
                     label="Name"
+                    name="name"
                     required
                     value=${name}
                     oninput=${useCallback(({ target }) => setName(target.value), [])}
@@ -260,6 +261,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
             <div>
                 <${FloatingLabelInput}
                     label="Server address (e.g. https://matrix-client.matrix.org)"
+                    name="url"
                     type="url"
                     required
                     value=${serverAddress}
@@ -269,6 +271,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
             <div>
                 <${FloatingLabelInput}
                     label="Access token"
+                    name="accessToken"
                     value=${accessToken}
                     oninput=${useCallback(({ target }) => setAccessToken(target.value), [])}
                 />
@@ -398,8 +401,8 @@ function IdentitySelector({identities, onDelete, onEdit, onSelect}) {
         ${identities.map(identity => {
             return html`<li key=${identity.name}>
                 <button class="identity-page_name" type="button" onclick=${() => onSelect(identity)}>${identity.name}</button>
-                <button type="button" title="Edit" onclick=${() => onEdit(identity)}>✏️</button>
-                <button type="button" title="Delete" onclick=${() => onDelete(identity)}>❌</button>
+                <button type="button" title="Edit identity ${identity.name}" onclick=${() => onEdit(identity)}>✏️</button>
+                <button type="button" title="Delete identity ${identity.name}" onclick=${() => onDelete(identity)}>❌</button>
             </li>`;
         })}
     `;
@@ -525,10 +528,8 @@ function IdentityPage() {
             }
             const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
             const conflicts = newIdentities.findIndex(ident => ident.name === identity.name) !== -1;
-            // Either we create a new identity, don't change the name or check that the name isn't taken.
-            if (!(!editedIdentity.name || editedIdentity.name === identity.name || !conflicts)) {
-                console.log(!editedIdentity.name, editedIdentity.name === identity.name, !conflicts);
-                console.log(!(!editedIdentity.name || editedIdentity.name === identity.name || !conflicts));
+            // The name may only conflict if this is the name we're editing.
+            if (conflicts && editedIdentity.name !== identity.name) {
                 setEditingError('Identity name taken!');
                 return identities;
             }

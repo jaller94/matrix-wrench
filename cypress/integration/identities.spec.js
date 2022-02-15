@@ -1,0 +1,92 @@
+describe('Identity Management', () => {
+    it('Allows to add an identity without an access token', () => {
+        cy.visit('http://localhost:1234');
+        cy.contains('Add identity').click();
+        cy.get('input[name=name]').type('jaller94');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('form').submit();
+        cy.contains('jaller94').click();
+        cy.contains('Alias to Room ID');
+    });
+    it('Allows to add an identity with an access token', () => {
+        cy.visit('http://localhost:1234');
+        cy.get('h1').should('contain', 'Identities');
+        cy.contains('Add identity').click();
+        cy.get('h1').should('contain', 'Identity Editor');
+        cy.get('input[name=name]').type('jaller94');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('input[name=accessToken]').type('syn_abc');
+        cy.get('form').submit();
+        cy.contains('jaller94').click();
+        cy.get('h1').should('contain', 'jaller94');
+        cy.contains('Room management');
+    });
+    it('Rejects an identity with a duplicate name', () => {
+        cy.visit('http://localhost:1234');
+        cy.contains('Add identity').click();
+        cy.get('input[name=name]').type('jaller94');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('form').submit();
+        cy.contains('Add identity').click();
+        cy.get('input[name=name]').type('jaller94');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identity Editor');
+        cy.contains('Identity name taken!');
+    });
+    it('Rejects renaming an identity when it creates a conflict', () => {
+        cy.visit('http://localhost:1234');
+        cy.contains('Add identity').click();
+        cy.get('input[name=name]').type('jaller94');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('form').submit();
+        cy.contains('Add identity').click();
+        cy.get('input[name=name]').type('jaller95');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identities');
+        cy.get('[title="Edit identity jaller95"]').click();
+        cy.get('input[name=name]').clear().type('jaller94');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identity Editor');
+        cy.contains('Identity name taken!');
+    });
+    it('Allows to edit the name of an identity', () => {
+        cy.visit('http://localhost:1234');
+        cy.contains('Add identity').click();
+        cy.get('input[name=name]').type('jaller94');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identities');
+        cy.get('[title="Edit identity jaller94"]').click();
+        cy.get('input[name=name]').clear().type('jaller95');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identities');
+        cy.contains('jaller95');
+    });
+    it('Allows to edit the name of an identity', () => {
+        cy.visit('http://localhost:1234');
+        cy.contains('Add identity').click();
+        cy.get('input[name=name]').type('jaller94');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identities');
+        cy.get('[title="Edit identity jaller94"]').click();
+        cy.get('input[name=url]').clear().type('https://chrpaul.de/2');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identities');
+    });
+    it('Allows to edit the access token of an identity', () => {
+        cy.visit('http://localhost:1234');
+        cy.contains('Add identity').click();
+        cy.get('input[name=name]').type('jaller94');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('input[name=accessToken]').type('syn_abc');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identities');
+        cy.get('[title="Edit identity jaller94"]').click();
+        cy.get('input[name=accessToken]').clear().type('syn_123');
+        cy.get('form').submit();
+        cy.get('h1').should('contain', 'Identities');
+    });
+});
