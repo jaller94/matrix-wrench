@@ -1,7 +1,9 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+* Changed: Design of the Identity Selector
 * Fixed: Clear validation errors after pressing Cancel in the Identity Editor
+* Fixed: The heading of the Network Log is no longer a level 1 heading
 
 ## v0.5.0 (2022-02-05)
 * Added: Make someone a room admin via the Synapse Admin API

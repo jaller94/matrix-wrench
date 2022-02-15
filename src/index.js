@@ -383,7 +383,7 @@ function NetworkLog() {
     }, []);
 
     return html`
-        <h1>Network Log</h1>
+        <h2>Network Log</h2>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
         <ol class="network-log_list">
             ${requests.map(request => (
@@ -394,19 +394,14 @@ function NetworkLog() {
 }
 
 function IdentitySelector({identities, onDelete, onEdit, onSelect}) {
-    if (identities.length === 0) {
-        return html`<p>No identities entered so far.</p>`;
-    }
     return html`
-        <ul>
-            ${identities.map(identity => {
-                return html`<li key=${identity.name}>
-                    <button type="button" onclick=${() => onSelect(identity)}>${identity.name}</button>
-                    <button type="button" title="Edit" onclick=${() => onEdit(identity)}>✏️</button>
-                    <button type="button" title="Delete" onclick=${() => onDelete(identity)}>❌</button>
-                </li>`;
-            })}
-        </ul>
+        ${identities.map(identity => {
+            return html`<li key=${identity.name}>
+                <button class="identity-page_name" type="button" onclick=${() => onSelect(identity)}>${identity.name}</button>
+                <button type="button" title="Edit" onclick=${() => onEdit(identity)}>✏️</button>
+                <button type="button" title="Delete" onclick=${() => onDelete(identity)}>❌</button>
+            </li>`;
+        })}
     `;
 }
 
@@ -476,7 +471,9 @@ function App() {
     // <${Header} />
     return html`
         <${IdentityPage} />
-        <${NetworkLog} />
+        <aside>
+            <${NetworkLog} />
+        </aside>
     `;
 }
 
@@ -494,6 +491,10 @@ function IdentityPage() {
     const [identity, setIdentity] = useState(null);
     const [editedIdentity, setEditedIdentity] = useState(null);
     const [editingError, setEditingError] = useState(null);
+
+    const handleAddIdentity = useCallback(() => {
+        setEditedIdentity({});
+    }, []);
 
     const handleCancel = useCallback(() => {
         setEditingError(null);
@@ -558,14 +559,19 @@ function IdentityPage() {
         return html`
             <main>
                 <${AppHeader}>Identities</>
-                <button
-                    type="button"
-                    onclick=${() => setIdentity({ serverAddress: 'https://matrix-client.matrix.org' })}
-                >
-                    No auth on matrix.org
-                </button>
-                <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
-                <button type="button" onclick=${() => setEditedIdentity({})}>Add identity</button>
+                <ul class="identity-page_list">
+                    <li>
+                        <button
+                            class="identity-page_name"
+                            type="button"
+                            onclick=${() => setIdentity({ serverAddress: 'https://matrix-client.matrix.org' })}
+                        >
+                            No auth on matrix.org
+                        </button>
+                    </li>
+                    <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
+                </ul>
+                <button type="button" onclick=${handleAddIdentity}>Add identity</button>
             </main>
             <aside>
                 <${About} />
@@ -577,15 +583,17 @@ function IdentityPage() {
             backLabel="Switch identity"
             onBack=${() => setIdentity(null)}
         >${identity.name ?? 'No authentication'}</>
-        ${identity.accessToken && html`
-            <${WhoAmI} identity=${identity}/>
-        `}
-        <h2>Alias to Room ID</h2>
-        <${AliasResolver} identity=${identity}/>
-        ${identity.accessToken && html`
-            <h2>Room management</h2>
-            <${RoomSelector} identity=${identity}/>
-        `}
+        <main>
+            ${identity.accessToken && html`
+                <${WhoAmI} identity=${identity}/>
+            `}
+            <h2>Alias to Room ID</h2>
+            <${AliasResolver} identity=${identity}/>
+            ${identity.accessToken && html`
+                <h2>Room management</h2>
+                <${RoomSelector} identity=${identity}/>
+            `}
+        </main>
     `;
 }
 

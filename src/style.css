@@ -121,6 +121,26 @@ textarea {
     width: 500px;
 }
 
+.identity-page_list {
+    width: 100%;
+    list-style: none;
+    max-width: 500px;
+    padding-left: 0;
+}
+
+.identity-page_list>li {
+    display: flex;
+    margin-bottom: .3em;
+}
+
+.identity-page_list>li>.identity-page_name {
+    text-align: left;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
 .identity-editor-form {
     max-width: 500px;
 }
