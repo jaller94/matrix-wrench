@@ -516,6 +516,7 @@ function IdentityPage() {
     }, []);
 
     const handleSave = useCallback((identity) => {
+        setEditingError(null);
         setIdentities(identities => {
             const newIdentities = [...identities];
             if (!identity.name) {
@@ -523,9 +524,11 @@ function IdentityPage() {
                 return identities;
             }
             const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
-            // When creating a new identity or changing an existing's identity name,
-            // we check if the new name is already taken.
-            if ((!editedIdentity.name || !editedIdentity.name !== identity.name) && index !== -1) {
+            const conflicts = newIdentities.findIndex(ident => ident.name === identity.name) !== -1;
+            // Either we create a new identity, don't change the name or check that the name isn't taken.
+            if (!(!editedIdentity.name || editedIdentity.name === identity.name || !conflicts)) {
+                console.log(!editedIdentity.name, editedIdentity.name === identity.name, !conflicts);
+                console.log(!(!editedIdentity.name || editedIdentity.name === identity.name || !conflicts));
                 setEditingError('Identity name taken!');
                 return identities;
             }

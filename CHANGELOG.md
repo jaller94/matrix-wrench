@@ -2,6 +2,7 @@
 
 ## Next release
 * Changed: Design of the Identity Selector
+* Fixed: Editing an identity showed "Identity name taken!"
 * Fixed: Clear validation errors after pressing Cancel in the Identity Editor
 * Fixed: The heading of the Network Log is no longer a level 1 heading
 
