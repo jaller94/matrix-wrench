@@ -1,6 +1,8 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+
+## v0.5.1 (2022-02-15)
 * Changed: Design of the Identity Selector
 * Fixed: Editing an identity showed "Identity name taken!"
 * Fixed: Clear validation errors after pressing Cancel in the Identity Editor
