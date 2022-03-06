@@ -18,11 +18,11 @@ details {
 }
 
 details {
-  border: 2px grey solid;
-  border-radius: .5em;
-  padding: .5em;
-  margin-bottom: .5em;
-  margin-right: .5em;
+    border: 2px grey solid;
+    border-radius: .5em;
+    padding: .5em;
+    margin-bottom: .5em;
+    margin-right: .5em;
 }
 
 
@@ -31,36 +31,36 @@ details {
  Adapted from https://codepen.io/MoritzGiessmann/pen/PobErJB
 */
 summary {
-  display: block;
-  padding-left: 2.2rem;
-  position: relative;
-  cursor: pointer;
+    display: block;
+    padding-left: 2.2rem;
+    position: relative;
+    cursor: pointer;
 }
 
 summary:before {
-  content: '';
-  border-width: .4rem;
-  border-style: solid;
-  border-color: transparent transparent transparent #000;
-  position: absolute;
-  top: calc(50% - .4rem);
-  left: 1rem;
-  transform: rotate(0);
-  transform-origin: .2rem 50%;
-  transition: .25s transform ease;
+    content: '';
+    border-width: .4rem;
+    border-style: solid;
+    border-color: transparent transparent transparent #000;
+    position: absolute;
+    top: calc(50% - .4rem);
+    left: 1rem;
+    transform: rotate(0);
+    transform-origin: .2rem 50%;
+    transition: .25s transform ease;
 }
 
 details[open] > summary:before {
-  transform: rotate(90deg);
+    transform: rotate(90deg);
 }
 
 details summary::-webkit-details-marker {
-  display:none;
+    display:none;
 }
 
 details > ul {
-  padding-bottom: 1rem;
-  margin-bottom: 0;
+    padding-bottom: 1rem;
+    margin-bottom: 0;
 }
 
 /**/
@@ -84,6 +84,31 @@ textarea {
 
     resize: vertical;
     min-height: 300px;
+}
+
+fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.card {
+    box-shadow: 0 1px 1px 0 rgba(66, 66, 66, 0.08), 0 1px 3px 1px rgba(66, 66, 66, 0.16);
+    width: 500px;
+    border: 2px solid grey;
+    border-radius: .5em;
+    padding: .5em;
+}
+
+.card>h2 {
+    margin-top: 0;
+}
+
+button.primary {
+    background-color: #6716ec;
+    border-color: #6716ec;
+    color: white;
+    border-radius: 3px;
 }
 
 .app-header {
