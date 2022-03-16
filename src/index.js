@@ -43,7 +43,7 @@ try {
 }
 
 const FloatingLabelInput = ({label, ...props}) => {
-    const [id] = useState(uniqueId());
+    const [id] = useState(uniqueId);
     return html`
         <div class="floating-label-input">
             <input id=${id} ...${props} placeholder="Text"/>
@@ -1069,15 +1069,3 @@ function MediaExplorer({ identity, roomId }) {
 }
 
 render(html`<${App} />`, document.body);
-
-// if ('serviceWorker' in navigator) {
-//     window.addEventListener('load', function () {
-//         navigator.serviceWorker.register('/sw.js').then(function (registration) {
-//             // Registration was successful
-//             console.log('ServiceWorker registration successful with scope: ', registration.scope);
-//         }, function (err) {
-//             // registration failed :(
-//             console.log('ServiceWorker registration failed: ', err);
-//         });
-//     });
-// }
