@@ -138,21 +138,28 @@ function RoomActions({ identity, roomId }) {
             identity=${identity}
             label="Join"
             method="POST"
-            url="/_matrix/client/r0/rooms/!{roomId}/join"
+            url="/_matrix/client/v3/rooms/!{roomId}/join"
             variables=${variables}
         />
         <${CustomButton}
             identity=${identity}
             label="Leave"
             method="POST"
-            url="/_matrix/client/r0/rooms/!{roomId}/leave"
+            url="/_matrix/client/v3/rooms/!{roomId}/leave"
             variables=${variables}
         />
         <${CustomButton}
             identity=${identity}
             label="Forget"
             method="POST"
-            url="/_matrix/client/r0/rooms/!{roomId}/forget"
+            url="/_matrix/client/v3/rooms/!{roomId}/forget"
+            variables=${variables}
+        />
+        <${CustomButton}
+            identity=${identity}
+            label="Knock"
+            method="POST"
+            url="/_matrix/client/v3/knock/!{roomId}"
             variables=${variables}
         />
     `;
@@ -483,7 +490,7 @@ function App() {
 function AppHeader({backLabel = 'Back', children, onBack}) {
     return html`
         <div class="app-header">
-            ${onBack && html`<button aria-label=${backLabel} class="app-header_back" type="button" onclick=${onBack}>${'<'}</button>`}
+            ${onBack && html`<button aria-label=${backLabel} class="app-header_back" title=${backLabel} type="button" onclick=${onBack}>${'<'}</button>`}
             <h1 class="app-header_label">${children}</h1>
         </div>
     `;
@@ -587,36 +594,54 @@ function IdentityPage() {
             backLabel="Switch identity"
             onBack=${() => setIdentity(null)}
         >${identity.name ?? 'No authentication'}</>
-        <main>
+        <div style="display: flex; flex-direction: column">
             ${identity.accessToken && html`
-                <${WhoAmI} identity=${identity}/>
+                <div class="card">
+                    <${WhoAmI} identity=${identity}/>
+                </div>
             `}
-            <h2>Alias to Room ID</h2>
-            <${AliasResolver} identity=${identity}/>
-            ${identity.accessToken && html`
-                <h2>Room management</h2>
+            ${identity.accessToken ? html`
                 <${RoomSelector} identity=${identity}/>
+            ` : html`
+                <div class="card">
+                    <h2>Alias to Room ID</h2>
+                    <${AliasResolver} identity=${identity}/>
+                </div>
             `}
-        </main>
+        </div>
     `;
 }
 
-function RoomList({roomIds}) {
+function RoomList({roomIds, onSelectRoom}) {
+    const handleSelectRoom = useCallback(event => {
+        event.preventDefault();
+        event.stopPropagation();
+        onSelectRoom(event.target.dataset.roomId);
+    }, [onSelectRoom]);
+ 
     if (roomIds.length === 0) {
         return html`
             <p>There's no room in this list.</p>
         `;
     }
     return html`
-        <ul>
-            ${roomIds.map(roomId => {
-                return html`<li key=${roomId}>${roomId}</li>`;
-            })}
+        <ul style="overflow-x: auto">
+            ${roomIds.map(roomId => html`
+                <li key=${roomId}>
+                    ${!onSelectRoom ? roomId : html`
+                        <button
+                            type="button"
+                            data-room-id=${roomId}
+                            onclick=${handleSelectRoom}
+                        >${roomId}</button>
+                    `}
+                </li>
+            `)}
         </ul>
     `;
 }
 
-function JoinedRoomList({identity}) {
+function JoinedRoomList({identity, onSelectRoom}) {
     const [roomIds, setRoomIds] = useState(null);
     const [busy, setBusy] = useState(false);
 
@@ -634,17 +659,45 @@ function JoinedRoomList({identity}) {
 
     return html`
         <h3>Joined rooms</h3>
-        <button disabled=${busy} type="button" onclick=${handleGet}>Query</button>
-        ${roomIds && html`<${RoomList} roomIds=${roomIds}/>`}
+        <button disabled=${busy} type="button" onclick=${handleGet}>Query joined rooms</button>
+        ${roomIds && html`<${RoomList} roomIds=${roomIds} onSelectRoom=${onSelectRoom}/>`}
     `;
 }
 
 function RoomSelector({identity}) {
     const [room, setRoom] = useState('');
     const [roomId, setRoomId] = useState(null);
+    const [resolvedRoomId, setResolvedRoomId] = useState(null);
     const [recentRooms, setRecentRooms] = useState([]);
     const [busy, setBusy] = useState(false);
-    const roomRef = useRef();
+
+    const handleSelectRoom = useCallback(roomId => {
+        setRoomId(roomId);
+        setRecentRooms(recentRooms => ([
+            roomId,
+            ...recentRooms.filter(r => r !== roomId),
+        ]).slice(0, 4));
+    }, []);
+
+    const handleResolveAlias = useCallback(async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        let roomId = room;
+        if (room.startsWith('#')) {
+            setBusy(true);
+            try {
+                roomId = (await resolveAlias(identity, room)).room_id;
+            } catch (error) {
+                console.warn(error);
+                const message = `Couldn't resolve alias! ${error}`;
+                alert(message);
+                return;
+            } finally {
+                setBusy(false);
+            }
+        }
+        setResolvedRoomId(roomId);
+    }, [identity, room]);
 
     const handleSubmit = useCallback(async event => {
         event.preventDefault();
@@ -656,20 +709,15 @@ function RoomSelector({identity}) {
                 roomId = (await resolveAlias(identity, room)).room_id;
             } catch (error) {
                 console.warn(error);
-                // const input = roomRef.current.base.querySelector('input');
                 const message = `Couldn't resolve alias! ${error}`;
-                // if (input) {
-                //     input.setCustomValidity(`Couldn't resolve alias! ${error}`);
-                //     input.reportValidity();
-                // } else {
-                    alert(message);
-                // }
+                alert(message);
                 return;
             } finally {
                 setBusy(false);
             }
         }
         setRoomId(roomId);
+        setResolvedRoomId(roomId);
         setRecentRooms(recentRooms => ([
             roomId,
             ...recentRooms.filter(r => r !== roomId),
@@ -682,30 +730,42 @@ function RoomSelector({identity}) {
 
     if (roomId) {
         return html`
+            <hr/>
             <button onclick=${handleResetRoomId}>Switch to a different room</button>
             <${RoomPage} identity=${identity} roomId=${roomId}/>
         `;
     }
 
     return html`
-        <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
-                label="Room alias or ID"
-                pattern="[!#].+:.+"
-                ref=${roomRef}
-                required
-                value=${room}
-                oninput=${({target}) => setRoom(target.value)}
-            />
-            <button type="submit">Go</button>
-        </fieldset></form>
-        <aside>
-            ${recentRooms.length > 0 && html`
-                <h3>Recent rooms</h3>
-                <${RoomList} roomIds=${recentRooms}/>
-            `}
-            <${JoinedRoomList} identity=${identity}/>
-        </aside>
+        <div class="card">
+            <h2>Room management</h2>
+            <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
+                <${FloatingLabelInput}
+                    label="Room alias or ID"
+                    pattern="[!#].+:.+"
+                    required
+                    value=${room}
+                    oninput=${({target}) => setRoom(target.value)}
+                />
+                <button
+                    disabled=${!room.startsWith('#')}
+                    type="button"
+                    onclick=${handleResolveAlias}
+                >Resolve alias</button>
+                <button type="submit" class="primary">Open details</button>
+            </fieldset></form>
+            <div>
+                <strong>Room id:</strong>
+                <code style="border: 2px black dotted; user-select:all; margin-left: .5em">${resolvedRoomId || 'N/A'}</code>
+            </div>
+            <aside>
+                ${recentRooms.length > 0 && html`
+                    <h3>Recent rooms</h3>
+                    <${RoomList} roomIds=${recentRooms} onSelectRoom=${handleSelectRoom}/>
+                `}
+                <${JoinedRoomList} identity=${identity} onSelectRoom=${handleSelectRoom}/>
+            </aside>
+        </div>
     `;
 }
 

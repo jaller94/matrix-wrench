@@ -1,10 +1,14 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+* Added: Many room IDs are now clickable to open the room page.
+* Added: Knock button
+* Changed: Use client version 3 for most API calls instead of `/r0/`
+* Changed: Combined "Alias to Room ID" and "Room management"
 
 ## v0.5.2 (2022-02-15)
 * Fixed: Don't allow two identities to have the same name.
-* Internal: Added some integration tests.
+* Internal: Added some integration tests using Cypress.
 
 ## v0.5.1 (2022-02-15)
 * Changed: Redesigned the Identity Selector and App Header.
