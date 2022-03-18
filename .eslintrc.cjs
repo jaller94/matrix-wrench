@@ -5,7 +5,8 @@ module.exports = {
     },
     'extends': [
         'eslint:recommended',
-        'preact'
+        'preact',
+        'plugin:cypress/recommended'
     ],
     'parserOptions': {
         'ecmaVersion': 12,
