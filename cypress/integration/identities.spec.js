@@ -64,7 +64,7 @@ describe('Identity Management', () => {
         cy.get('h1').should('contain', 'Identities');
         cy.contains('jaller95');
     });
-    it('Allows to edit the name of an identity', () => {
+    it('Allows to edit the url of an identity', () => {
         cy.visit('http://localhost:1234');
         cy.contains('Add identity').click();
         cy.get('input[name=name]').type('jaller94');

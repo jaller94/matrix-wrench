@@ -1,9 +1,11 @@
 # Changelog for Matrix Wrench
 
-## Next release
+## v0.6.0 (2022-03-18)
+*Putin started the war.*
+
 * Added: Add Synapse Admin buttons to delete a room and recursively delete a space
-* Added: Many room IDs are now clickable to open the room page.
-* Added: Add Knock button to knock on a roomm
+* Added: Many room IDs are now clickable and open the respective room page
+* Added: Add Knock button to knock on a room
 * Changed: Use client version 3 for most API calls instead of `/r0/`
 * Changed: Combined "Alias to Room ID" and "Room management"
 

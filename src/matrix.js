@@ -420,7 +420,7 @@ export async function whoAmI(identity) {
  * Get a list of client features and versions supported by the server.
  * @returns {Promise<Object>}
  */
-export async function clientVersions() {
+export async function clientVersions(identity) {
     return doRequest(`${identity.serverAddress}/_matrix/client/versions`, {
         method: 'GET',
     });

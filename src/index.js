@@ -1,4 +1,4 @@
-import { html, render, useCallback, useEffect, useMemo, useRef, useState } from './node_modules/htm/preact/standalone.module.js';
+import { html, render, useCallback, useEffect, useMemo, useState } from './node_modules/htm/preact/standalone.module.js';
 import {
     classnames,
     fillInVariables,
@@ -628,13 +628,13 @@ function RoomList({roomIds, onSelectRoom}) {
         <ul style="overflow-x: auto">
             ${roomIds.map(roomId => html`
                 <li key=${roomId}>
-                    ${!onSelectRoom ? roomId : html`
+                    ${onSelectRoom ? html`
                         <button
                             type="button"
                             data-room-id=${roomId}
                             onclick=${handleSelectRoom}
                         >${roomId}</button>
-                    `}
+                    ` : roomId}
                 </li>
             `)}
         </ul>
