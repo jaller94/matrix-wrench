@@ -103,7 +103,7 @@ export function summarizeFetch(resource, init) {
  * @param {Object} identity
  * @param {string} roomId
  * @param {string} userId
- * @param {string?} reason
+ * @param {string=} reason
  * @returns {Promise<Object>}
  */
 export async function banUser(identity, roomId, userId, reason) {
@@ -237,8 +237,8 @@ export async function getMembers(identity, roomId) {
  * Get the state of a room.
  * @param {Object} identity
  * @param {string} roomId
- * @param {string?} type
- * @param {string?} stateKey
+ * @param {string=} type
+ * @param {string=} stateKey
  * @returns {Promise<Object>}
  */
 export async function getState(identity, roomId, type, stateKey) {
@@ -285,7 +285,7 @@ export async function inviteUser(identity, roomId, userId) {
  * @param {Object} identity
  * @param {string} roomId
  * @param {string} userId
- * @param {string?} reason
+ * @param {string=} reason
  * @returns {Promise<Object>}
  */
 export async function kickUser(identity, roomId, userId, reason) {
@@ -327,7 +327,7 @@ export async function resolveAlias(identity, roomAlias) {
  * @param {string} roomId
  * @param {string} type
  * @param {Object} content
- * @param {string?} transactionId
+ * @param {string=} transactionId
  * @returns {Promise<Object>}
  */
 export async function sendEvent(identity, roomId, type, content, transactionId) {
@@ -352,7 +352,7 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
  * @param {Object} identity
  * @param {string} roomId
  * @param {string} type
- * @param {string?} stateKey
+ * @param {string=} stateKey
  * @param {Object} content
  * @returns {Promise<Object>}
  */
