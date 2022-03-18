@@ -1,5 +1,8 @@
 # Changelog for Matrix Wrench
 
+## v0.6.1 (2022-03-18)
+* Added: Progress indicator for recursively deleting a space
+
 ## v0.6.0 (2022-03-18)
 *Putin started the war.*
 

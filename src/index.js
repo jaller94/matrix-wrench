@@ -202,7 +202,7 @@ function WhoAmI({identity}) {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState(null);
 
-    const handleSubmit = useCallback(async (event) => {
+    const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -803,9 +803,26 @@ async function deleteRoom(identity, roomId, body = {}) {
 }
 
 function SynapseAdminDelete({ identity, roomId }) {
+    const [busy, setBusy] = useState(false);
+    const [progress, setProgress] = useState(undefined);
+    const [total, setTotal] = useState(undefined);
+
     const [block, setBlock] = useState(false);
     const [purge, setPurge] = useState(true);
     const [forcePurge, setForcePurge] = useState(false);
+
+    const handleSubmit = useCallback((event) => {
+        // Just ignore submit. We have two buttons - no submit button.
+        event.preventDefault();
+        event.stopPropagation();   
+    }, []);
+
+    const handleBusy = useCallback(newBusy => {
+        if (!newBusy) {
+            setProgress(undefined);
+        }
+        setBusy(newBusy);
+    }, []);
 
     const handleBlockClick = useCallback(() => setBlock(value => !!value), []);
     const handlePurgeClick = useCallback(() => setPurge(value => !!value), []);
@@ -822,69 +839,86 @@ function SynapseAdminDelete({ identity, roomId }) {
     }), [roomId]);
 
     return html`
-        <ul class="checkbox-list">
-            <li><label>
-                <input
-                    checked=${block}
-                    type="checkbox"
-                    onChange=${handleBlockClick}
-                />
-                Block in the future
-            </label></li>
-            <li><label>
-                <input
-                    checked=${purge}
-                    type="checkbox"
-                    onChange=${handlePurgeClick}
-                />
-                Purge from database
-            </label></li>
-            <li><label>
-                <input
-                    checked=${forcePurge}
-                    type="checkbox"
-                    onChange=${handleForcePurgeClick}
-                />
-                Purge even if local users cannot be removed
-            </label></li>
-        </ul>
-        <${CustomButton}
-            body=${body}
-            identity=${identity}
-            label="Delete room"
-            method="DELETE"
-            requiresConfirmation
-            url="/_synapse/admin/v2/rooms/!{roomId}"
-            variables=${variables}
-        />
-        <${DeleteSpaceRecursivelyButton}
-            body=${body}
-            identity=${identity}
-            roomId=${roomId}
-        />
+        <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
+            <ul class="checkbox-list">
+                <li><label>
+                    <input
+                        checked=${block}
+                        type="checkbox"
+                        onChange=${handleBlockClick}
+                    />
+                    Block in the future
+                </label></li>
+                <li><label>
+                    <input
+                        checked=${purge}
+                        type="checkbox"
+                        onChange=${handlePurgeClick}
+                    />
+                    Purge from database
+                </label></li>
+                <li><label>
+                    <input
+                        checked=${forcePurge}
+                        type="checkbox"
+                        onChange=${handleForcePurgeClick}
+                    />
+                    Purge even if local users cannot be removed
+                </label></li>
+            </ul>
+            ${busy && html`
+                <div>
+                    <progress max=${total} value=${progress}>Deleted ${progress} of ${total} rooms.</progress>
+                </div>
+            `}
+            <${CustomButton}
+                body=${body}
+                identity=${identity}
+                label="Delete room"
+                method="DELETE"
+                requiresConfirmation
+                url="/_synapse/admin/v2/rooms/!{roomId}"
+                variables=${variables}
+            />
+            <${DeleteSpaceRecursivelyButton}
+                body=${body}
+                identity=${identity}
+                roomId=${roomId}
+                onBusy=${handleBusy}
+                onProgress=${setProgress}
+                onTotal=${setTotal}
+            />
+        </fieldset></form>
     `;
 }
 
-function DeleteSpaceRecursivelyButton({ body, identity, roomId }) {
-    const handlePress = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        let confirmed = confirm('Fetching a list of all subspaces and rooms can take many minutes.\nAre you ok to wait?');
-        if (!confirmed) return;
-        const rooms = await getRoomsInASpace(identity, roomId, -1);
-        const roomIds = new Set(rooms.map(r => r.roomId));
-        roomIds.add(roomId);
-        confirmed = confirm(`Found ${roomIds.size} rooms (includes spaces) to delete.\nAre you sure you want to DELETE ALL?`);
-        if (!confirmed) return;
-        for (const roomId of roomIds.values()) {
-            try {
-                await deleteRoom(identity, roomId, body);
-            } catch (error) {
-                let confirmed = confirm(`Failed to delete room ${roomId}.\n${error.error || error.message}\nContinue?`);
-                if (!confirmed) return;
+function DeleteSpaceRecursivelyButton({ body, identity, roomId, onBusy, onProgress, onTotal }) {
+    const handlePress = useCallback(async() => {
+        onBusy(true);
+        try {
+            let confirmed = confirm('Fetching a list of all subspaces and rooms can take many minutes.\nAre you ok to wait?');
+            if (!confirmed) return;
+            const rooms = await getRoomsInASpace(identity, roomId, -1);
+            const roomIds = new Set(rooms.map(r => r.roomId));
+            roomIds.add(roomId);
+            onTotal(roomIds.size);
+            confirmed = confirm(`Found ${roomIds.size} rooms (includes spaces) to delete.\nAre you sure you want to DELETE ALL?`);
+            if (!confirmed) return;
+            let progress = 0;
+            for (const roomId of roomIds.values()) {
+                try {
+                    await deleteRoom(identity, roomId, body);
+                } catch (error) {
+                    let confirmed = confirm(`Failed to delete room ${roomId}.\n${error.error || error.message}\nContinue?`);
+                    if (!confirmed) return;
+                }
+                progress += 1;
+                onProgress(progress);
             }
+        } finally {
+            onBusy(false);
         }
-    }, [body, identity, roomId]);
+    }, [body, identity, roomId, onBusy, onProgress, onTotal]);
 
     return html`
         <button type="button" onclick=${handlePress}>Delete space recursively</button>
