@@ -193,7 +193,7 @@ function MakeRoomAdminButton({ identity, roomId }) {
                 value=${userId}
                 oninput=${useCallback(({ target }) => setUserId(target.value), [])}
             />
-            <button>Make them a room admin</button>
+            <button>Make user a room admin</button>
         </>
     `;
 }
@@ -769,6 +769,128 @@ function RoomSelector({identity}) {
     `;
 }
 
+async function getRoomsInASpaceInner(identity, roomId, maxDepth, roomMap) {
+    if (maxDepth === 0) return;
+    const state = await getState(identity, roomId);
+    const childEvents = state.filter(event => event.type === 'm.space.child' && Array.isArray(event.content.via));
+    for (const childEvent of childEvents) {
+        if (roomMap.has(childEvent.state_key)) {
+            continue;
+        }
+        roomMap.set(childEvent.state_key, {
+            roomId: childEvent.state_key,
+        });
+        await getRoomsInASpaceInner(identity, childEvent.state_key, maxDepth - 1, roomMap);
+    }
+}
+
+async function getRoomsInASpace(identity, roomId, maxDepth = 1) {
+    const roomMap = new Map();
+    await getRoomsInASpaceInner(identity, roomId, maxDepth, roomMap);
+    return [...roomMap.values()];
+}
+
+async function deleteRoom(identity, roomId, body = {}) {
+    await doRequest(`${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
+        method: 'DELETE',
+        headers: {
+            ...(identity.accessToken && {
+                Authorization: `Bearer ${identity.accessToken}`,
+            }),
+        },
+        body: JSON.stringify(body),
+    });
+}
+
+function SynapseAdminDelete({ identity, roomId }) {
+    const [block, setBlock] = useState(false);
+    const [purge, setPurge] = useState(true);
+    const [forcePurge, setForcePurge] = useState(false);
+
+    const handleBlockClick = useCallback(() => setBlock(value => !!value), []);
+    const handlePurgeClick = useCallback(() => setPurge(value => !!value), []);
+    const handleForcePurgeClick = useCallback(() => setForcePurge(value => !!value), []);
+
+    const body = useMemo(() => ({
+        block,
+        purge,
+        force_purge: forcePurge,
+    }), [block, purge, forcePurge]);
+
+    const variables = useMemo(() => ({
+        roomId,
+    }), [roomId]);
+
+    return html`
+        <ul class="checkbox-list">
+            <li><label>
+                <input
+                    checked=${block}
+                    type="checkbox"
+                    onChange=${handleBlockClick}
+                />
+                Block in the future
+            </label></li>
+            <li><label>
+                <input
+                    checked=${purge}
+                    type="checkbox"
+                    onChange=${handlePurgeClick}
+                />
+                Purge from database
+            </label></li>
+            <li><label>
+                <input
+                    checked=${forcePurge}
+                    type="checkbox"
+                    onChange=${handleForcePurgeClick}
+                />
+                Purge even if local users cannot be removed
+            </label></li>
+        </ul>
+        <${CustomButton}
+            body=${body}
+            identity=${identity}
+            label="Delete room"
+            method="DELETE"
+            requiresConfirmation
+            url="/_synapse/admin/v2/rooms/!{roomId}"
+            variables=${variables}
+        />
+        <${DeleteSpaceRecursivelyButton}
+            body=${body}
+            identity=${identity}
+            roomId=${roomId}
+        />
+    `;
+}
+
+function DeleteSpaceRecursivelyButton({ body, identity, roomId }) {
+    const handlePress = useCallback(async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        let confirmed = confirm('Fetching a list of all subspaces and rooms can take many minutes.\nAre you ok to wait?');
+        if (!confirmed) return;
+        const rooms = await getRoomsInASpace(identity, roomId, -1);
+        const roomIds = new Set(rooms.map(r => r.roomId));
+        roomIds.add(roomId);
+        confirmed = confirm(`Found ${roomIds.size} rooms (includes spaces) to delete.\nAre you sure you want to DELETE ALL?`);
+        if (!confirmed) return;
+        for (const roomId of roomIds.values()) {
+            try {
+                await deleteRoom(identity, roomId, body);
+            } catch (error) {
+                let confirmed = confirm(`Failed to delete room ${roomId}.\n${error.error || error.message}\nContinue?`);
+                if (!confirmed) return;
+            }
+        }
+    }, [body, identity, roomId]);
+
+    return html`
+        <button type="button" onclick=${handlePress}>Delete space recursively</button>
+    `;
+}
+
 function RoomPage({identity, roomId}) {
     return html`
         <h3>${roomId}</h3>
@@ -807,6 +929,9 @@ function RoomPage({identity, roomId}) {
                 <details>
                     <summary><h2>Synapse Admin</h2></summary>
                     <${MakeRoomAdminButton} identity=${identity} roomId=${roomId}/>
+                    <hr/>
+                    <h3>Remove users and delete room</h3>
+                    <${SynapseAdminDelete} identity=${identity} roomId=${roomId} />
                 </details>
             </div>
             <div class="section">

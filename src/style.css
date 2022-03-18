@@ -146,6 +146,11 @@ button.primary {
     width: 500px;
 }
 
+.checkbox-list {
+    list-style: none;
+    padding: 0;
+}
+
 .identity-page_list {
     width: 100%;
     list-style: none;
