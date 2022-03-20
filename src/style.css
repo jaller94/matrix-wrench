@@ -146,6 +146,48 @@ button.primary {
     width: 500px;
 }
 
+.reg-exp-toggle-button {
+    position: relative;
+    cursor: pointer;
+}
+
+.reg-exp-toggle-button>input {
+    opacity: 0;
+}
+
+.reg-exp-toggle-button>span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+    content: '.*';
+    text-align: center;
+    user-select: none;
+    border-radius: .3rem;
+}
+
+.reg-exp-toggle-button:focus-within>span {
+    outline: 1px green solid;
+}
+
+.reg-exp-toggle-button:hover>span {
+    background: lightgray;
+}
+
+.reg-exp-toggle-button>input:checked+span {
+    background: rgb(105, 193, 223);
+}
+
+.selectable-list {
+    list-style: none;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    height: 500px;
+}
+
 .checkbox-list {
     list-style: none;
     padding: 0;
