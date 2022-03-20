@@ -1,5 +1,8 @@
 # Changelog for Matrix Wrench
 
+## Next release
+* Added: The room lists now have external matrix.to links
+
 ## v0.6.1 (2022-03-18)
 * Added: Progress indicator for recursively deleting a space
 
