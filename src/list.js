@@ -24,15 +24,14 @@ export function ListWithSearch({items: originalItems = []}) {
 
     const handleSearchTermInput = useCallback(event => {
         setSearchTerm(event.target.value);
-    });
+    }, []);
 
     const filteredItems = useMemo(() => {
         if (isRegExp) {
             const regExp = new RegExp(searchTerm);
             return items.filter(item => regExp.test(item.id))
-        } else {
-            return items.filter(item => item.id.includes(searchTerm));
         }
+        return items.filter(item => item.id.includes(searchTerm));
     }, [isRegExp, items, searchTerm]);
 
     const handleSelectAllChange = useCallback(event => {
@@ -53,11 +52,11 @@ export function ListWithSearch({items: originalItems = []}) {
 
     const itemsSelected = useMemo(() => {
         return items.filter(item => item.selected).length;
-    }, [items, searchTerm]);
+    }, [items]);
 
     const filteredItemsSelected = useMemo(() => {
         return filteredItems.filter(item => item.selected).length;
-    }, [filteredItems, searchTerm]);
+    }, [filteredItems]);
 
     const handleItemSelected = useCallback((id, selected) => {
         setItems(items => {
@@ -113,9 +112,9 @@ export function ListWithSearch({items: originalItems = []}) {
  */
 function SelectableList({items, onSelect}) {
     const handleChecked = useCallback(event => {
-        const id = event.target.dataset.id;
+        const { id } = event.target.dataset;
         onSelect(id, !items.find(item => item.id === id).selected);
-    });
+    }, [items, onSelect]);
 
     return html`
         <ul class="selectable-list">
@@ -134,7 +133,7 @@ function SelectableList({items, onSelect}) {
     `;
 }
 
-function RoomList({roomIds}) {
+export function RoomList({roomIds}) {
     const rooms = useMemo(() => {
         return roomIds.map((roomId) => ({
             id: roomId,
