@@ -1,6 +1,7 @@
 # Changelog for Matrix Wrench
 
 ## Next release
+* Added: A "Remember login" checkbox lets the user decide whether to store an access token in localStorage.
 * Added: The room lists now have external matrix.to links
 
 ## v0.6.1 (2022-03-18)

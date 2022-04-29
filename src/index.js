@@ -40,7 +40,10 @@ try {
     if (!Array.isArray(identities)) {
         throw Error(`Expected an array, got ${typeof identities}`);
     }
-    IDENTITIES = identities;
+    IDENTITIES = identities.map(identity => ({
+        ...identity,
+        rememberLogin: true,
+    }));
 } catch (error) {
     console.warn('No stored identities found in localStorage.', error);
 }
@@ -247,12 +250,15 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
+    const [rememberLogin, setRememberLogin] = useState(identity.accessToken ?? false);
 
     const handleSubmit = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
-        onSave({name, serverAddress, accessToken});
-    }, [accessToken, name, onSave, serverAddress]);
+        onSave({name, serverAddress, accessToken, rememberLogin});
+    }, [accessToken, name, onSave, serverAddress, rememberLogin]);
+    
+    const handleRmemberLoginClick = useCallback(({ target }) => setRememberLogin(target.checked), []);
 
     return html`
         <${AppHeader}
@@ -286,10 +292,23 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                     oninput=${useCallback(({ target }) => setAccessToken(target.value), [])}
                 />
             </div>
+            ${!!localStorage && html`
+                <div>
+                    <ul class="checkbox-list">
+                        <li><label>
+                            <input
+                                checked=${rememberLogin}
+                                type="checkbox"
+                                onChange=${handleRmemberLoginClick}
+                            />
+                            Remember login
+                        </label></li>
+                    </ul>
+                </div>
+            `}
             ${!!error && html`<p>${error}</p>`}
             <button type="button" onclick=${onCancel}>Cancel</button>
             <button type="submit">Save</button>
-            ${!!localStorage && html`<p>Use Incognito mode, if you don't want access token to be stored in localStorage!</p>`}
         </form>
     `;
 }
@@ -406,14 +425,24 @@ function NetworkLog() {
     `;
 }
 
+function IdentitySelectorRow({identity, onDelete, onEdit, onSelect}) {
+    return html`<li>
+        <button class="identity-page_name" type="button" onclick=${useCallback(() => onSelect(identity), [identity, onSelect])}>${identity.name}</button>
+        <button type="button" title="Edit identity ${identity.name}" onclick=${useCallback(() => onEdit(identity), [identity, onEdit])}>✏️</button>
+        <button type="button" title="Delete identity ${identity.name}" onclick=${useCallback(() => onDelete(identity), [identity, onDelete])}>❌</button>
+    </li>`;
+}
+
 function IdentitySelector({identities, onDelete, onEdit, onSelect}) {
     return html`
         ${identities.map(identity => {
-            return html`<li key=${identity.name}>
-                <button class="identity-page_name" type="button" onclick=${() => onSelect(identity)}>${identity.name}</button>
-                <button type="button" title="Edit identity ${identity.name}" onclick=${() => onEdit(identity)}>✏️</button>
-                <button type="button" title="Delete identity ${identity.name}" onclick=${() => onDelete(identity)}>❌</button>
-            </li>`;
+            return html`<${IdentitySelectorRow}
+                key=${identity.name}
+                identity=${identity}
+                onDelete=${onDelete}
+                onEdit=${onEdit}
+                onSelect=${onSelect}
+            />`;
         })}
     `;
 }
@@ -499,6 +528,17 @@ function AppHeader({backLabel = 'Back', children, onBack}) {
     `;
 }
 
+function saveIdentitiesToLocalStorage(identities) {
+    if (!localStorage) return;
+    // Filter out identities where the user said to not remember them.
+    const identitiesToStore = identities.filter(identity => identity.rememberLogin).map(identity => {
+        const copyOfIdentity = {...identity};
+        delete identity.rememberLogin;
+        return copyOfIdentity;
+    });
+    localStorage.setItem('identities', JSON.stringify(identitiesToStore));
+}
+
 function IdentityPage() {
     const [identities, setIdentities] = useState(IDENTITIES);
     const [identity, setIdentity] = useState(null);
@@ -520,7 +560,7 @@ function IdentityPage() {
         setIdentities((identities) => {
             const newIdentities = identities.filter(obj => obj.name !== identity.name);
             try {
-                localStorage.setItem('identities', JSON.stringify(newIdentities));
+                saveIdentitiesToLocalStorage(newIdentities);
             } catch (error) {
                 console.warn('Failed to store identities in localStorage', error);
             }
@@ -550,10 +590,12 @@ function IdentityPage() {
                 // Replace existing identity
                 newIdentities.splice(index, 1, identity);
             }
-            try {
-                localStorage.setItem('identities', JSON.stringify(newIdentities));
-            } catch (error) {
-                console.warn('Failed to store identities in localStorage', error);
+            if (identity.rememberLogin) {
+                try {
+                    saveIdentitiesToLocalStorage(newIdentities);
+                } catch (error) {
+                    console.warn('Failed to store identities in localStorage', error);
+                }
             }
             setEditedIdentity(null);
             setEditingError(null);
