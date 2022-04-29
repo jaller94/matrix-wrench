@@ -8,11 +8,6 @@ body {
     margin: 0 6px;
 }
 
-header {
-    background-color: grey;
-    border-bottom: 1px solid black;
-}
-
 details {
     border: 2px grey solid;
 }
@@ -24,7 +19,6 @@ details {
     margin-bottom: .5em;
     margin-right: .5em;
 }
-
 
 /*
  Details Summary marker.
@@ -137,6 +131,10 @@ button.primary {
     font-weight: bold;
 }
 
+.app-header_nav {
+    height: 50px;
+}
+
 .page {
     display: flex;
     flex-wrap: wrap;
@@ -186,6 +184,7 @@ button.primary {
     overflow-x: hidden;
     overflow-y: scroll;
     height: 500px;
+    border: 1px dotted gray;
 }
 
 .checkbox-list {

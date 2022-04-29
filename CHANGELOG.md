@@ -1,7 +1,9 @@
 # Changelog for Matrix Wrench
 
 ## Next release
-* Added: The room lists now have external matrix.to links
+* Added: The room lists now have external matrix.to links.
+* Fixed: When getting truncated, rows in the Network Log keep their number.
+* Changed: The About page was moved into the header.
 
 ## v0.6.1 (2022-03-18)
 * Added: Progress indicator for recursively deleting a space
