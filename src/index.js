@@ -1,4 +1,13 @@
-import { html, render, useCallback, useEffect, useMemo, useState } from './node_modules/htm/preact/standalone.module.js';
+import {
+    createContext,
+    html,
+    render,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from './node_modules/htm/preact/standalone.module.js';
 import {
     classnames,
     fillInVariables,
@@ -6,6 +15,7 @@ import {
 } from './helper.js';
 // import {
 //     ListWithSearch,
+//     // RoomList,
 // } from './list.js';
 import {
     MatrixError,
@@ -33,6 +43,14 @@ function alert(...args) {
 }
 
 const NETWORKLOG_MAX_ENTRIES = 500;
+
+const NetworkRequests = createContext({
+    isShortened: false,
+    requests: [],
+});
+const Settings = createContext({
+    externalMatrixUrl: 'https://matrix.to/#/',
+});
 
 let IDENTITIES = [];
 try {
@@ -346,7 +364,7 @@ function ResponseStatus({invalid, status}) {
 
 function NetworkLogRequest({request}) {
     return html`
-        <li><details>
+        <li value=${request.id}><details>
             <summary>
                 <div class="network-log-request_header">
                     <span class="network-log-request_summarized-fetch">${summarizeFetch(request.resource, request.init)}</span>
@@ -365,44 +383,49 @@ function NetworkLogRequest({request}) {
     `;
 }
 
-function NetworkLog() {
-    const [isShortened, setIsShortened] = useState(false);
-    const [requests, setRequests] = useState([]);
+function NetworkRequestsProvider({children}) {
+    const [state, setState] = useState({
+        isShortened: false,
+        requests: [],
+    });
 
     useEffect(() => {
         const handleMatrixRequest = (event) => {
-            setRequests(requests => {
-                if (requests.length >= NETWORKLOG_MAX_ENTRIES) {
-                    setIsShortened(true);
-                }
-                
-                return [
-                    ...requests,
-                    {
-                        id: event.detail.requestId,
-                        init: event.detail.init,
-                        resource: event.detail.resource,
-                        sent: new Date(),
-                    },
-                ].slice(-NETWORKLOG_MAX_ENTRIES);
+            setState(state => {
+                return {
+                    ...state,
+                    isShortened: state.requests.length >= NETWORKLOG_MAX_ENTRIES,
+                    requests: [
+                        ...state.requests,
+                        {
+                            id: event.detail.requestId,
+                            init: event.detail.init,
+                            resource: event.detail.resource,
+                            sent: new Date(),
+                        },
+                    ].slice(-NETWORKLOG_MAX_ENTRIES),
+                };
             });
         };
 
         const handleMatrixResponse = (event) => {
-            setRequests(requests => {
-                const index = requests.findIndex(r => r.id === event.detail.requestId);
+            setState(state => {
+                const index = state.requests.findIndex(r => r.id === event.detail.requestId);
                 if (index === -1) {
-                    return requests;
+                    return state;
                 }
                 const newRequest = {
-                    ...requests[index],
+                    ...state.requests[index],
                     status: event.detail.status || null,
                 };
-                return [
-                    ...requests.slice(0, index),
-                    newRequest,
-                    ...requests.slice(index + 1),
-                ];
+                return {
+                    ...state,
+                    requests: [
+                        ...state.requests.slice(0, index),
+                        newRequest,
+                        ...state.requests.slice(index + 1),
+                    ]
+                };
             });
         };
 
@@ -414,6 +437,15 @@ function NetworkLog() {
         };
     }, []);
 
+    return html`
+        <${NetworkRequests.Provider} value=${state}>
+            ${children}
+        </>
+    `;
+}
+
+function NetworkLog() {
+    const {isShortened, requests} = useContext(NetworkRequests);
     return html`
         <h2>Network Log</h2>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
@@ -486,15 +518,20 @@ function AliasResolver({identity}) {
 }
 
 function About() {
+    const handleBack = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        window.location.hash = '';
+    };
+
     return html`
-        <details>
-            <summary><h2>About Matrix Wrench</h2></summary>
-            <ul>
-                <li>Code: <a href="https://gitlab.com/jaller94/matrix-wrench">Matrix Wrench on Gitlab.com</a></li>
-                <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
-                <li>License: <a href="https://choosealicense.com/licenses/apache-2.0/">Apache 2.0</a></li>
-            </ul>
-        </details>
+        <${AppHeader} onBack=${handleBack}>Matrix Wrench</>
+        <h2>About</h2>
+        <ul>
+            <li>Code: <a href="https://gitlab.com/jaller94/matrix-wrench">Matrix Wrench on Gitlab.com</a></li>
+            <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
+            <li>License: <a href="https://choosealicense.com/licenses/apache-2.0/">Apache 2.0</a></li>
+        </ul>
     `;
 }
 
@@ -510,21 +547,40 @@ function About() {
 // }
 
 function App() {
-    // <${Header} />
+    const [page, setPage] = useState(location.hash.slice(1));
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            setPage(location.hash.slice(1));
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => {
+            window.removeEventListener('hashchange', handleHashChange);
+        };
+    }, []);
+
     return html`
-        <${IdentityPage} />
-        <aside>
-            <${NetworkLog} />
-        </aside>
+        <${NetworkRequestsProvider}>
+            ${page === 'about' ? html`
+                <${About} />
+            ` : html`
+                <${IdentityPage} />
+                <${NetworkLog} />
+            `}
+        </>
     `;
 }
 
 function AppHeader({backLabel = 'Back', children, onBack}) {
     return html`
-        <div class="app-header">
+        <header class="app-header">
             ${onBack && html`<button aria-label=${backLabel} class="app-header_back" title=${backLabel} type="button" onclick=${onBack}>${'<'}</button>`}
             <h1 class="app-header_label">${children}</h1>
-        </div>
+            <nav class="app-header_nav">
+                <a href="#about">About</a>
+            </nav>
+        </header>
     `;
 }
 
@@ -613,8 +669,8 @@ function IdentityPage() {
     }
     if (!identity) {
         return html`
+            <${AppHeader}>Identities</>
             <main>
-                <${AppHeader}>Identities</>
                 <ul class="identity-page_list">
                     <li>
                         <button
@@ -629,9 +685,6 @@ function IdentityPage() {
                 </ul>
                 <button type="button" onclick=${handleAddIdentity}>Add identity</button>
             </main>
-            <aside>
-                <${About} />
-            </aside>
         `;
     }
     return html`
@@ -658,6 +711,7 @@ function IdentityPage() {
 }
 
 function RoomList({roomIds, onSelectRoom}) {
+    const { externalMatrixUrl } = useContext(Settings);
     const handleSelectRoom = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
@@ -681,7 +735,7 @@ function RoomList({roomIds, onSelectRoom}) {
                         >${roomId}</button>
                     ` : roomId}
                     <a
-                        href=${`https://matrix.to/#/${encodeURIComponent(roomId)}`}
+                        href=${`${externalMatrixUrl}${encodeURIComponent(roomId)}`}
                         rel="noopener noreferrer"
                         target="_blank"
                     >
