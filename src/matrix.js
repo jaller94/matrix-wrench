@@ -244,10 +244,10 @@ export async function getMembers(identity, roomId) {
 export async function getState(identity, roomId, type, stateKey) {
     let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/state`;
     if (type) {
-        url += `/${type}`;
+        url += `/${encodeURIComponent(type)}`;
     }
     if (stateKey) {
-        url += `/${stateKey}`;
+        url += `/${encodeURIComponent(stateKey)}`;
     }
     return doRequest(url, {
         method: 'GET',
@@ -357,12 +357,9 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
  * @returns {Promise<Object>}
  */
 export async function setState(identity, roomId, type, stateKey, content) {
-    let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/state`;
-    if (type) {
-        url += `/${type}`;
-    }
+    let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/state/${encodeURIComponent(type)}`;
     if (stateKey) {
-        url += `/${stateKey}`;
+        url += `/${encodeURIComponent(stateKey)}`;
     }
     return doRequest(url, {
         method: 'PUT',
