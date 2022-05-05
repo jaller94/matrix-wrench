@@ -8,8 +8,8 @@ export class MatrixError extends Error {
     }
 }
 
-let nextRequestId = 1;
 /* START Helper functions */
+let nextRequestId = 1;
 export async function doRequest(resource, init) {
     const requestId = nextRequestId;
     nextRequestId += 1;
