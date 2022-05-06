@@ -2,6 +2,7 @@
 
 ## Next release
 * Added: A "Am I a member?" button tells your membership state in a room.
+* Fixed: Unchanged identites got deleted from localStorage when editing identities twice.
 
 ## v0.6.2 (2022-04-29)
 * Added: A "Remember login" checkbox lets the user decide whether to store an access token in localStorage.

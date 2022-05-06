@@ -607,7 +607,7 @@ function saveIdentitiesToLocalStorage(identities) {
     // Filter out identities where the user said to not remember them.
     const identitiesToStore = identities.filter(identity => identity.rememberLogin).map(identity => {
         const copyOfIdentity = {...identity};
-        delete identity.rememberLogin;
+        delete copyOfIdentity.rememberLogin;
         return copyOfIdentity;
     });
     localStorage.setItem('identities', JSON.stringify(identitiesToStore));
@@ -633,6 +633,7 @@ function IdentityPage() {
         if (!confirmed) return;
         setIdentities((identities) => {
             const newIdentities = identities.filter(obj => obj.name !== identity.name);
+            console.log(identity, identities, newIdentities);
             try {
                 saveIdentitiesToLocalStorage(newIdentities);
             } catch (error) {
