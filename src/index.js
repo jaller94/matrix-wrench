@@ -271,8 +271,6 @@ function WhatsMyMemberState({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState(null);
 
-    console.log('roomId', roomId);
-
     const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
@@ -633,7 +631,6 @@ function IdentityPage() {
         if (!confirmed) return;
         setIdentities((identities) => {
             const newIdentities = identities.filter(obj => obj.name !== identity.name);
-            console.log(identity, identities, newIdentities);
             try {
                 saveIdentitiesToLocalStorage(newIdentities);
             } catch (error) {
