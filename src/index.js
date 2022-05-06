@@ -1381,8 +1381,9 @@ function BulkInviteForm({onSubmit}) {
     const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
-        // TODO Get user IDs
-        const userIds = userIdsString.split(/[\s,;]/).map(userIds => userIds.trim()).filter(userId => /^@.*:/.test(userId));
+        let userIds = userIdsString.split(/[\s,;]/);
+        userIds = userIds.map(userIds => userIds.trim());
+        userIds = userIds.filter(userId => /^@.*:/.test(userId));
         await onSubmit({
             userIds,   
         });
@@ -1405,7 +1406,7 @@ function BulkInvitePage({identity, roomId}) {
         for (const userId of userIds) {
             await inviteUser(identity, roomId, userId);
         }
-    });
+    }, [identity, roomId]);
 
     return html`
         <${AppHeader}
@@ -1443,26 +1444,32 @@ function App() {
         };
     }, []);
 
-    const matchRoomPage = page.match(/^\/([^/]+)\/([^/]+)$/);
+    const matchRoomPage = page.match(/^\/(?<identityName>[^/]+)\/(?<roomId>[^/]+)$/);
+
+    let child = html`
+        <${IdentityPage} />
+        <${NetworkLog} />
+    `;
+
+    if (page === 'about') {
+        child = html`<${About} />`;
+    } else if (matchRoomPage) {
+        child = html`
+            <${IdentityProvider}
+                identityName=${decodeURIComponent(matchRoomPage.groups.identityName)}
+                render=${(identity) => html`
+                    <${BulkInvitePage}
+                        identity=${identity}
+                        roomId=${decodeURIComponent(matchRoomPage.groups.groupId)}
+                    />
+                `}
+            />
+        `;
+    }
 
     return html`
         <${NetworkRequestsProvider}>
-            ${page === 'about' ? html`
-                <${About} />
-            ` : matchRoomPage ? html`
-                <${IdentityProvider}
-                    identityName=${decodeURIComponent(matchRoomPage[1])}
-                    render=${(identity) => html`
-                        <${BulkInvitePage}
-                            identity=${identity}
-                            roomId=${decodeURIComponent(matchRoomPage[2])}
-                        />
-                    `}
-                />
-            ` : html`
-                <${IdentityPage} />
-                <${NetworkLog} />
-            `}
+            ${child}
         </>
     `;
 }
