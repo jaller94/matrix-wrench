@@ -1,5 +1,8 @@
 # Changelog for Matrix Wrench
 
+## Next release
+* Added: A "Am I a member?" button tells your membership state in a room.
+
 ## v0.6.2 (2022-04-29)
 * Added: A "Remember login" checkbox lets the user decide whether to store an access token in localStorage.
 * Added: The room lists now have external matrix.to links.

@@ -158,6 +158,9 @@ function RoomActions({ identity, roomId }) {
     }), [roomId]);
 
     return html`
+        <div>
+            <${WhatsMyMemberState} identity=${identity} roomId=${roomId} />
+        </div>
         <${CustomButton}
             identity=${identity}
             label="Join"
@@ -261,6 +264,52 @@ function WhoAmI({identity}) {
             <br/>
             Device ID: ${(info || {}).device_id || 'unknown'}
         </p>
+    `;
+}
+
+function WhatsMyMemberState({identity, roomId}) {
+    const [busy, setBusy] = useState(false);
+    const [info, setInfo] = useState(null);
+
+    console.log('roomId', roomId);
+
+    const handleSubmit = useCallback(async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        setInfo('updating…');
+        try {
+            const userId = (await whoAmI(identity)).user_id;
+            const data = await getState(identity, roomId, 'm.room.member', userId);
+            const translations = {
+                ban: 'banned',
+                join: 'joined',
+                knock: 'knocking',
+                leave: 'left',
+            };
+            setInfo(translations[data.membership] ?? data.membership);
+        } catch(error) {
+            if (error instanceof MatrixError) {
+                if (error.content.errcode === 'M_UNKNOWN_TOKEN') {
+                    setInfo('Invalid access token');
+                } else if (error.content.errcode === 'M_NOT_FOUND') {
+                    setInfo('No member event for you found');
+                }
+            } else {
+                alert(error);
+                setInfo(null);
+            }
+        } finally {
+            setBusy(false);
+        }
+    }, [identity, roomId]);
+
+    return html`
+        <button
+            disabled=${busy}
+            type="button"
+            onclick=${handleSubmit}
+        >Am I a member?</button> Result: ${info || 'unknown'}
     `;
 }
 
