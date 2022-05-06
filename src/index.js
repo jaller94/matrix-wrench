@@ -16,7 +16,7 @@ import {
 // import {
 //     ListWithSearch,
 //     // RoomList,
-// } from './list.js';
+// } from './components/list.js';
 import {
     MatrixError,
     banUser,
@@ -518,15 +518,10 @@ function AliasResolver({identity}) {
 }
 
 function About() {
-    const handleBack = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        window.location.hash = '';
-    };
-
     return html`
-        <${AppHeader} onBack=${handleBack}>Matrix Wrench</>
+        <${AppHeader} backUrl="#">Matrix Wrench</>
         <h2>About</h2>
+        <p>Please file issues and request features on the <a href="https://gitlab.com/jaller94/matrix-wrench/-/issues">issue page on Gitlab.com</a>.</p>
         <ul>
             <li>Code: <a href="https://gitlab.com/jaller94/matrix-wrench">Matrix Wrench on Gitlab.com</a></li>
             <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
@@ -535,47 +530,21 @@ function About() {
     `;
 }
 
-// function DesignTest() {
-//     return html`
-//         <${ResponseStatus} status=${undefined}/>
-//         <${ResponseStatus} invalid=${true} status=${undefined}/>
-//         <${ResponseStatus} status=${null}/>
-//         <${ResponseStatus} status=${200}/>
-//         <${ResponseStatus} status=${403}/>
-//         <${ResponseStatus} status=${503}/>
-//     `;
-// }
+function AppHeader({backLabel = 'Back', backUrl, children, onBack}) {
+    const handleBack = useCallback(event => {
+        if (backUrl) {
+            event.preventDefault();
+            event.stopPropagation();
+            window.location = backUrl;
+        }
+        if (onBack) {
+            onBack(event);
+        }
+    }, [backUrl, onBack]);
 
-function App() {
-    const [page, setPage] = useState(location.hash.slice(1));
-
-    useEffect(() => {
-        const handleHashChange = () => {
-            setPage(location.hash.slice(1));
-        };
-
-        window.addEventListener('hashchange', handleHashChange);
-        return () => {
-            window.removeEventListener('hashchange', handleHashChange);
-        };
-    }, []);
-
-    return html`
-        <${NetworkRequestsProvider}>
-            ${page === 'about' ? html`
-                <${About} />
-            ` : html`
-                <${IdentityPage} />
-                <${NetworkLog} />
-            `}
-        </>
-    `;
-}
-
-function AppHeader({backLabel = 'Back', children, onBack}) {
     return html`
         <header class="app-header">
-            ${onBack && html`<button aria-label=${backLabel} class="app-header_back" title=${backLabel} type="button" onclick=${onBack}>${'<'}</button>`}
+            ${(onBack || typeof backUrl === 'string') && html`<button aria-label=${backLabel} class="app-header_back" title=${backLabel} type="button" onclick=${handleBack}>${'<'}</button>`}
             <h1 class="app-header_label">${children}</h1>
             <nav class="app-header_nav">
                 <a href="#about">About</a>
@@ -1278,7 +1247,7 @@ function MemberList({members}) {
     `;
 }
 
-function MediaList({ list }) {
+function MediaList({list}) {
     if (list.length === 0) {
         return html`
             <p>There's no media in this list.</p>
@@ -1361,7 +1330,7 @@ function MembersExplorer({identity, roomId}) {
     `;
 }
 
-function MediaExplorer({ identity, roomId }) {
+function MediaExplorer({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [media, setMedia] = useState(null);
 
@@ -1393,6 +1362,108 @@ function MediaExplorer({ identity, roomId }) {
                 <${MediaList} list=${media.remote} />
             </details>
         `)}
+    `;
+}
+
+function IdentityProvider({render, identityName}) {
+    const identity = IDENTITIES.find(ident => ident.name === identityName);
+    if (!identity) {
+        return html`
+            <div>Invalid idenitity</div>
+        `;
+    }
+    return render(identity);
+}
+
+function BulkInviteForm({onSubmit}) {
+    const [userIdsString, setUserIdsString] = useState('');
+
+    const handleSubmit = useCallback(async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        // TODO Get user IDs
+        const userIds = userIdsString.split(/[\s,;]/).map(userIds => userIds.trim()).filter(userId => /^@.*:/.test(userId));
+        await onSubmit({
+            userIds,   
+        });
+    }, [userIdsString, onSubmit]);
+
+    return html`
+        <form onsubmit=${handleSubmit}>
+            <label>
+                User IDs
+                <textarea onchange=${useCallback(event => setUserIdsString(event.target.value), [])}>${userIdsString}</teaxtarea>
+            </label>
+            <button>Invite</button>
+        </form>
+    `;
+}
+
+function BulkInvitePage({identity, roomId}) {
+    const handleSubmit = useCallback(async({userIds}) => {
+        // TODO Properly invite with error messages
+        for (const userId of userIds) {
+            await inviteUser(identity, roomId, userId);
+        }
+    });
+
+    return html`
+        <${AppHeader}
+            backUrl=${`#/${encodeURIComponent(identity.name)}`}
+        >Bulk Invite to ${roomId}</>
+        <main>
+            <${BulkInviteForm} onSubmit=${handleSubmit} />
+        </main>
+        <${NetworkLog} />
+    `;
+}
+
+// function DesignTest() {
+//     return html`
+//         <${ResponseStatus} status=${undefined}/>
+//         <${ResponseStatus} invalid=${true} status=${undefined}/>
+//         <${ResponseStatus} status=${null}/>
+//         <${ResponseStatus} status=${200}/>
+//         <${ResponseStatus} status=${403}/>
+//         <${ResponseStatus} status=${503}/>
+//     `;
+// }
+
+function App() {
+    const [page, setPage] = useState(location.hash.slice(1));
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            setPage(location.hash.slice(1));
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => {
+            window.removeEventListener('hashchange', handleHashChange);
+        };
+    }, []);
+
+    const matchRoomPage = page.match(/^\/([^/]+)\/([^/]+)$/);
+
+    return html`
+        <${NetworkRequestsProvider}>
+            ${page === 'about' ? html`
+                <${About} />
+            ` : matchRoomPage ? html`
+                <${IdentityProvider}
+                    identityName=${decodeURIComponent(matchRoomPage[1])}
+                    render=${(identity) => html`
+                        <${BulkInvitePage}
+                            identity=${identity}
+                            roomId=${decodeURIComponent(matchRoomPage[2])}
+                        />
+                    `}
+                />
+            ` : html`
+                <${IdentityPage} />
+                <${NetworkLog} />
+            `}
+        </>
     `;
 }
 
