@@ -1448,21 +1448,67 @@ function BulkInviteForm({onSubmit}) {
 }
 
 function BulkInvitePage({identity, roomId}) {
-    const handleSubmit = useCallback(async({userIds}) => {
-        // TODO Properly invite with error messages
-        for (const userId of userIds) {
-            await inviteUser(identity, roomId, userId);
-        }
-    }, [identity, roomId]);
+    const [userIds, setUserIds] = useState(null);
+    
+    const handleSubmit = useCallback(({userIds}) => {
+        setUserIds(userIds);
+    }, []);
 
     return html`
         <${AppHeader}
             backUrl=${`#/${encodeURIComponent(identity.name)}`}
-        >Bulk Invite to ${roomId}</>
+        >Bulk Invite</>
         <main>
-            <${BulkInviteForm} onSubmit=${handleSubmit} />
+            <h2>${roomId}</h2>
+            ${userIds === null ? html` 
+                <${BulkInviteForm} onSubmit=${handleSubmit} />
+            ` : html`
+                <${BulkActionTracker} identity=${identity} items=${userIds} roomId=${roomId} />
+            `}
         </main>
         <${NetworkLog} />
+    `;
+}
+
+function BulkActionTracker({ items, identity, roomId }) {
+    const [currentItem, setCurrentItem] = useState(null);
+    const [progress, setProgress] = useState(0);
+    const [errors, setErrors] = useState([]);
+
+    useEffect(async() => {
+        for (const item of items) {
+            try {
+                setCurrentItem(item);
+                await inviteUser(identity, roomId, item);
+            } catch (error) {
+                setErrors(errors => [
+                    ...errors,
+                    {
+                        id: uniqueId(),
+                        item,
+                        message: error.message, // TODO prefer Matrix error message.
+                    },
+                ]);
+            }
+            setProgress(value => value + 1);
+        }
+        setCurrentItem(null);
+    }, [identity, items, roomId]);
+
+    return html`
+        <h3>Progress</h3>
+        <progress value=${progress} max=${items.length} />
+        ${currentItem ? html`
+            Inviting ${currentItem}…
+        ` : html`
+            ${progress} / ${items.length}
+        `}
+        <h3>Errors (${errors.length})</h3>
+        ${errors.length === 0 ? html`<p>No errors</p>` : html`
+            <ol>
+                ${errors.map(error => html`<li key=${error.id}>${error.item} - ${error.message}</li>`)}
+            </ol>
+        `}
     `;
 }
 
@@ -1507,7 +1553,7 @@ function App() {
                 render=${(identity) => html`
                     <${BulkInvitePage}
                         identity=${identity}
-                        roomId=${decodeURIComponent(matchRoomPage.groups.groupId)}
+                        roomId=${decodeURIComponent(matchRoomPage.groups.roomId)}
                     />
                 `}
             />
