@@ -1416,7 +1416,10 @@ function IdentityProvider({render, identityName}) {
     const identity = IDENTITIES.find(ident => ident.name === identityName);
     if (!identity) {
         return html`
-            <div>Invalid idenitity</div>
+            <${AppHeader}
+                backUrl="#"
+            >Invalid identity</>
+            <p>No such identity. Please go back and add an identity with the name ${identityName}.</p>
         `;
     }
     return render(identity);
@@ -1456,7 +1459,7 @@ function BulkInvitePage({identity, roomId}) {
 
     return html`
         <${AppHeader}
-            backUrl=${`#/${encodeURIComponent(identity.name)}`}
+            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
         >Bulk Invite</>
         <main>
             <h2>${roomId}</h2>
@@ -1537,7 +1540,7 @@ function App() {
         };
     }, []);
 
-    const matchRoomPage = page.match(/^\/(?<identityName>[^/]+)\/(?<roomId>[^/]+)$/);
+    const matchRoomPage = page.match(/^\/(?<identityName>[^/]*)(?:\/(?<roomId>[^/]*)(?:\/(?<subpage>.*))?)?$/);
 
     let child = html`
         <${IdentityPage} />
