@@ -189,6 +189,8 @@ function RoomActions({ identity, roomId }) {
             url="/_matrix/client/v3/knock/!{roomId}"
             variables=${variables}
         />
+        <hr />
+        <a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a>
     `;
 }
 
@@ -504,9 +506,9 @@ function NetworkLog() {
     `;
 }
 
-function IdentitySelectorRow({identity, onDelete, onEdit, onSelect}) {
+function IdentitySelectorRow({identity, onDelete, onEdit}) {
     return html`<li>
-        <button class="identity-page_name" type="button" onclick=${useCallback(() => onSelect(identity), [identity, onSelect])}>${identity.name}</button>
+        <a class="identity-page_name" href=${`#/${identity.name}`}>${identity.name}</a>
         <button type="button" title="Edit identity ${identity.name}" onclick=${useCallback(() => onEdit(identity), [identity, onEdit])}>✏️</button>
         <button type="button" title="Delete identity ${identity.name}" onclick=${useCallback(() => onDelete(identity), [identity, onDelete])}>❌</button>
     </li>`;
@@ -611,9 +613,32 @@ function saveIdentitiesToLocalStorage(identities) {
     localStorage.setItem('identities', JSON.stringify(identitiesToStore));
 }
 
-function IdentityPage() {
+function MainPage({identity, roomId}) {
+    return html`
+        <${AppHeader}
+            backLabel="Switch identity"
+            backUrl="#"
+        >${identity.name ?? 'No authentication'}</>
+        <div style="display: flex; flex-direction: column">
+            ${identity.accessToken && html`
+                <div class="card">
+                    <${WhoAmI} identity=${identity}/>
+                </div>
+            `}
+            ${identity.accessToken ? html`
+                <${RoomSelector} identity=${identity} roomId=${roomId}/>
+            ` : html`
+                <div class="card">
+                    <h2>Alias to Room ID</h2>
+                    <${AliasResolver} identity=${identity}/>
+                </div>
+            `}
+        </div>
+    `;
+}
+
+function IdentitySelectorPage() {
     const [identities, setIdentities] = useState(IDENTITIES);
-    const [identity, setIdentity] = useState(null);
     const [editedIdentity, setEditedIdentity] = useState(null);
     const [editingError, setEditingError] = useState(null);
 
@@ -683,46 +708,14 @@ function IdentityPage() {
             onSave=${handleSave}
         />`;
     }
-    if (!identity) {
-        return html`
-            <${AppHeader}>Identities</>
-            <main>
-                <ul class="identity-page_list">
-                    <li>
-                        <button
-                            class="identity-page_name"
-                            type="button"
-                            onclick=${() => setIdentity({ serverAddress: 'https://matrix-client.matrix.org' })}
-                        >
-                            No auth on matrix.org
-                        </button>
-                    </li>
-                    <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
-                </ul>
-                <button type="button" onclick=${handleAddIdentity}>Add identity</button>
-            </main>
-        `;
-    }
     return html`
-        <${AppHeader}
-            backLabel="Switch identity"
-            onBack=${() => setIdentity(null)}
-        >${identity.name ?? 'No authentication'}</>
-        <div style="display: flex; flex-direction: column">
-            ${identity.accessToken && html`
-                <div class="card">
-                    <${WhoAmI} identity=${identity}/>
-                </div>
-            `}
-            ${identity.accessToken ? html`
-                <${RoomSelector} identity=${identity}/>
-            ` : html`
-                <div class="card">
-                    <h2>Alias to Room ID</h2>
-                    <${AliasResolver} identity=${identity}/>
-                </div>
-            `}
-        </div>
+        <${AppHeader}>Identities</>
+        <main>
+            <ul class="identity-page_list">
+                <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} />
+            </ul>
+            <button type="button" onclick=${handleAddIdentity}>Add identity</button>
+        </main>
     `;
 }
 
@@ -754,9 +747,10 @@ function RoomList({roomIds, onSelectRoom}) {
                         href=${`${externalMatrixUrl}${encodeURIComponent(roomId)}`}
                         rel="noopener noreferrer"
                         target="_blank"
+                        title="Open room externally"
                     >
                         <img
-                            alt="Open room externally"
+                            alt=""
                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z'/%3E%3Cpath fill-rule='evenodd' d='M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z'/%3E%3C/svg%3E"
                         />
                     </a>
@@ -789,15 +783,14 @@ function JoinedRoomList({identity, onSelectRoom}) {
     `;
 }
 
-function RoomSelector({identity}) {
+function RoomSelector({identity, roomId}) {
     const [room, setRoom] = useState('');
-    const [roomId, setRoomId] = useState(null);
     const [resolvedRoomId, setResolvedRoomId] = useState(null);
     const [recentRooms, setRecentRooms] = useState([]);
     const [busy, setBusy] = useState(false);
 
     const handleSelectRoom = useCallback(roomId => {
-        setRoomId(roomId);
+        window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setRecentRooms(recentRooms => ([
             roomId,
             ...recentRooms.filter(r => r !== roomId),
@@ -841,7 +834,7 @@ function RoomSelector({identity}) {
                 setBusy(false);
             }
         }
-        setRoomId(roomId);
+        window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setResolvedRoomId(roomId);
         setRecentRooms(recentRooms => ([
             roomId,
@@ -850,7 +843,7 @@ function RoomSelector({identity}) {
     }, [identity, room]);
 
     const handleResetRoomId = useCallback(() => {
-        setRoomId(null);
+        window.location = `#/${encodeURIComponent(identity.name)}`;
     }, []);
 
     if (roomId) {
@@ -1090,7 +1083,7 @@ function RoomPage({identity, roomId}) {
                     <${MakeRoomAdminButton} identity=${identity} roomId=${roomId}/>
                     <hr/>
                     <h3>Remove users and delete room</h3>
-                    <${SynapseAdminDelete} identity=${identity} roomId=${roomId} />
+                    <${SynapseAdminDelete} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
             <div class="section">
@@ -1500,7 +1493,7 @@ function BulkActionTracker({ items, identity, roomId }) {
 
     return html`
         <h3>Progress</h3>
-        <progress value=${progress} max=${items.length} />
+        <progress value=${progress} max=${items.length}>Processed ${progress} of ${total} items.</progress>
         ${currentItem ? html`
             Inviting ${currentItem}…
         ` : html`
@@ -1543,22 +1536,36 @@ function App() {
     const matchRoomPage = page.match(/^\/(?<identityName>[^/]*)(?:\/(?<roomId>[^/]*)(?:\/(?<subpage>.*))?)?$/);
 
     let child = html`
-        <${IdentityPage} />
+        <${IdentitySelectorPage} />
         <${NetworkLog} />
     `;
+
+    const identityName = matchRoomPage.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName);
+    const roomId = matchRoomPage.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
 
     if (page === 'about') {
         child = html`<${About} />`;
     } else if (matchRoomPage) {
         child = html`
             <${IdentityProvider}
-                identityName=${decodeURIComponent(matchRoomPage.groups.identityName)}
-                render=${(identity) => html`
-                    <${BulkInvitePage}
-                        identity=${identity}
-                        roomId=${decodeURIComponent(matchRoomPage.groups.roomId)}
-                    />
-                `}
+                identityName=${identityName}
+                render=${(identity) => {
+                    if (matchRoomPage.groups.subpage === 'invite') {
+                        return html`
+                            <${BulkInvitePage}
+                                identity=${identity}
+                                roomId=${roomId}
+                            />
+                        `;
+                    } else {
+                        return html`
+                            <${MainPage}
+                                identity=${identity}
+                                roomId=${roomId}
+                            />
+                        `;
+                    }
+                }}
             />
         `;
     }
