@@ -795,7 +795,7 @@ function RoomSelector({identity, roomId}) {
             roomId,
             ...recentRooms.filter(r => r !== roomId),
         ]).slice(0, 4));
-    }, []);
+    }, [identity.name]);
 
     const handleResolveAlias = useCallback(async event => {
         event.preventDefault();
@@ -844,7 +844,7 @@ function RoomSelector({identity, roomId}) {
 
     const handleResetRoomId = useCallback(() => {
         window.location = `#/${encodeURIComponent(identity.name)}`;
-    }, []);
+    }, [identity.name]);
 
     if (roomId) {
         return html`
@@ -1471,29 +1471,32 @@ function BulkActionTracker({ items, identity, roomId }) {
     const [progress, setProgress] = useState(0);
     const [errors, setErrors] = useState([]);
 
-    useEffect(async() => {
-        for (const item of items) {
-            try {
-                setCurrentItem(item);
-                await inviteUser(identity, roomId, item);
-            } catch (error) {
-                setErrors(errors => [
-                    ...errors,
-                    {
-                        id: uniqueId(),
-                        item,
-                        message: error.message, // TODO prefer Matrix error message.
-                    },
-                ]);
+    useEffect(() => {
+        async function inviteUsers() {
+            for (const item of items) {
+                try {
+                    setCurrentItem(item);
+                    await inviteUser(identity, roomId, item);
+                } catch (error) {
+                    setErrors(errors => [
+                        ...errors,
+                        {
+                            id: uniqueId(),
+                            item,
+                            message: error.content?.errcode || error.message,
+                        },
+                    ]);
+                }
+                setProgress(value => value + 1);
             }
-            setProgress(value => value + 1);
+            setCurrentItem(null);
         }
-        setCurrentItem(null);
+        inviteUsers();
     }, [identity, items, roomId]);
 
     return html`
         <h3>Progress</h3>
-        <progress value=${progress} max=${items.length}>Processed ${progress} of ${total} items.</progress>
+        <progress value=${progress} max=${items.length}>Processed ${progress} of ${items.length} items.</progress>
         ${currentItem ? html`
             Inviting ${currentItem}…
         ` : html`
@@ -1557,14 +1560,13 @@ function App() {
                                 roomId=${roomId}
                             />
                         `;
-                    } else {
-                        return html`
-                            <${MainPage}
-                                identity=${identity}
-                                roomId=${roomId}
-                            />
-                        `;
                     }
+                    return html`
+                        <${MainPage}
+                            identity=${identity}
+                            roomId=${roomId}
+                        />
+                    `;
                 }}
             />
         `;
