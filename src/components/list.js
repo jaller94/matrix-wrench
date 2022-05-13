@@ -1,4 +1,4 @@
-import { html, useCallback, useMemo, useState } from './node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useMemo, useState } from '../node_modules/htm/preact/standalone.module.js';
 
 function RegExpToggleButton({...props}) {
     return html`
