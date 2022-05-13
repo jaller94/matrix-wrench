@@ -13,6 +13,9 @@ import {
     fillInVariables,
     uniqueId,
 } from './helper.js';
+import {
+    HighUpLabelInput,
+} from './components/inputs.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -64,18 +67,6 @@ try {
     }));
 } catch (error) {
     console.warn('No stored identities found in localStorage.', error);
-}
-
-const FloatingLabelInput = ({label, ...props}) => {
-    const [id] = useState(uniqueId);
-    return html`
-        <div class="floating-label-input">
-            <input id=${id} ...${props} placeholder="Text"/>
-            <label
-                for=${props.id ?? id}
-            >${label}${props.required && html`<span class="floating-label-input_required" title="required"> *</span>`}</label>
-        </div>
-    `;
 }
 
 // function Header() {
@@ -214,7 +205,7 @@ function MakeRoomAdminButton({ identity, roomId }) {
             url="/_synapse/admin/v1/rooms/!{roomId}/make_room_admin"
             variables=${variables}
         >
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="User"
                 pattern="@.+:.+"
                 required
@@ -333,7 +324,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
         >Identity Editor</>
         <form class="identity-editor-form" onsubmit=${handleSubmit}>
             <div>
-                <${FloatingLabelInput}
+                <${HighUpLabelInput}
                     label="Name"
                     name="name"
                     required
@@ -342,7 +333,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 />
             </div>
             <div>
-                <${FloatingLabelInput}
+                <${HighUpLabelInput}
                     label="Server address (e.g. https://matrix-client.matrix.org)"
                     name="url"
                     type="url"
@@ -352,7 +343,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 />
             </div>
             <div>
-                <${FloatingLabelInput}
+                <${HighUpLabelInput}
                     label="Access token"
                     name="accessToken"
                     value=${accessToken}
@@ -375,7 +366,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
             `}
             ${!!error && html`<p>${error}</p>`}
             <button type="button" onclick=${onCancel}>Cancel</button>
-            <button type="submit">Save</button>
+            <button type="submit" class="primary">Save</button>
         </form>
     `;
 }
@@ -549,7 +540,7 @@ function AliasResolver({identity}) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Room alias"
                 pattern="#.+:.+"
                 required
@@ -858,7 +849,7 @@ function RoomSelector({identity, roomId}) {
         <div class="card">
             <h2>Room management</h2>
             <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-                <${FloatingLabelInput}
+                <${HighUpLabelInput}
                     label="Room alias or ID"
                     pattern="[!#].+:.+"
                     required
@@ -1128,13 +1119,13 @@ function AliasActions({ identity, roomId }) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Alias"
                 pattern="#.+:.+"
                 required
                 title="A room alias, e.g. #matrix:matrix.org"
                 value=${alias}
-                oninput=${({ target }) => setAlias(target.value)}
+                oninput=${useCallback(({ target }) => setAlias(target.value), [])}
             />
             <button type="submit" value="add">Add</button>
             <button type="submit" value="remove">Remove</button>
@@ -1171,7 +1162,7 @@ function UserActions({ identity, roomId }) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="User"
                 pattern="@.+:.+"
                 required
@@ -1179,7 +1170,7 @@ function UserActions({ identity, roomId }) {
                 value=${userId}
                 oninput=${useCallback(({target}) => setUserId(target.value), [])}
             />
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Reason for kick or ban"
                 title="A reason why this user gets kicked or banned."
                 value=${reason}
@@ -1250,13 +1241,13 @@ function StateExplorer({identity, roomId}) {
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Type"
                 list="state-types"
                 value=${type}
                 oninput=${useCallback(({target}) => setType(target.value), [])}
             />
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="State Key"
                 value=${stateKey}
                 oninput=${useCallback(({target}) => setStateKey(target.value), [])}
@@ -1543,8 +1534,8 @@ function App() {
         <${NetworkLog} />
     `;
 
-    const identityName = matchRoomPage.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName);
-    const roomId = matchRoomPage.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
+    const identityName = matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName);
+    const roomId = matchRoomPage?.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
 
     if (page === 'about') {
         child = html`<${About} />`;

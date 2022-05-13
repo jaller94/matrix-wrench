@@ -2,6 +2,7 @@
 
 ## Next release
 * Added: A "Am I a member?" button tells your membership state in a room.
+* Changed: Changed design of text inputs to not be animated.
 * Fixed: Unchanged identites got deleted from localStorage when editing identities twice.
 
 ## v0.6.2 (2022-04-29)

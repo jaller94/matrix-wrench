@@ -272,6 +272,50 @@ label {
     color: darkred;
 }
 
+.high-up-label-input {
+    position: relative;
+}
+
+.high-up-label-input>input +
+label {
+    position: absolute;
+    top: .25em;
+    user-select: none;
+    margin: 0 1em;
+    display: inline-block;
+    width: calc(100% - 2em);
+    pointer-events: none;
+    color: darkblue;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
+.high-up-label-input>label,
+.high-up-label-input>input {
+    font: inherit;
+    line-height: 1;
+    display: block;
+    width: 100%;
+}
+
+.high-up-label-input>input {
+    background-color: transparent;
+    border-radius: 5px;
+    color: black;
+    padding: 1.5em 1em 0.5em;
+    border: 1px black solid;
+    box-sizing: border-box;
+}
+
+.high-up-label-input>input::placeholder {
+    color: transparent;
+}
+
+.high-up-label-input_required {
+    color: darkred;
+}
+
 .network-log_list {
     max-width: 1200px;
 }
