@@ -18,6 +18,7 @@ import {
 //     // RoomList,
 // } from './components/list.js';
 import {
+    auth,
     MatrixError,
     banUser,
     createRoomAlias,
@@ -100,17 +101,12 @@ function CustomForm({ body, children, identity, method, requiresConfirmation, ur
         }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
         try {
-            await doRequest(actualUrl, {
+            await doRequest(...auth(identity, actualUrl, {
                 method,
-                headers: {
-                    ...(identity.accessToken && {
-                        Authorization: `Bearer ${identity.accessToken}`,
-                    }),
-                },
                 ...(body && {
                     body: typeof body === 'string' ? body : JSON.stringify(body),
                 }),
-            });
+            }));
         } catch (error) {
             alert(error);
         }
@@ -131,17 +127,12 @@ function CustomButton({ body, identity, label, method, requiresConfirmation, url
         }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
         try {
-            await doRequest(actualUrl, {
+            await doRequest(...auth(identity, actualUrl, {
                 method,
-                headers: {
-                    ...(identity.accessToken && {
-                        Authorization: `Bearer ${identity.accessToken}`,
-                    }),
-                },
                 ...(body && {
                     body: typeof body === 'string' ? body : JSON.stringify(body),
                 }),
-            });
+            }));
         } catch (error) {
             alert(error);
         }
@@ -916,15 +907,10 @@ async function getRoomsInASpace(identity, roomId, maxDepth = 1) {
 }
 
 async function deleteRoom(identity, roomId, body = {}) {
-    await doRequest(`${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
+    await doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
         method: 'DELETE',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
         body: JSON.stringify(body),
-    });
+    }));
 }
 
 function SynapseAdminDelete({ identity, roomId }) {

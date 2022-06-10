@@ -96,6 +96,23 @@ export function summarizeFetch(resource, init) {
     return `${init.method} ${url}`;
 }
 
+function auth(identity, resource, init) {
+    const url = identity.masqueradeAs ? `${resource}?user_id=${identity.masqueradeAs}` : resource;
+
+    return [
+        url,
+        {
+            ...init,
+            headers: {
+                ...init.headers,
+                ...(identity.accessToken && {
+                    Authorization: `Bearer ${identity.accessToken}`,
+                }),
+            },
+        },
+    ]
+}
+
 /* END Helper functions */
 
 /**
@@ -107,19 +124,16 @@ export function summarizeFetch(resource, init) {
  * @returns {Promise<Object>}
  */
 export async function banUser(identity, roomId, userId, reason) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/ban`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/ban`, {
         method: 'POST',
         headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             user_id: userId,
             reason,
         }),
-    });
+    }));
 }
 
 /**
@@ -130,18 +144,15 @@ export async function banUser(identity, roomId, userId, reason) {
  * @returns {Promise<Object>}
  */
 export async function createRoomAlias(identity, roomAlias, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'PUT',
         headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             room_id: roomId,
         }),
-    });
+    }));
 }
 
 /**
@@ -151,18 +162,15 @@ export async function createRoomAlias(identity, roomAlias, roomId) {
  * @returns {Promise<Object>}
  */
 export async function deleteRoomAlias(identity, roomAlias) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'DELETE',
         headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             roomAlias,
         }),
-    });
+    }));
 }
 
 /**
@@ -172,14 +180,9 @@ export async function deleteRoomAlias(identity, roomAlias) {
  * @returns {Promise<{joined: Record<string, Object>}>}
  */
 export async function getJoinedMembers(identity, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/joined_members`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/joined_members`, {
         method: 'GET',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
-    });
+    }));
 }
 
 /**
@@ -188,14 +191,9 @@ export async function getJoinedMembers(identity, roomId) {
  * @returns {Promise<{joined_rooms: string[]}>}
  */
 export async function getJoinedRooms(identity) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/joined_rooms`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/joined_rooms`, {
         method: 'GET',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
-    });
+    }));
 }
 
 /**
@@ -206,14 +204,9 @@ export async function getJoinedRooms(identity) {
  * @returns {Promise<Object>}
  */
 export async function getMediaByRoom(identity, roomId) {
-    return doRequest(`${identity.serverAddress}/_synapse/admin/v1/room/${encodeURIComponent(roomId)}/media`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v1/room/${encodeURIComponent(roomId)}/media`, {
         method: 'GET',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
-    });
+    }));
 }
 
 /**
@@ -223,14 +216,9 @@ export async function getMediaByRoom(identity, roomId) {
  * @returns {Promise<Object>}
  */
 export async function getMembers(identity, roomId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/members`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/members`, {
         method: 'GET',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
-    });
+    }));
 }
 
 /**
@@ -249,14 +237,9 @@ export async function getState(identity, roomId, type, stateKey) {
     if (stateKey) {
         url += `/${encodeURIComponent(stateKey)}`;
     }
-    return doRequest(url, {
+    return doRequest(...auth(url, {
         method: 'GET',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
-    });
+    }));
 }
 
 /**
@@ -266,18 +249,15 @@ export async function getState(identity, roomId, type, stateKey) {
  * @returns {Promise<Object>}
  */
 export async function inviteUser(identity, roomId, userId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/invite`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/invite`, {
         method: 'POST',
         headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             user_id: userId,
         }),
-    });
+    }));
 }
 
 /**
@@ -289,19 +269,16 @@ export async function inviteUser(identity, roomId, userId) {
  * @returns {Promise<Object>}
  */
 export async function kickUser(identity, roomId, userId, reason) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/kick`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/kick`, {
         method: 'POST',
         headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             user_id: userId,
             reason,
         }),
-    });
+    }));
 }
 
 /**
@@ -311,14 +288,9 @@ export async function kickUser(identity, roomId, userId, reason) {
  * @returns {{room_id: string, servers: string[]}}
  */
 export async function resolveAlias(identity, roomAlias) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'GET',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
-    });
+    }));
 }
 
 /**
@@ -335,16 +307,13 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
     if (transactionId) {
         url += `/${transactionId}`;
     }
-    return doRequest(url, {
+    return doRequest(...auth(url, {
         method: 'PUT',
         headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(content),
-    });
+    }));
 }
 
 /**
@@ -361,16 +330,13 @@ export async function setState(identity, roomId, type, stateKey, content) {
     if (stateKey) {
         url += `/${encodeURIComponent(stateKey)}`;
     }
-    return doRequest(url, {
+    return doRequest(...auth(url, {
         method: 'PUT',
         headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(content),
-    });
+    }));
 }
 
 /**
@@ -381,18 +347,15 @@ export async function setState(identity, roomId, type, stateKey, content) {
  * @returns {Promise<Object>}
  */
 export async function unbanUser(identity, roomId, userId) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/unban`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/unban`, {
         method: 'POST',
         headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             user_id: userId,
         }),
-    });
+    }));
 }
 
 /**
@@ -403,14 +366,9 @@ export async function unbanUser(identity, roomId, userId) {
  * @returns {Promise<Object>}
  */
 export async function whoAmI(identity) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/v3/account/whoami`, {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/account/whoami`, {
         method: 'GET',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
-    });
+    }));
 }
 
 /**
