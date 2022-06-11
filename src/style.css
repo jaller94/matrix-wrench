@@ -284,6 +284,7 @@ label {
     margin: 0 1em;
     display: inline-block;
     width: calc(100% - 2em);
+    height: 1.5em;
     pointer-events: none;
     color: darkblue;
     white-space: nowrap;
