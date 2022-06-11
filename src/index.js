@@ -180,6 +180,7 @@ function RoomActions({ identity, roomId }) {
 }
 
 function MutateUserForm({ identity }) {
+    const [logoutDevices, setLogoutDevices] = useState(true);
     const [password, setPassword] = useState('');
     const [userId, setUserId] = useState('');
     const [userType, setUserType] = useState('');
@@ -216,6 +217,16 @@ function MutateUserForm({ identity }) {
                 value=${password}
                 oninput=${useCallback(({ target }) => setPassword(target.value), [])}
             />
+            <ul class="checkbox-list">
+                <li><label>
+                    <input
+                        checked=${logoutDevices}
+                        type="checkbox"
+                        onChange=${useCallback(() => setLogoutDevices(v => !!v), [])}
+                    />
+                    Remember login
+                </label></li>
+            </ul>
             <p>
                 <label>User type
                     <select
@@ -227,7 +238,7 @@ function MutateUserForm({ identity }) {
                     </select>
                 </label>
             </p>
-            <button>Mutate user</button>
+            <button>Create/mutate user</button>
         </>
     `;
 }
@@ -652,7 +663,7 @@ function saveIdentitiesToLocalStorage(identities) {
 }
 
 function MainPage({identity, roomId}) {
-    const synapseAdmin = false;
+    const synapseAdmin = true;
     return html`
         <${AppHeader}
             backLabel="Switch identity"
