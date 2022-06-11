@@ -172,7 +172,10 @@ function RoomActions({ identity, roomId }) {
             variables=${variables}
         />
         <hr />
-        <a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a>
+        <ul>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/kick`}>Bulk kick</a></li>
+        </ul>
     `;
 }
 
@@ -1452,7 +1455,7 @@ function IdentityProvider({render, identityName}) {
     return render(identity);
 }
 
-function BulkInviteForm({onSubmit}) {
+function BulkInviteForm({actionLabel, onSubmit}) {
     const [userIdsString, setUserIdsString] = useState('');
 
     const handleSubmit = useCallback(async event => {
@@ -1469,10 +1472,10 @@ function BulkInviteForm({onSubmit}) {
     return html`
         <form onsubmit=${handleSubmit}>
             <label>
-                User IDs
+                User IDs (separated by spaces, new lines, commas or semi-colons)
                 <textarea onchange=${useCallback(event => setUserIdsString(event.target.value), [])}>${userIdsString}</teaxtarea>
             </label>
-            <button>Invite</button>
+            <button>${actionLabel}</button>
         </form>
     `;
 }
@@ -1491,26 +1494,49 @@ function BulkInvitePage({identity, roomId}) {
         <main>
             <h2>${roomId}</h2>
             ${userIds === null ? html` 
-                <${BulkInviteForm} onSubmit=${handleSubmit} />
+                <${BulkInviteForm} actionLabel="Invite" onSubmit=${handleSubmit} />
             ` : html`
-                <${BulkActionTracker} identity=${identity} items=${userIds} roomId=${roomId} />
+                <${BulkActionTracker} action=${inviteUser} identity=${identity} items=${userIds} roomId=${roomId} />
             `}
         </main>
         <${NetworkLog} />
     `;
 }
 
-function BulkActionTracker({ items, identity, roomId }) {
+function BulkKickPage({identity, roomId}) {
+    const [userIds, setUserIds] = useState(null);
+    
+    const handleSubmit = useCallback(({userIds}) => {
+        setUserIds(userIds);
+    }, []);
+
+    return html`
+        <${AppHeader}
+            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
+        >Bulk Kick</>
+        <main>
+            <h2>${roomId}</h2>
+            ${userIds === null ? html` 
+                <${BulkInviteForm} actionLabel="Kick" onSubmit=${handleSubmit} />
+            ` : html`
+                <${BulkActionTracker} action=${kickUser} identity=${identity} items=${userIds} roomId=${roomId} />
+            `}
+        </main>
+        <${NetworkLog} />
+    `;
+}
+
+function BulkActionTracker({ action, items, identity, roomId }) {
     const [currentItem, setCurrentItem] = useState(null);
     const [progress, setProgress] = useState(0);
     const [errors, setErrors] = useState([]);
 
     useEffect(() => {
-        async function inviteUsers() {
+        async function doAction() {
             for (const item of items) {
                 try {
                     setCurrentItem(item);
-                    await inviteUser(identity, roomId, item);
+                    await action(identity, roomId, item);
                 } catch (error) {
                     setErrors(errors => [
                         ...errors,
@@ -1525,14 +1551,14 @@ function BulkActionTracker({ items, identity, roomId }) {
             }
             setCurrentItem(null);
         }
-        inviteUsers();
-    }, [identity, items, roomId]);
+        doAction();
+    }, [action, identity, items, roomId]);
 
     return html`
         <h3>Progress</h3>
         <progress value=${progress} max=${items.length}>Processed ${progress} of ${items.length} items.</progress>
         ${currentItem ? html`
-            Inviting ${currentItem}…
+            Processing ${currentItem}…
         ` : html`
             ${progress} / ${items.length}
         `}
@@ -1590,6 +1616,14 @@ function App() {
                     if (matchRoomPage.groups.subpage === 'invite') {
                         return html`
                             <${BulkInvitePage}
+                                identity=${identity}
+                                roomId=${roomId}
+                            />
+                        `;
+                    }
+                    if (matchRoomPage.groups.subpage === 'kick') {
+                        return html`
+                            <${BulkKickPage}
                                 identity=${identity}
                                 roomId=${roomId}
                             />

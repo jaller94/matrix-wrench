@@ -1,5 +1,13 @@
 # Changelog for Matrix Wrench
 
+## Future
+* Added: Act as other users when using AppService tokens.
+* Added: Create and mutate users using the Synapse API.
+
+## Next release
+* Added: All pages have URLs to quickly navigate to.
+* Added: Bulk actions to invite and kick users
+
 ## v0.7.0 (2022-05-06)
 * Added: A "Am I a member?" button tells your membership state in a room.
 * Changed: Changed design of text inputs to not be animated.
