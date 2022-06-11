@@ -96,7 +96,7 @@ export function summarizeFetch(resource, init) {
     return `${init.method} ${url}`;
 }
 
-function auth(identity, resource, init) {
+export function auth(identity, resource, init) {
     const url = identity.masqueradeAs ? `${resource}?user_id=${identity.masqueradeAs}` : resource;
 
     return [
