@@ -21,6 +21,7 @@ import {
 //     // RoomList,
 // } from './components/list.js';
 import {
+    auth,
     MatrixError,
     banUser,
     createRoomAlias,
@@ -91,17 +92,12 @@ function CustomForm({ body, children, identity, method, requiresConfirmation, ur
         }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
         try {
-            await doRequest(actualUrl, {
+            await doRequest(...auth(identity, actualUrl, {
                 method,
-                headers: {
-                    ...(identity.accessToken && {
-                        Authorization: `Bearer ${identity.accessToken}`,
-                    }),
-                },
                 ...(body && {
                     body: typeof body === 'string' ? body : JSON.stringify(body),
                 }),
-            });
+            }));
         } catch (error) {
             alert(error);
         }
@@ -122,17 +118,12 @@ function CustomButton({ body, identity, label, method, requiresConfirmation, url
         }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
         try {
-            await doRequest(actualUrl, {
+            await doRequest(...auth(identity, actualUrl, {
                 method,
-                headers: {
-                    ...(identity.accessToken && {
-                        Authorization: `Bearer ${identity.accessToken}`,
-                    }),
-                },
                 ...(body && {
                     body: typeof body === 'string' ? body : JSON.stringify(body),
                 }),
-            });
+            }));
         } catch (error) {
             alert(error);
         }
@@ -185,7 +176,60 @@ function RoomActions({ identity, roomId }) {
     `;
 }
 
-function MakeRoomAdminButton({ identity, roomId }) {
+function MutateUserForm({ identity }) {
+    const [password, setPassword] = useState('');
+    const [userId, setUserId] = useState('');
+    const [userType, setUserType] = useState('');
+
+    const body = useMemo(() => ({
+        password,
+        user_type: userType || null,
+    }), [password, userType]);
+
+    const variables = useMemo(() => ({
+        userId,
+    }), [userId]);
+
+    return html`
+        <${CustomForm}
+            body=${body}
+            identity=${identity}
+            method="PUT"
+            requiresConfirmation=${true}
+            url="/_synapse/admin/v2/users/!{userId}"
+            variables=${variables}
+        >
+            <${HighUpLabelInput}
+                label="User"
+                pattern="@.+:.+"
+                required
+                title="A user id, e.g. @user:server.com"
+                value=${userId}
+                oninput=${useCallback(({ target }) => setUserId(target.value), [])}
+            />
+            <${HighUpLabelInput}
+                label="Password"
+                title="Optional password"
+                value=${password}
+                oninput=${useCallback(({ target }) => setPassword(target.value), [])}
+            />
+            <p>
+                <label>User type
+                    <select
+                        oninput=${useCallback(({ target }) => setUserType(target.value), [])}
+                    >
+                        <option value="">None</>
+                        <option value="bot">Bot</>
+                        <option value="support">Support</>
+                    </select>
+                </label>
+            </p>
+            <button>Mutate user</button>
+        </>
+    `;
+}
+
+function MakeRoomAdminForm({ identity, roomId }) {
     const [userId, setUserId] = useState('');
 
     const body = useMemo(() => ({
@@ -390,7 +434,7 @@ function ResponseStatus({invalid, status}) {
             class=${classnames(
                 'network-log-request_status',
                 {
-                    'network-log-request_status--success': status === 200,
+                    'network-log-request_status--success': status >= 200 && status < 300,
                     'network-log-request_status--client-error': status >= 400 && status < 500,
                     'network-log-request_status--server-error': status >= 500 || invalid,
                     'network-log-request_status--network': status === null,
@@ -605,23 +649,27 @@ function saveIdentitiesToLocalStorage(identities) {
 }
 
 function MainPage({identity, roomId}) {
+    const synapseAdmin = false;
     return html`
         <${AppHeader}
             backLabel="Switch identity"
             backUrl="#"
         >${identity.name ?? 'No authentication'}</>
         <div style="display: flex; flex-direction: column">
-            ${identity.accessToken && html`
+            ${identity.accessToken ? html`
                 <div class="card">
                     <${WhoAmI} identity=${identity}/>
                 </div>
-            `}
-            ${identity.accessToken ? html`
                 <${RoomSelector} identity=${identity} roomId=${roomId}/>
             ` : html`
                 <div class="card">
                     <h2>Alias to Room ID</h2>
                     <${AliasResolver} identity=${identity}/>
+                </div>
+            `}
+            ${synapseAdmin && html`
+                <div class="card">
+                    <${MutateUserForm} identity=${identity}/>
                 </div>
             `}
         </div>
@@ -900,15 +948,10 @@ async function getRoomsInASpace(identity, roomId, maxDepth = 1) {
 }
 
 async function deleteRoom(identity, roomId, body = {}) {
-    await doRequest(`${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
+    await doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
         method: 'DELETE',
-        headers: {
-            ...(identity.accessToken && {
-                Authorization: `Bearer ${identity.accessToken}`,
-            }),
-        },
         body: JSON.stringify(body),
-    });
+    }));
 }
 
 function SynapseAdminDelete({ identity, roomId }) {
@@ -1071,7 +1114,7 @@ function RoomPage({identity, roomId}) {
             <div class="section">
                 <details>
                     <summary><h2>Synapse Admin</h2></summary>
-                    <${MakeRoomAdminButton} identity=${identity} roomId=${roomId}/>
+                    <${MakeRoomAdminForm} identity=${identity} roomId=${roomId}/>
                     <hr/>
                     <h3>Remove users and delete room</h3>
                     <${SynapseAdminDelete} identity=${identity} roomId=${roomId}/>

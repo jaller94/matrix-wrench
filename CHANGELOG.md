@@ -1,6 +1,6 @@
 # Changelog for Matrix Wrench
 
-## Next release
+## v0.7.0 (2022-05-06)
 * Added: A "Am I a member?" button tells your membership state in a room.
 * Changed: Changed design of text inputs to not be animated.
 * Fixed: Unchanged identites got deleted from localStorage when editing identities twice.
