@@ -13,6 +13,9 @@ import {
     fillInVariables,
     uniqueId,
 } from './helper.js';
+import {
+    HighUpLabelInput,
+} from './components/inputs.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -65,18 +68,6 @@ try {
     }));
 } catch (error) {
     console.warn('No stored identities found in localStorage.', error);
-}
-
-const FloatingLabelInput = ({label, ...props}) => {
-    const [id] = useState(uniqueId);
-    return html`
-        <div class="floating-label-input">
-            <input id=${id} ...${props} placeholder="Text"/>
-            <label
-                for=${props.id ?? id}
-            >${label}${props.required && html`<span class="floating-label-input_required" title="required"> *</span>`}</label>
-        </div>
-    `;
 }
 
 // function Header() {
@@ -180,10 +171,16 @@ function RoomActions({ identity, roomId }) {
             url="/_matrix/client/v3/knock/!{roomId}"
             variables=${variables}
         />
+        <hr />
+        <ul>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/kick`}>Bulk kick</a></li>
+        </ul>
     `;
 }
 
 function MutateUserForm({ identity }) {
+    const [logoutDevices, setLogoutDevices] = useState(true);
     const [password, setPassword] = useState('');
     const [userId, setUserId] = useState('');
     const [userType, setUserType] = useState('');
@@ -206,7 +203,7 @@ function MutateUserForm({ identity }) {
             url="/_synapse/admin/v2/users/!{userId}"
             variables=${variables}
         >
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="User"
                 pattern="@.+:.+"
                 required
@@ -214,12 +211,22 @@ function MutateUserForm({ identity }) {
                 value=${userId}
                 oninput=${useCallback(({ target }) => setUserId(target.value), [])}
             />
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Password"
                 title="Optional password"
                 value=${password}
                 oninput=${useCallback(({ target }) => setPassword(target.value), [])}
             />
+            <ul class="checkbox-list">
+                <li><label>
+                    <input
+                        checked=${logoutDevices}
+                        type="checkbox"
+                        onChange=${useCallback(() => setLogoutDevices(v => !!v), [])}
+                    />
+                    Remember login
+                </label></li>
+            </ul>
             <p>
                 <label>User type
                     <select
@@ -231,7 +238,7 @@ function MutateUserForm({ identity }) {
                     </select>
                 </label>
             </p>
-            <button>Mutate user</button>
+            <button>Create/mutate user</button>
         </>
     `;
 }
@@ -256,7 +263,7 @@ function MakeRoomAdminForm({ identity, roomId }) {
             url="/_synapse/admin/v1/rooms/!{roomId}/make_room_admin"
             variables=${variables}
         >
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="User"
                 pattern="@.+:.+"
                 required
@@ -375,7 +382,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
         >Identity Editor</>
         <form class="identity-editor-form" onsubmit=${handleSubmit}>
             <div>
-                <${FloatingLabelInput}
+                <${HighUpLabelInput}
                     label="Name"
                     name="name"
                     required
@@ -384,7 +391,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 />
             </div>
             <div>
-                <${FloatingLabelInput}
+                <${HighUpLabelInput}
                     label="Server address (e.g. https://matrix-client.matrix.org)"
                     name="url"
                     type="url"
@@ -394,7 +401,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 />
             </div>
             <div>
-                <${FloatingLabelInput}
+                <${HighUpLabelInput}
                     label="Access token"
                     name="accessToken"
                     value=${accessToken}
@@ -417,7 +424,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
             `}
             ${!!error && html`<p>${error}</p>`}
             <button type="button" onclick=${onCancel}>Cancel</button>
-            <button type="submit">Save</button>
+            <button type="submit" class="primary">Save</button>
         </form>
     `;
 }
@@ -548,9 +555,9 @@ function NetworkLog() {
     `;
 }
 
-function IdentitySelectorRow({identity, onDelete, onEdit, onSelect}) {
+function IdentitySelectorRow({identity, onDelete, onEdit}) {
     return html`<li>
-        <button class="identity-page_name" type="button" onclick=${useCallback(() => onSelect(identity), [identity, onSelect])}>${identity.name}</button>
+        <a class="identity-page_name" href=${`#/${identity.name}`}>${identity.name}</a>
         <button type="button" title="Edit identity ${identity.name}" onclick=${useCallback(() => onEdit(identity), [identity, onEdit])}>✏️</button>
         <button type="button" title="Delete identity ${identity.name}" onclick=${useCallback(() => onDelete(identity), [identity, onDelete])}>❌</button>
     </li>`;
@@ -591,7 +598,7 @@ function AliasResolver({identity}) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Room alias"
                 pattern="#.+:.+"
                 required
@@ -655,9 +662,36 @@ function saveIdentitiesToLocalStorage(identities) {
     localStorage.setItem('identities', JSON.stringify(identitiesToStore));
 }
 
-function IdentityPage() {
+function MainPage({identity, roomId}) {
+    const synapseAdmin = true;
+    return html`
+        <${AppHeader}
+            backLabel="Switch identity"
+            backUrl="#"
+        >${identity.name ?? 'No authentication'}</>
+        <div style="display: flex; flex-direction: column">
+            ${identity.accessToken ? html`
+                <div class="card">
+                    <${WhoAmI} identity=${identity}/>
+                </div>
+                <${RoomSelector} identity=${identity} roomId=${roomId}/>
+            ` : html`
+                <div class="card">
+                    <h2>Alias to Room ID</h2>
+                    <${AliasResolver} identity=${identity}/>
+                </div>
+            `}
+            ${synapseAdmin && html`
+                <div class="card">
+                    <${MutateUserForm} identity=${identity}/>
+                </div>
+            `}
+        </div>
+    `;
+}
+
+function IdentitySelectorPage() {
     const [identities, setIdentities] = useState(IDENTITIES);
-    const [identity, setIdentity] = useState(null);
     const [editedIdentity, setEditedIdentity] = useState(null);
     const [editingError, setEditingError] = useState(null);
 
@@ -727,50 +761,14 @@ function IdentityPage() {
             onSave=${handleSave}
         />`;
     }
-    if (!identity) {
-        return html`
-            <${AppHeader}>Identities</>
-            <main>
-                <ul class="identity-page_list">
-                    <li>
-                        <button
-                            class="identity-page_name"
-                            type="button"
-                            onclick=${() => setIdentity({ serverAddress: 'https://matrix-client.matrix.org' })}
-                        >
-                            No auth on matrix.org
-                        </button>
-                    </li>
-                    <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} onSelect=${setIdentity}/>
-                </ul>
-                <button type="button" onclick=${handleAddIdentity}>Add identity</button>
-            </main>
-        `;
-    }
-    const synapseAdmin = false;
     return html`
-        <${AppHeader}
-            backLabel="Switch identity"
-            onBack=${() => setIdentity(null)}
-        >${identity.name ?? 'No authentication'}</>
-        <div style="display: flex; flex-direction: column">
-            ${identity.accessToken ? html`
-                <div class="card">
-                    <${WhoAmI} identity=${identity}/>
-                </div>
-                <${RoomSelector} identity=${identity}/>
-            ` : html`
-                <div class="card">
-                    <h2>Alias to Room ID</h2>
-                    <${AliasResolver} identity=${identity}/>
-                </div>
-            `}
-            ${synapseAdmin && html`
-                <div class="card">
-                    <${MutateUserForm} identity=${identity}/>
-                </div>
-            `}
-        </div>
+        <${AppHeader}>Identities</>
+        <main>
+            <ul class="identity-page_list">
+                <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} />
+            </ul>
+            <button type="button" onclick=${handleAddIdentity}>Add identity</button>
+        </main>
     `;
 }
 
@@ -802,9 +800,10 @@ function RoomList({roomIds, onSelectRoom}) {
                         href=${`${externalMatrixUrl}${encodeURIComponent(roomId)}`}
                         rel="noopener noreferrer"
                         target="_blank"
+                        title="Open room externally"
                     >
                         <img
-                            alt="Open room externally"
+                            alt=""
                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z'/%3E%3Cpath fill-rule='evenodd' d='M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z'/%3E%3C/svg%3E"
                         />
                     </a>
@@ -837,20 +836,19 @@ function JoinedRoomList({identity, onSelectRoom}) {
     `;
 }
 
-function RoomSelector({identity}) {
+function RoomSelector({identity, roomId}) {
     const [room, setRoom] = useState('');
-    const [roomId, setRoomId] = useState(null);
     const [resolvedRoomId, setResolvedRoomId] = useState(null);
     const [recentRooms, setRecentRooms] = useState([]);
     const [busy, setBusy] = useState(false);
 
     const handleSelectRoom = useCallback(roomId => {
-        setRoomId(roomId);
+        window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setRecentRooms(recentRooms => ([
             roomId,
             ...recentRooms.filter(r => r !== roomId),
         ]).slice(0, 4));
-    }, []);
+    }, [identity.name]);
 
     const handleResolveAlias = useCallback(async event => {
         event.preventDefault();
@@ -889,7 +887,7 @@ function RoomSelector({identity}) {
                 setBusy(false);
             }
         }
-        setRoomId(roomId);
+        window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setResolvedRoomId(roomId);
         setRecentRooms(recentRooms => ([
             roomId,
@@ -898,8 +896,8 @@ function RoomSelector({identity}) {
     }, [identity, room]);
 
     const handleResetRoomId = useCallback(() => {
-        setRoomId(null);
-    }, []);
+        window.location = `#/${encodeURIComponent(identity.name)}`;
+    }, [identity.name]);
 
     if (roomId) {
         return html`
@@ -913,7 +911,7 @@ function RoomSelector({identity}) {
         <div class="card">
             <h2>Room management</h2>
             <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-                <${FloatingLabelInput}
+                <${HighUpLabelInput}
                     label="Room alias or ID"
                     pattern="[!#].+:.+"
                     required
@@ -1133,7 +1131,7 @@ function RoomPage({identity, roomId}) {
                     <${MakeRoomAdminForm} identity=${identity} roomId=${roomId}/>
                     <hr/>
                     <h3>Remove users and delete room</h3>
-                    <${SynapseAdminDelete} identity=${identity} roomId=${roomId} />
+                    <${SynapseAdminDelete} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
             <div class="section">
@@ -1178,13 +1176,13 @@ function AliasActions({ identity, roomId }) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Alias"
                 pattern="#.+:.+"
                 required
                 title="A room alias, e.g. #matrix:matrix.org"
                 value=${alias}
-                oninput=${({ target }) => setAlias(target.value)}
+                oninput=${useCallback(({ target }) => setAlias(target.value), [])}
             />
             <button type="submit" value="add">Add</button>
             <button type="submit" value="remove">Remove</button>
@@ -1221,7 +1219,7 @@ function UserActions({ identity, roomId }) {
 
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="User"
                 pattern="@.+:.+"
                 required
@@ -1229,7 +1227,7 @@ function UserActions({ identity, roomId }) {
                 value=${userId}
                 oninput=${useCallback(({target}) => setUserId(target.value), [])}
             />
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Reason for kick or ban"
                 title="A reason why this user gets kicked or banned."
                 value=${reason}
@@ -1300,13 +1298,13 @@ function StateExplorer({identity, roomId}) {
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="Type"
                 list="state-types"
                 value=${type}
                 oninput=${useCallback(({target}) => setType(target.value), [])}
             />
-            <${FloatingLabelInput}
+            <${HighUpLabelInput}
                 label="State Key"
                 value=${stateKey}
                 oninput=${useCallback(({target}) => setStateKey(target.value), [])}
@@ -1459,13 +1457,16 @@ function IdentityProvider({render, identityName}) {
     const identity = IDENTITIES.find(ident => ident.name === identityName);
     if (!identity) {
         return html`
-            <div>Invalid idenitity</div>
+            <${AppHeader}
+                backUrl="#"
+            >Invalid identity</>
+            <p>No such identity. Please go back and add an identity with the name ${identityName}.</p>
         `;
     }
     return render(identity);
 }
 
-function BulkInviteForm({onSubmit}) {
+function BulkInviteForm({actionLabel, onSubmit}) {
     const [userIdsString, setUserIdsString] = useState('');
 
     const handleSubmit = useCallback(async event => {
@@ -1482,30 +1483,102 @@ function BulkInviteForm({onSubmit}) {
     return html`
         <form onsubmit=${handleSubmit}>
             <label>
-                User IDs
+                User IDs (separated by spaces, new lines, commas or semi-colons)
                 <textarea onchange=${useCallback(event => setUserIdsString(event.target.value), [])}>${userIdsString}</teaxtarea>
             </label>
-            <button>Invite</button>
+            <button>${actionLabel}</button>
         </form>
     `;
 }
 
 function BulkInvitePage({identity, roomId}) {
-    const handleSubmit = useCallback(async({userIds}) => {
-        // TODO Properly invite with error messages
-        for (const userId of userIds) {
-            await inviteUser(identity, roomId, userId);
-        }
-    }, [identity, roomId]);
+    const [userIds, setUserIds] = useState(null);
+    
+    const handleSubmit = useCallback(({userIds}) => {
+        setUserIds(userIds);
+    }, []);
 
     return html`
         <${AppHeader}
-            backUrl=${`#/${encodeURIComponent(identity.name)}`}
-        >Bulk Invite to ${roomId}</>
+            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
+        >Bulk Invite</>
         <main>
-            <${BulkInviteForm} onSubmit=${handleSubmit} />
+            <h2>${roomId}</h2>
+            ${userIds === null ? html` 
+                <${BulkInviteForm} actionLabel="Invite" onSubmit=${handleSubmit} />
+            ` : html`
+                <${BulkActionTracker} action=${inviteUser} identity=${identity} items=${userIds} roomId=${roomId} />
+            `}
         </main>
         <${NetworkLog} />
+    `;
+}
+
+function BulkKickPage({identity, roomId}) {
+    const [userIds, setUserIds] = useState(null);
+    
+    const handleSubmit = useCallback(({userIds}) => {
+        setUserIds(userIds);
+    }, []);
+
+    return html`
+        <${AppHeader}
+            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
+        >Bulk Kick</>
+        <main>
+            <h2>${roomId}</h2>
+            ${userIds === null ? html` 
+                <${BulkInviteForm} actionLabel="Kick" onSubmit=${handleSubmit} />
+            ` : html`
+                <${BulkActionTracker} action=${kickUser} identity=${identity} items=${userIds} roomId=${roomId} />
+            `}
+        </main>
+        <${NetworkLog} />
+    `;
+}
+
+function BulkActionTracker({ action, items, identity, roomId }) {
+    const [currentItem, setCurrentItem] = useState(null);
+    const [progress, setProgress] = useState(0);
+    const [errors, setErrors] = useState([]);
+
+    useEffect(() => {
+        async function doAction() {
+            for (const item of items) {
+                try {
+                    setCurrentItem(item);
+                    await action(identity, roomId, item);
+                } catch (error) {
+                    setErrors(errors => [
+                        ...errors,
+                        {
+                            id: uniqueId(),
+                            item,
+                            message: error.content?.errcode || error.message,
+                        },
+                    ]);
+                }
+                setProgress(value => value + 1);
+            }
+            setCurrentItem(null);
+        }
+        doAction();
+    }, [action, identity, items, roomId]);
+
+    return html`
+        <h3>Progress</h3>
+        <progress value=${progress} max=${items.length}>Processed ${progress} of ${items.length} items.</progress>
+        ${currentItem ? html`
+            Processing ${currentItem}…
+        ` : html`
+            ${progress} / ${items.length}
+        `}
+        <h3>Errors (${errors.length})</h3>
+        ${errors.length === 0 ? html`<p>No errors</p>` : html`
+            <ol>
+                ${errors.map(error => html`<li key=${error.id}>${error.item} - ${error.message}</li>`)}
+            </ol>
+        `}
     `;
 }
 
@@ -1534,25 +1607,46 @@ function App() {
         };
     }, []);
 
-    const matchRoomPage = page.match(/^\/(?<identityName>[^/]+)\/(?<roomId>[^/]+)$/);
+    const matchRoomPage = page.match(/^\/(?<identityName>[^/]*)(?:\/(?<roomId>[^/]*)(?:\/(?<subpage>.*))?)?$/);
 
     let child = html`
-        <${IdentityPage} />
+        <${IdentitySelectorPage} />
         <${NetworkLog} />
     `;
+
+    const identityName = matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName);
+    const roomId = matchRoomPage?.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
 
     if (page === 'about') {
         child = html`<${About} />`;
     } else if (matchRoomPage) {
         child = html`
             <${IdentityProvider}
-                identityName=${decodeURIComponent(matchRoomPage.groups.identityName)}
-                render=${(identity) => html`
-                    <${BulkInvitePage}
-                        identity=${identity}
-                        roomId=${decodeURIComponent(matchRoomPage.groups.groupId)}
-                    />
-                `}
+                identityName=${identityName}
+                render=${(identity) => {
+                    if (matchRoomPage.groups.subpage === 'invite') {
+                        return html`
+                            <${BulkInvitePage}
+                                identity=${identity}
+                                roomId=${roomId}
+                            />
+                        `;
+                    }
+                    if (matchRoomPage.groups.subpage === 'kick') {
+                        return html`
+                            <${BulkKickPage}
+                                identity=${identity}
+                                roomId=${roomId}
+                            />
+                        `;
+                    }
+                    return html`
+                        <${MainPage}
+                            identity=${identity}
+                            roomId=${roomId}
+                        />
+                    `;
+                }}
             />
         `;
     }
