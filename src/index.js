@@ -48,14 +48,6 @@ function alert(...args) {
 
 const NETWORKLOG_MAX_ENTRIES = 500;
 
-const NetworkRequests = createContext({
-    isShortened: false,
-    requests: [],
-});
-const Settings = createContext({
-    externalMatrixUrl: 'https://matrix.to/#/',
-});
-
 let IDENTITIES = [];
 try {
     const identities = JSON.parse(localStorage.getItem('identities'));
@@ -67,8 +59,17 @@ try {
         rememberLogin: true,
     }));
 } catch (error) {
-    console.warn('No stored identities found in localStorage.', error);
+    console.warn('No identities loaded from localStorage.', error);
 }
+
+const NetworkRequests = createContext({
+    isShortened: false,
+    requests: [],
+});
+const Settings = createContext({
+    externalMatrixUrl: 'https://matrix.to/#/',
+    identities: [],
+});
 
 // function Header() {
 //     return html`
@@ -209,20 +210,20 @@ function MutateUserForm({ identity }) {
                 required
                 title="A user id, e.g. @user:server.com"
                 value=${userId}
-                oninput=${useCallback(({ target }) => setUserId(target.value), [])}
+                oninput=${useCallback(({target}) => setUserId(target.value), [])}
             />
             <${HighUpLabelInput}
                 label="Password"
                 title="Optional password"
                 value=${password}
-                oninput=${useCallback(({ target }) => setPassword(target.value), [])}
+                oninput=${useCallback(({target}) => setPassword(target.value), [])}
             />
             <ul class="checkbox-list">
                 <li><label>
                     <input
                         checked=${logoutDevices}
                         type="checkbox"
-                        onChange=${useCallback(() => setLogoutDevices(v => !!v), [])}
+                        onChange=${useCallback(({target}) => setLogoutDevices(target.checked), [])}
                     />
                     Remember login
                 </label></li>
@@ -230,7 +231,7 @@ function MutateUserForm({ identity }) {
             <p>
                 <label>User type
                     <select
-                        oninput=${useCallback(({ target }) => setUserType(target.value), [])}
+                        oninput=${useCallback(({target}) => setUserType(target.value), [])}
                     >
                         <option value="">None</>
                         <option value="bot">Bot</>
@@ -269,7 +270,7 @@ function MakeRoomAdminForm({ identity, roomId }) {
                 required
                 title="A user id, e.g. @foo:matrix.org"
                 value=${userId}
-                oninput=${useCallback(({ target }) => setUserId(target.value), [])}
+                oninput=${useCallback(({target}) => setUserId(target.value), [])}
             />
             <button>Make user a room admin</button>
         </>
@@ -366,7 +367,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
-    const [rememberLogin, setRememberLogin] = useState(identity.accessToken ?? false);
+    const [rememberLogin, setRememberLogin] = useState(identity.rememberLogin ?? false);
 
     const handleSubmit = useCallback(event => {
         event.preventDefault();
@@ -374,7 +375,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
         onSave({name, serverAddress, accessToken, rememberLogin});
     }, [accessToken, name, onSave, serverAddress, rememberLogin]);
     
-    const handleRmemberLoginClick = useCallback(({ target }) => setRememberLogin(target.checked), []);
+    const handleRememberLoginClick = useCallback(({target}) => setRememberLogin(target.checked), []);
 
     return html`
         <${AppHeader}
@@ -387,7 +388,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                     name="name"
                     required
                     value=${name}
-                    oninput=${useCallback(({ target }) => setName(target.value), [])}
+                    oninput=${useCallback(({target}) => setName(target.value), [])}
                 />
             </div>
             <div>
@@ -397,7 +398,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                     type="url"
                     required
                     value=${serverAddress}
-                    oninput=${useCallback(({ target }) => setServerAddress(target.value), [])}
+                    oninput=${useCallback(({target}) => setServerAddress(target.value), [])}
                 />
             </div>
             <div>
@@ -405,7 +406,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                     label="Access token"
                     name="accessToken"
                     value=${accessToken}
-                    oninput=${useCallback(({ target }) => setAccessToken(target.value), [])}
+                    oninput=${useCallback(({target}) => setAccessToken(target.value), [])}
                 />
             </div>
             ${!!localStorage && html`
@@ -415,7 +416,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                             <input
                                 checked=${rememberLogin}
                                 type="checkbox"
-                                onChange=${handleRmemberLoginClick}
+                                onChange=${handleRememberLoginClick}
                             />
                             Remember login
                         </label></li>
@@ -547,11 +548,42 @@ function NetworkLog() {
     return html`
         <h2>Network Log</h2>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
-        <ol class="network-log_list">
-            ${requests.map(request => (
-                html`<${NetworkLogRequest} key=${request.id} request=${request}/>`
-            ))}
-        </ol>
+        ${requests.length === 0 ? html`
+            <p>Requests to Matrix homeservers will be listed here.</p>
+        ` : html`
+            <ol class="network-log_list">
+                ${requests.map(request => (
+                    html`<${NetworkLogRequest} key=${request.id} request=${request}/>`
+                ))}
+            </ol>
+        `}
+    `;
+}
+
+function SettingsProvider({children}) {
+    const [state, setState] = useState({
+        externalMatrixUrl: 'https://matrix.to/#/',
+        identities: IDENTITIES,
+    });
+
+    useEffect(() => {
+        const setIdentities = (callback) => {
+            setState(state => ({
+                ...state,
+                identities: callback(state.identities),
+            }));
+        };
+
+        setState(state => ({
+            ...state,
+            setIdentities,
+        }));
+    }, []);
+
+    return html`
+        <${Settings.Provider} value=${state}>
+            ${children}
+        </>
     `;
 }
 
@@ -617,13 +649,34 @@ function AliasResolver({identity}) {
 
 function About() {
     return html`
-        <${AppHeader} backUrl="#">Matrix Wrench</>
-        <h2>About</h2>
+        <${AppHeader} backUrl="#">About</>
+        <h2>What is Matrix Wrench?</h2>
+        <p>
+            Matrix Wrench is a fast, convenient way to manage Matrix rooms. It's a user interface for tasks where one would have used the terminal application CURL.
+        </p>
+        <p>
+            A common task is to view and edit a room state, e.g. to change the power levels. It works with access tokens of regular users and appservices (bridges and complex bots). If you give it an appservice token you can access any room the appservice has access to, allowing to easily debug and administrate bridges.
+        </p>
+        <p>
+            Furthermore, a few tasks around homeserver administration are supported, like listing media files in unencrypted rooms. The majority of features uses the <a href="https://spec.matrix.org/">standardized Matrix protocol</a>. If a feature makes use of the Synapse Admin API, this is noted.
+        </p>
+        <h2>Identities</h2>
+        <p>
+            You can manage multiple logins to various homeservers. An identity is a combination of a homeserver URL and an access token. The identity name is only used for identification within Matrix Wrench.
+        </p>
+        <h2>Privacy and Security</h2>
+        <p>
+            No information about your homeserver or actions is sent to the author or host of this web application. Identities are optionally stored in your browser. To eliminate the risk of a malicious release which could compromise your Matrix access tokens, download the application's source code and host it on a static HTTP(S) server.
+        </p>
+        <p>
+            Matrix Wrench is my hobby project without a security audit or peer review. I use it at work and try to apply some best practices from my professional work to the development, however, Matrix Wrench is neither backed nor endorsed by my employer. There are a few unit tests that are automatically run on every commit. The project's dependencies are currently limited to <a href="https://www.npmjs.com/package/htm">htm</a> for rendering the interface.
+        </p>
+        <h2>Development</h2>
         <p>Please file issues and request features on the <a href="https://gitlab.com/jaller94/matrix-wrench/-/issues">issue page on Gitlab.com</a>.</p>
         <ul>
             <li>Code: <a href="https://gitlab.com/jaller94/matrix-wrench">Matrix Wrench on Gitlab.com</a></li>
-            <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
             <li>License: <a href="https://choosealicense.com/licenses/apache-2.0/">Apache 2.0</a></li>
+            <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
         </ul>
     `;
 }
@@ -663,7 +716,7 @@ function saveIdentitiesToLocalStorage(identities) {
 }
 
 function MainPage({identity, roomId}) {
-    const synapseAdmin = true;
+    const synapseAdmin = false;
     return html`
         <${AppHeader}
             backLabel="Switch identity"
@@ -687,11 +740,12 @@ function MainPage({identity, roomId}) {
                 </div>
             `}
         </div>
+        <${NetworkLog} />
     `;
 }
 
 function IdentitySelectorPage() {
-    const [identities, setIdentities] = useState(IDENTITIES);
+    const {identities, setIdentities} = useContext(Settings);
     const [editedIdentity, setEditedIdentity] = useState(null);
     const [editingError, setEditingError] = useState(null);
 
@@ -716,7 +770,7 @@ function IdentitySelectorPage() {
             }
             return newIdentities;
         });
-    }, []);
+    }, [setIdentities]);
 
     const handleSave = useCallback((identity) => {
         setEditingError(null);
@@ -751,7 +805,7 @@ function IdentitySelectorPage() {
             setEditingError(null);
             return newIdentities;
         });
-    }, [editedIdentity]);
+    }, [editedIdentity, setIdentities]);
 
     if (editedIdentity) {
         return html`<${IdentityEditor}
@@ -764,6 +818,7 @@ function IdentitySelectorPage() {
     return html`
         <${AppHeader}>Identities</>
         <main>
+            <p>Add or choose an identity. An identity is a combination of a homeserver URL and an access token.</p>
             <ul class="identity-page_list">
                 <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} />
             </ul>
@@ -1182,7 +1237,7 @@ function AliasActions({ identity, roomId }) {
                 required
                 title="A room alias, e.g. #matrix:matrix.org"
                 value=${alias}
-                oninput=${useCallback(({ target }) => setAlias(target.value), [])}
+                oninput=${useCallback(({target}) => setAlias(target.value), [])}
             />
             <button type="submit" value="add">Add</button>
             <button type="submit" value="remove">Remove</button>
@@ -1454,7 +1509,8 @@ function MediaExplorer({identity, roomId}) {
 }
 
 function IdentityProvider({render, identityName}) {
-    const identity = IDENTITIES.find(ident => ident.name === identityName);
+    const { identities } = useContext(Settings);
+    const identity = identities.find(ident => ident.name === identityName);
     if (!identity) {
         return html`
             <${AppHeader}
@@ -1652,8 +1708,10 @@ function App() {
     }
 
     return html`
-        <${NetworkRequestsProvider}>
-            ${child}
+        <${SettingsProvider}>
+            <${NetworkRequestsProvider}>
+                ${child}
+            </>
         </>
     `;
 }

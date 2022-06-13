@@ -104,7 +104,7 @@ export function auth(identity, resource, init) {
         {
             ...init,
             headers: {
-                ...init.headers,
+                ...(init ?? {}).headers,
                 ...(identity.accessToken && {
                     Authorization: `Bearer ${identity.accessToken}`,
                 }),
@@ -237,7 +237,7 @@ export async function getState(identity, roomId, type, stateKey) {
     if (stateKey) {
         url += `/${encodeURIComponent(stateKey)}`;
     }
-    return doRequest(...auth(url, {
+    return doRequest(...auth(identity, url, {
         method: 'GET',
     }));
 }
@@ -307,7 +307,7 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
     if (transactionId) {
         url += `/${transactionId}`;
     }
-    return doRequest(...auth(url, {
+    return doRequest(...auth(identity, url, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -330,7 +330,7 @@ export async function setState(identity, roomId, type, stateKey, content) {
     if (stateKey) {
         url += `/${encodeURIComponent(stateKey)}`;
     }
-    return doRequest(...auth(url, {
+    return doRequest(...auth(identity, url, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

@@ -4,10 +4,14 @@
 * Added: Act as other users when using AppService tokens.
 * Added: Create and mutate users using the Synapse API.
 
-## Next release
+## v0.8.0 (2022-06-13)
+*Happy birthday, Matrix Wrench!*
+
 * Added: All pages have URLs to quickly navigate to.
 * Added: Bulk actions to invite and kick users
+* Added: The About page now shines some light on the application's features and security.
 * Changed: The labels of input fields are no longer animated.
+* Fixed: When editing an identity, "Remember login" wasn't set correctly.
 
 ## v0.7.0 (2022-05-06)
 * Added: A "Am I a member?" button tells your membership state in a room.

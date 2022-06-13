@@ -4,6 +4,7 @@ describe('Identity Management', () => {
         cy.contains('Add identity').click();
         cy.get('input[name=name]').type('jaller94');
         cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.contains('Remember login').click();
         cy.get('form').submit();
         cy.contains('jaller94').click();
         cy.contains('Alias to Room ID');
@@ -16,6 +17,7 @@ describe('Identity Management', () => {
         cy.get('input[name=name]').type('jaller94');
         cy.get('input[name=url]').type('https://chrpaul.de');
         cy.get('input[name=accessToken]').type('syn_abc');
+        cy.contains('Remember login').click();
         cy.get('form').submit();
         cy.contains('jaller94').click();
         cy.get('h1').should('contain', 'jaller94');
@@ -26,6 +28,7 @@ describe('Identity Management', () => {
         cy.contains('Add identity').click();
         cy.get('input[name=name]').type('jaller94');
         cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.contains('Remember login').click();
         cy.get('form').submit();
         cy.contains('Add identity').click();
         cy.get('input[name=name]').type('jaller94');
@@ -39,6 +42,7 @@ describe('Identity Management', () => {
         cy.contains('Add identity').click();
         cy.get('input[name=name]').type('jaller94');
         cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.contains('Remember login').click();
         cy.get('form').submit();
         cy.contains('Add identity').click();
         cy.get('input[name=name]').type('jaller95');
@@ -56,6 +60,7 @@ describe('Identity Management', () => {
         cy.contains('Add identity').click();
         cy.get('input[name=name]').type('jaller94');
         cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.contains('Remember login').click();
         cy.get('form').submit();
         cy.get('h1').should('contain', 'Identities');
         cy.get('[title="Edit identity jaller94"]').click();
@@ -69,6 +74,7 @@ describe('Identity Management', () => {
         cy.contains('Add identity').click();
         cy.get('input[name=name]').type('jaller94');
         cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.contains('Remember login').click();
         cy.get('form').submit();
         cy.get('h1').should('contain', 'Identities');
         cy.get('[title="Edit identity jaller94"]').click();
@@ -82,6 +88,7 @@ describe('Identity Management', () => {
         cy.get('input[name=name]').type('jaller94');
         cy.get('input[name=url]').type('https://chrpaul.de');
         cy.get('input[name=accessToken]').type('syn_abc');
+        cy.contains('Remember login').click();
         cy.get('form').submit();
         cy.get('h1').should('contain', 'Identities');
         cy.get('[title="Edit identity jaller94"]').click();
