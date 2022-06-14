@@ -715,8 +715,21 @@ function saveIdentitiesToLocalStorage(identities) {
     localStorage.setItem('identities', JSON.stringify(identitiesToStore));
 }
 
+function SynapseAdminPage({identity}) {
+    return html`
+        <${AppHeader}
+            backLabel="Switch identity"
+            backUrl="#"
+        >${identity.name ?? 'No authentication'}</>
+        <div class="card">
+            <h2>Create/Mutate user</h2>
+            <${MutateUserForm} identity=${identity}/>
+        </div>
+        <${NetworkLog} />
+    `;
+}
+
 function MainPage({identity, roomId}) {
-    const synapseAdmin = false;
     return html`
         <${AppHeader}
             backLabel="Switch identity"
@@ -732,11 +745,6 @@ function MainPage({identity, roomId}) {
                 <div class="card">
                     <h2>Alias to Room ID</h2>
                     <${AliasResolver} identity=${identity}/>
-                </div>
-            `}
-            ${synapseAdmin && html`
-                <div class="card">
-                    <${MutateUserForm} identity=${identity}/>
                 </div>
             `}
         </div>
@@ -1677,28 +1685,27 @@ function App() {
             <${IdentityProvider}
                 identityName=${identityName}
                 render=${(identity) => {
-                    if (matchRoomPage.groups.subpage === 'invite') {
-                        return html`
-                            <${BulkInvitePage}
+                    if (matchRoomPage) {
+                        if (matchRoomPage.groups.roomId === 'synapse-admin') {
+                            return html`<${SynapseAdminPage}
+                                identity=${identity}
+                            />`;
+                        } else if (matchRoomPage.groups.subpage === 'invite') {
+                            return html`<${BulkInvitePage}
                                 identity=${identity}
                                 roomId=${roomId}
-                            />
-                        `;
-                    }
-                    if (matchRoomPage.groups.subpage === 'kick') {
-                        return html`
-                            <${BulkKickPage}
+                            />`;
+                        } else if (matchRoomPage.groups.subpage === 'kick') {
+                            return html`<${BulkKickPage}
                                 identity=${identity}
                                 roomId=${roomId}
-                            />
-                        `;
+                            />`;
+                        }
                     }
-                    return html`
-                        <${MainPage}
-                            identity=${identity}
-                            roomId=${roomId}
-                        />
-                    `;
+                    return html`<${MainPage}
+                        identity=${identity}
+                        roomId=${roomId}
+                    />`;
                 }}
             />
         `;
