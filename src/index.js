@@ -181,15 +181,19 @@ function RoomActions({ identity, roomId }) {
 }
 
 function MutateUserForm({ identity }) {
+    const [admin, setAdmin] = useState(false);
+    const [deactivated, setDeactivated] = useState(false);
     const [logoutDevices, setLogoutDevices] = useState(true);
     const [password, setPassword] = useState('');
     const [userId, setUserId] = useState('');
     const [userType, setUserType] = useState('');
 
     const body = useMemo(() => ({
+        admin,
+        deactivated,
         password,
         user_type: userType || null,
-    }), [password, userType]);
+    }), [admin, password, userType]);
 
     const variables = useMemo(() => ({
         userId,
@@ -218,16 +222,6 @@ function MutateUserForm({ identity }) {
                 value=${password}
                 oninput=${useCallback(({target}) => setPassword(target.value), [])}
             />
-            <ul class="checkbox-list">
-                <li><label>
-                    <input
-                        checked=${logoutDevices}
-                        type="checkbox"
-                        onChange=${useCallback(({target}) => setLogoutDevices(target.checked), [])}
-                    />
-                    Remember login
-                </label></li>
-            </ul>
             <p>
                 <label>User type
                     <select
@@ -239,6 +233,32 @@ function MutateUserForm({ identity }) {
                     </select>
                 </label>
             </p>
+            <ul class="checkbox-list">
+                <li><label>
+                    <input
+                        checked=${logoutDevices}
+                        type="checkbox"
+                        onChange=${useCallback(({target}) => setLogoutDevices(target.checked), [])}
+                    />
+                    Log out all devices
+                </label></li>
+                <li><label>
+                    <input
+                        checked=${admin}
+                        type="checkbox"
+                        onChange=${useCallback(({target}) => setAdmin(target.checked), [])}
+                    />
+                    Synapse admin
+                </label></li>
+                <li><label>
+                    <input
+                        checked=${deactivated}
+                        type="checkbox"
+                        onChange=${useCallback(({ target }) => setDeactivated(target.checked), [])}
+                    />
+                    Deactivated
+                </label></li>
+            </ul>
             <button>Create/mutate user</button>
         </>
     `;
