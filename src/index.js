@@ -950,6 +950,31 @@ function RoomSelector({identity, roomId}) {
         setResolvedRoomId(roomId);
     }, [identity, room]);
 
+    const handleSpaceManagement = useCallback(async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        let roomId = room;
+        if (room.startsWith('#')) {
+            setBusy(true);
+            try {
+                roomId = (await resolveAlias(identity, room)).room_id;
+            } catch (error) {
+                console.warn(error);
+                const message = `Couldn't resolve alias! ${error}`;
+                alert(message);
+                return;
+            } finally {
+                setBusy(false);
+            }
+        }
+        window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/space-management`;
+        setResolvedRoomId(roomId);
+        setRecentRooms(recentRooms => ([
+            roomId,
+            ...recentRooms.filter(r => r !== roomId),
+        ]).slice(0, 4));
+    }, [identity, room]);
+
     const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
@@ -1003,6 +1028,10 @@ function RoomSelector({identity, roomId}) {
                     type="button"
                     onclick=${handleResolveAlias}
                 >Resolve alias</button>
+                <button
+                    type="button"
+                    onclick=${handleSpaceManagement}
+                >Manage Space</button>
                 <button type="submit" class="primary">Open details</button>
             </fieldset></form>
             <div>
@@ -1663,6 +1692,53 @@ function BulkActionTracker({ action, items, identity, roomId }) {
     `;
 }
 
+function SpaceManagementPage({identity, roomId}) {
+    const [rooms, setRooms] = useState(null);
+    
+    const handleQuery = useCallback(async() => {
+        const state = await getState(identity, roomId);
+        const childrenEvents = state.filter(event => event.type === 'm.space.child');
+        const name = state.find(event => event.type === 'm.room.name').content.name;
+        const childrenRoomIds = childrenEvents.map(event => event.state_key);
+        const rooms = [{
+            id: roomId,
+            name: name,
+            children: childrenRoomIds.map(roomId => ({
+                id: roomId,
+            })),
+        }];
+        console.log(rooms);
+        setRooms(rooms);
+    }, []);
+
+    return html`
+        <${AppHeader}
+            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
+        >Space Management</>
+        <main>
+            <button
+                type="button"
+                onClick=${handleQuery}
+            >Query</button>
+            ${rooms && html`
+                <ul>
+                    ${rooms.map(room => (html`
+                        <li key=${room.id}>${room.name ?? room.id}</li>
+                        ${room.children && html`
+                            <ul>
+                                ${room.children.map(room => (html`
+                                    <li key=${room.id}>${room.name ?? room.id}</li>
+                                `))}
+                            </ul>
+                        `}
+                    `))}
+                </ul>
+            `}
+        </main>
+        <${NetworkLog} />
+    `;
+}
+
 // function DesignTest() {
 //     return html`
 //         <${ResponseStatus} status=${undefined}/>
@@ -1717,6 +1793,11 @@ function App() {
                             />`;
                         } else if (matchRoomPage.groups.subpage === 'kick') {
                             return html`<${BulkKickPage}
+                                identity=${identity}
+                                roomId=${roomId}
+                            />`;
+                        } else if (matchRoomPage.groups.subpage === 'space-management') {
+                            return html`<${SpaceManagementPage}
                                 identity=${identity}
                                 roomId=${roomId}
                             />`;
