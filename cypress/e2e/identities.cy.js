@@ -96,4 +96,29 @@ describe('Identity Management', () => {
         cy.get('form').submit();
         cy.get('h1').should('contain', 'Identities');
     });
+    it('Remembers a login after a reload, if told to remember', () => {
+        cy.visit('http://localhost:1234');
+        cy.get('h1').should('contain', 'Identities');
+        cy.contains('Add identity').click();
+        cy.get('h1').should('contain', 'Identity Editor');
+        cy.get('input[name=name]').type('identity-to-remember');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.contains('Remember login').click();
+        cy.get('form').submit();
+        cy.contains('identity-to-remember');
+        cy.reload();
+        cy.contains('identity-to-remember');
+    });
+    it('Does not remember a login after a reload, if told not to remember', () => {
+        cy.visit('http://localhost:1234');
+        cy.get('h1').should('contain', 'Identities');
+        cy.contains('Add identity').click();
+        cy.get('h1').should('contain', 'Identity Editor');
+        cy.get('input[name=name]').type('identity-not-to-remember');
+        cy.get('input[name=url]').type('https://chrpaul.de');
+        cy.get('form').submit();
+        cy.contains('identity-not-to-remember');
+        cy.reload();
+        // cy.containsNot('identity-not-to-remember');
+    });
 });
