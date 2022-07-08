@@ -309,10 +309,6 @@ label {
     box-sizing: border-box;
 }
 
-.high-up-label-input>input::placeholder {
-    color: transparent;
-}
-
 .high-up-label-input_required {
     color: darkred;
 }
