@@ -71,6 +71,7 @@ const NetworkRequests = createContext({
 const Settings = createContext({
     externalMatrixUrl: 'https://matrix.to/#/',
     identities: [],
+    showNetworkLog: true,
 });
 
 // function Header() {
@@ -572,7 +573,11 @@ function NetworkRequestsProvider({children}) {
 }
 
 function NetworkLog() {
+    const { showNetworkLog } = useContext(Settings);
     const {isShortened, requests} = useContext(NetworkRequests);
+    if (!showNetworkLog) {
+        return;
+    }
     return html`
         <h2>Network Log</h2>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
@@ -592,9 +597,17 @@ function SettingsProvider({children}) {
     const [state, setState] = useState({
         externalMatrixUrl: 'https://matrix.to/#/',
         identities: IDENTITIES,
+        showNetworkLog: true,
     });
 
     useEffect(() => {
+        const setExternalMatrixUrl = (externalMatrixUrl) => {
+            setState(state => ({
+                ...state,
+                externalMatrixUrl,
+            }));
+        };
+        
         const setIdentities = (callback) => {
             setState(state => ({
                 ...state,
@@ -602,9 +615,18 @@ function SettingsProvider({children}) {
             }));
         };
 
+        const setShowNetworkLog = (showNetworkLog) => {
+            setState(state => ({
+                ...state,
+                showNetworkLog,
+            }));
+        };
+
         setState(state => ({
             ...state,
+            setExternalMatrixUrl,
             setIdentities,
+            setShowNetworkLog,
         }));
     }, []);
 
@@ -1206,8 +1228,10 @@ function RoomPage({identity, roomId}) {
 }
 
 function SettingsPage() {
-    const [showNetworkLog, setShowNetworkLog] = useState(true);
-    const [matrixUrl, setMatrixUrl] = useState('');
+    const {
+        externalMatrixUrl, setExternalMatrixUrl,
+        showNetworkLog, setShowNetworkLog,
+    } = useContext(Settings);
 
     return html`
         <${AppHeader}
@@ -1218,16 +1242,15 @@ function SettingsPage() {
                 <${HighUpLabelInput}
                     name="external_matrix_links"
                     label="External Matrix links"
-                    placeholder="matrix://"
-                    value=${matrixUrl}
-                    oninput=${useCallback(({target}) => setMatrixUrl(target.value), [])}
+                    value=${externalMatrixUrl}
+                    oninput=${useCallback(({target}) => setExternalMatrixUrl(target.value), [setExternalMatrixUrl])}
                 />
                 <ul class="checkbox-list">
                     <li><label>
                         <input
                             checked=${showNetworkLog}
                             type="checkbox"
-                            onChange=${useCallback(({target}) => setShowNetworkLog(target.checked), [])}
+                            onChange=${useCallback(({target}) => setShowNetworkLog(target.checked), [setShowNetworkLog])}
                         />
                         Show network log
                     </label></li>
@@ -1698,7 +1721,7 @@ function SpaceManagementPage({identity, roomId}) {
                 })),
             },
         ];
-        console.log(rooms);
+        console.debug(rooms);
         setRooms(rooms);
     }, [identity, roomId]);
 
