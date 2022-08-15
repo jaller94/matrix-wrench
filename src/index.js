@@ -40,6 +40,9 @@ import {
     unbanUser,
     whoAmI,
 } from './matrix.js';
+import {
+    loginWithPassword,
+} from './matrix-auth.js';
 
 function alert(...args) {
     console.warn(...args);
@@ -383,10 +386,67 @@ function WhatsMyMemberState({identity, roomId}) {
     `;
 }
 
+function AccessTokenInput({value, onAccessToken}) {
+    const [accessToken, setAccessToken] = useState(value ?? '');
+
+    const handleInput = useCallback(({target}) => {
+        setAccessToken(target.value);
+        onAccessToken(target.value);
+    }, [onAccessToken]);
+
+    return html`
+        <div>
+            <${HighUpLabelInput}
+                label="Access token"
+                name="accessToken"
+                value=${accessToken}
+                type="password"
+                oninput=${handleInput}
+            />
+        </div>
+    `;
+}
+
+function PasswordInput({serverAddress, onAccessToken}) {
+    const [user, setUser] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSubmit = useCallback(async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const accessToken = await loginWithPassword(serverAddress, user, password);
+        onAccessToken(accessToken);
+    }, [password, serverAddress, user, onAccessToken]);
+
+    return html`
+        <form onsubmit=${handleSubmit}>
+            <div>
+                <${HighUpLabelInput}
+                    label="Matrix ID or user name"
+                    name="user"
+                    value=${user}
+                    oninput=${useCallback(({target}) => setUser(target.value), [])}}
+                />
+            </div>
+            <div>
+                <${HighUpLabelInput}
+                    label="Password"
+                    name="password"
+                    value=${password}
+                    type="password"
+                    oninput=${useCallback(({target}) => setPassword(target.value), [])}}
+                />
+            </div>
+            <button>Get access token</button>
+        </div>
+    `;
+}
+
 function IdentityEditor({error, identity, onCancel, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
+    const [authType, setAuthType] = useState('accessToken');
     const [rememberLogin, setRememberLogin] = useState(identity.rememberLogin ?? false);
 
     const handleSubmit = useCallback(event => {
@@ -422,13 +482,26 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 />
             </div>
             <div>
-                <${HighUpLabelInput}
-                    label="Access token"
-                    name="accessToken"
-                    value=${accessToken}
-                    oninput=${useCallback(({target}) => setAccessToken(target.value), [])}
-                />
+                <h3>Authorization method</h3>
+                <button
+                    type="button"
+                    onclick=${useCallback(() => setAuthType('accessToken'), [])}
+                >Access Token</button>
+                <button
+                    type="button"
+                    onclick=${useCallback(() => setAuthType('password'), [])}
+                >Password</button>
             </div>
+            ${authType === 'accessToken' ? html`
+                <${AccessTokenInput}
+                    value=${accessToken}
+                    onAccessToken=${setAccessToken}
+                />
+            ` : html`
+                <${PasswordInput}
+                    onAccessToken=${setAccessToken}
+                />
+            `}
             ${!!localStorage && html`
                 <div>
                     <ul class="checkbox-list">
