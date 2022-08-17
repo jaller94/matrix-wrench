@@ -196,7 +196,7 @@ function MutateUserForm({ identity }) {
         deactivated,
         password,
         user_type: userType || null,
-    }), [admin, password, userType]);
+    }), [admin, deactivated, password, userType]);
 
     const variables = useMemo(() => ({
         userId,
