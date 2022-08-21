@@ -21,12 +21,10 @@ export async function loginWithPassword(serverAddress, user, password) {
               user,
             },
             password,
-            //TODO Determine if we need a session.
-            // session,
         }),
     });
     if (!resp.ok) {
-        throw Error('TODO: Failed to log in.');
+        throw Error('Failed to log in.');
     }
     return resp.json();
 }

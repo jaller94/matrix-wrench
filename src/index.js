@@ -425,7 +425,7 @@ function PasswordInput({serverAddress, onAccessToken}) {
                     label="Matrix ID or user name"
                     name="user"
                     value=${user}
-                    oninput=${useCallback(({target}) => setUser(target.value), [])}}
+                    oninput=${useCallback(({target}) => setUser(target.value), [])}
                 />
             </div>
             <div>
@@ -434,7 +434,7 @@ function PasswordInput({serverAddress, onAccessToken}) {
                     name="password"
                     value=${password}
                     type="password"
-                    oninput=${useCallback(({target}) => setPassword(target.value), [])}}
+                    oninput=${useCallback(({target}) => setPassword(target.value), [])}
                 />
             </div>
             <button>Get access token</button>
@@ -499,6 +499,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 />
             ` : html`
                 <${PasswordInput}
+                    serverAddress=${serverAddress}
                     onAccessToken=${setAccessToken}
                 />
             `}
