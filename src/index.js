@@ -386,27 +386,6 @@ function WhatsMyMemberState({identity, roomId}) {
     `;
 }
 
-function AccessTokenInput({value, onAccessToken}) {
-    const [accessToken, setAccessToken] = useState(value ?? '');
-
-    const handleInput = useCallback(({target}) => {
-        setAccessToken(target.value);
-        onAccessToken(target.value);
-    }, [onAccessToken]);
-
-    return html`
-        <div>
-            <${HighUpLabelInput}
-                label="Access token"
-                name="accessToken"
-                value=${accessToken}
-                type="password"
-                oninput=${handleInput}
-            />
-        </div>
-    `;
-}
-
 function PasswordInput({serverAddress, onAccessToken}) {
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
@@ -414,8 +393,8 @@ function PasswordInput({serverAddress, onAccessToken}) {
     const handleSubmit = useCallback(async (event) => {
         event.preventDefault();
         event.stopPropagation();
-        const accessToken = await loginWithPassword(serverAddress, user, password);
-        onAccessToken(accessToken);
+        const data = await loginWithPassword(serverAddress, user, password);
+        onAccessToken(data.access_token);
     }, [password, serverAddress, user, onAccessToken]);
 
     return html`
@@ -448,6 +427,13 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
     const [authType, setAuthType] = useState('accessToken');
     const [rememberLogin, setRememberLogin] = useState(identity.rememberLogin ?? false);
+
+    const handleReceivedAccessToken = useCallback((accessToken) => {
+        setAccessToken(accessToken);
+        setAuthType('accessToken');
+    }, []);
+
+    const handleAccessTokenInput = useCallback(({target}) => setAccessToken(target.value), []);
 
     const handleSubmit = useCallback(event => {
         event.preventDefault();
@@ -482,25 +468,44 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 />
             </div>
             <div>
-                <h3>Authorization method</h3>
-                <button
-                    type="button"
-                    onclick=${useCallback(() => setAuthType('accessToken'), [])}
-                >Access Token</button>
-                <button
-                    type="button"
-                    onclick=${useCallback(() => setAuthType('password'), [])}
-                >Password</button>
+                <fieldset>
+                    <legend>Authorization method</legend>
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="authType"
+                            checked=${authType === 'accessToken'}
+                            onclick=${useCallback(() => setAuthType('accessToken'), [])}
+                        />
+                        Access Token
+                    </label>
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="authType"
+                            checked=${authType === 'password'}
+                            onchange=${useCallback(() => setAuthType('password'), [])}
+                        />
+                        Password
+                    </label>
+                </fieldset>
             </div>
             ${authType === 'accessToken' ? html`
-                <${AccessTokenInput}
-                    value=${accessToken}
-                    onAccessToken=${setAccessToken}
-                />
+                <div>
+                    <${HighUpLabelInput}
+                        label="Access token"
+                        name="accessToken"
+                        value=${accessToken}
+                        type="password"
+                        oninput=${handleAccessTokenInput}
+                    />
+                </div>
             ` : html`
                 <${PasswordInput}
                     serverAddress=${serverAddress}
-                    onAccessToken=${setAccessToken}
+                    onAccessToken=${handleReceivedAccessToken}
                 />
             `}
             ${!!localStorage && html`

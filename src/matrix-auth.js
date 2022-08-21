@@ -26,5 +26,5 @@ export async function loginWithPassword(serverAddress, user, password) {
     if (!resp.ok) {
         throw Error('Failed to log in.');
     }
-    return resp.json();
+    return await resp.json();
 }
