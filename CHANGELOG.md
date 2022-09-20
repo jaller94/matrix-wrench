@@ -4,6 +4,9 @@
 * Added: Act as other users when using AppService tokens.
 * Added: Create and mutate users using the Synapse API.
 
+## v0.8.1 (2022-08-15)
+* Fixed: When creating or mutating a user, the deactivated status would not get applied, if it was changed last in the interface.
+
 ## v0.8.0 (2022-06-13)
 *Happy birthday, Matrix Wrench!*
 
