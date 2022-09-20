@@ -16,6 +16,9 @@ import {
 import {
     HighUpLabelInput,
 } from './components/inputs.js';
+import {
+    RoomToYamlPage,
+} from './components/room-to-yaml.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -1709,6 +1712,11 @@ function App() {
                         if (matchRoomPage.groups.roomId === 'synapse-admin') {
                             return html`<${SynapseAdminPage}
                                 identity=${identity}
+                            />`;
+                        } else if (matchRoomPage.groups.subpage === 'yaml') {
+                            return html`<${RoomToYamlPage}
+                                identity=${identity}
+                                roomId=${roomId}
                             />`;
                         } else if (matchRoomPage.groups.subpage === 'invite') {
                             return html`<${BulkInvitePage}
