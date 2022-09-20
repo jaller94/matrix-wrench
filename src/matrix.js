@@ -174,6 +174,18 @@ export async function deleteRoomAlias(identity, roomAlias) {
 }
 
 /**
+ * Gets account data. Exclusive to the Synapse Admin API.
+ * @param {Object} identity
+ * @param {string} userId
+ * @returns {Promise<{joined: Record<string, Object>}>}
+ */
+export async function getAccount(identity, roomId) {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v2/users?limit=1&user_id=${encodeURIComponent(roomId)}`, {
+        method: 'GET',
+    }));
+}
+
+/**
  * Gets a list of joined members of a room.
  * @param {Object} identity
  * @param {string} roomId

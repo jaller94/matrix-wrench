@@ -27,6 +27,7 @@ import {
     createRoomAlias,
     deleteRoomAlias,
     doRequest,
+    getAccount,
     getJoinedRooms,
     getMediaByRoom,
     getMembers,
@@ -199,6 +200,11 @@ function MutateUserForm({ identity }) {
         userId,
     }), [userId]);
 
+    const loadInfo = useCallback(async() => {
+        const account = await getAccount(identity, userId);
+        console.log(account);
+    }, [identity, userId]);
+
     return html`
         <${CustomForm}
             body=${body}
@@ -216,6 +222,9 @@ function MutateUserForm({ identity }) {
                 value=${userId}
                 oninput=${useCallback(({target}) => setUserId(target.value), [])}
             />
+            <button
+                onclick=${loadInfo}
+            >Load</button>
             <${HighUpLabelInput}
                 label="Password"
                 title="Optional password"
@@ -741,6 +750,7 @@ function SynapseAdminPage({identity}) {
             backLabel="Switch identity"
             backUrl="#"
         >${identity.name ?? 'No authentication'}</>
+        <${MainPageNav} identity=${identity}/>
         <div class="card">
             <h2>Create/Mutate user</h2>
             <${MutateUserForm} identity=${identity}/>
@@ -755,6 +765,7 @@ function MainPage({identity, roomId}) {
             backLabel="Switch identity"
             backUrl="#"
         >${identity.name ?? 'No authentication'}</>
+        <${MainPageNav} identity=${identity}/>
         <div style="display: flex; flex-direction: column">
             ${identity.accessToken ? html`
                 <div class="card">
@@ -1606,6 +1617,7 @@ function BulkKickPage({identity, roomId}) {
         <${AppHeader}
             backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
         >Bulk Kick</>
+        <${MainPageNav} identity=${identity}/>
         <main>
             <h2>${roomId}</h2>
             ${userIds === null ? html` 
@@ -1673,6 +1685,15 @@ function BulkActionTracker({ action, items, identity, roomId }) {
 //         <${ResponseStatus} status=${503}/>
 //     `;
 // }
+
+function MainPageNav({identity}) {
+    return html`
+        <nav>
+            <a href=${`#/${encodeURIComponent(identity.name)}`}>Main</a>
+            <a href=${`#/${encodeURIComponent(identity.name)}/synapse-admin`}>Synapse Admin</a>
+        </nav>
+    `;
+}
 
 function App() {
     const [page, setPage] = useState(location.hash.slice(1));
