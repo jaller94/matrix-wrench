@@ -416,6 +416,7 @@ function PasswordInput({serverAddress, onAccessToken}) {
             </div>
             <div>
                 <${HighUpLabelInput}
+                    autocomplete="current-password"
                     label="Password"
                     name="password"
                     value=${password}
@@ -502,6 +503,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
             ${authType === 'accessToken' ? html`
                 <div>
                     <${HighUpLabelInput}
+                        autocomplete="current-password"
                         label="Access token"
                         name="accessToken"
                         value=${accessToken}
