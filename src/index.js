@@ -923,31 +923,6 @@ function RoomSelector({identity, roomId}) {
         setResolvedRoomId(roomId);
     }, [identity, room]);
 
-    const handleSpaceManagement = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        let roomId = room;
-        if (room.startsWith('#')) {
-            setBusy(true);
-            try {
-                roomId = (await resolveAlias(identity, room)).room_id;
-            } catch (error) {
-                console.warn(error);
-                const message = `Couldn't resolve alias! ${error}`;
-                alert(message);
-                return;
-            } finally {
-                setBusy(false);
-            }
-        }
-        window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/space-management`;
-        setResolvedRoomId(roomId);
-        setRecentRooms(recentRooms => ([
-            roomId,
-            ...recentRooms.filter(r => r !== roomId),
-        ]).slice(0, 4));
-    }, [identity, room]);
-
     const handleSubmit = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
@@ -1002,10 +977,6 @@ function RoomSelector({identity, roomId}) {
                     type="button"
                     onclick=${handleResolveAlias}
                 >Resolve alias</button>
-                <button
-                    type="button"
-                    onclick=${handleSpaceManagement}
-                >Manage Space</button>
                 <button type="submit" class="primary">Open details</button>
             </fieldset></form>
             <div>
