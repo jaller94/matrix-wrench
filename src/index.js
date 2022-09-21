@@ -1771,7 +1771,6 @@ function SpaceManagementPage({identity, roomId}) {
                 })),
             },
         ];
-        console.debug(rooms);
         setRooms(rooms);
     }, [identity, roomId]);
 
