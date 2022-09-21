@@ -18,6 +18,9 @@ import {
     HighUpLabelInput,
 } from './components/inputs.js';
 import AboutPage from './pages/about.js';
+import {
+    RoomToYamlPage,
+} from './pages/room-to-yaml.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -651,7 +654,7 @@ function NetworkRequestsProvider({children}) {
     `;
 }
 
-function NetworkLog() {
+export function NetworkLog() {
     const { showNetworkLog } = useContext(Settings);
     const {isShortened, requests} = useContext(NetworkRequests);
     if (!showNetworkLog) {
@@ -1850,6 +1853,11 @@ function App() {
                         if (matchRoomPage.groups.roomId === 'synapse-admin') {
                             return html`<${SynapseAdminPage}
                                 identity=${identity}
+                            />`;
+                        } else if (matchRoomPage.groups.subpage === 'yaml') {
+                            return html`<${RoomToYamlPage}
+                                identity=${identity}
+                                roomId=${roomId}
                             />`;
                         } else if (matchRoomPage.groups.subpage === 'invite') {
                             return html`<${BulkInvitePage}
