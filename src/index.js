@@ -13,12 +13,14 @@ import {
     fillInVariables,
     uniqueId,
 } from './helper.js';
+import { AppHeader } from './components/header.js';
 import {
     HighUpLabelInput,
 } from './components/inputs.js';
 import {
     RoomToYamlPage,
 } from './components/room-to-yaml.js';
+import AboutPage from './pages/about.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -72,6 +74,7 @@ const NetworkRequests = createContext({
 const Settings = createContext({
     externalMatrixUrl: 'https://matrix.to/#/',
     identities: [],
+    showNetworkLog: true,
 });
 
 // function Header() {
@@ -138,7 +141,7 @@ function CustomButton({ body, identity, label, method, requiresConfirmation, url
     `;
 }
 
-function RoomActions({ identity, roomId }) {
+function RoomActions({identity, roomId}) {
     const variables = useMemo(() => ({
         roomId,
     }), [roomId]);
@@ -175,7 +178,7 @@ function RoomActions({ identity, roomId }) {
             url="/_matrix/client/v3/knock/!{roomId}"
             variables=${variables}
         />
-        <hr />
+        <hr/>
         <ul>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/kick`}>Bulk kick</a></li>
@@ -362,11 +365,15 @@ function WhatsMyMemberState({identity, roomId}) {
             };
             setInfo(translations[data.membership] ?? data.membership);
         } catch(error) {
-            if (error instanceof MatrixError) {
+            if (error instanceof MatrixError && error.content && error.content.errcode === 'string') {
                 if (error.content.errcode === 'M_UNKNOWN_TOKEN') {
                     setInfo('Invalid access token');
+                } else if (error.content.errcode === 'M_FORBIDDEN') {
+                    setInfo('No access to room. It may not exist.');
                 } else if (error.content.errcode === 'M_NOT_FOUND') {
-                    setInfo('No member event for you found');
+                    setInfo('No member event for you found.');
+                } else {
+                    setInfo(`Not a member. Server replied with the error ${error.content.errcode}.`);
                 }
             } else {
                 alert(error);
@@ -426,8 +433,10 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
             </div>
             <div>
                 <${HighUpLabelInput}
+                    autocomplete="current-password"
                     label="Access token"
                     name="accessToken"
+                    type="password"
                     value=${accessToken}
                     oninput=${useCallback(({target}) => setAccessToken(target.value), [])}
                 />
@@ -567,7 +576,11 @@ function NetworkRequestsProvider({children}) {
 }
 
 function NetworkLog() {
+    const { showNetworkLog } = useContext(Settings);
     const {isShortened, requests} = useContext(NetworkRequests);
+    if (!showNetworkLog) {
+        return;
+    }
     return html`
         <h2>Network Log</h2>
         ${isShortened && html`<p>Older entries have been removed.</p>`}
@@ -587,9 +600,17 @@ function SettingsProvider({children}) {
     const [state, setState] = useState({
         externalMatrixUrl: 'https://matrix.to/#/',
         identities: IDENTITIES,
+        showNetworkLog: true,
     });
 
     useEffect(() => {
+        const setExternalMatrixUrl = (externalMatrixUrl) => {
+            setState(state => ({
+                ...state,
+                externalMatrixUrl,
+            }));
+        };
+        
         const setIdentities = (callback) => {
             setState(state => ({
                 ...state,
@@ -597,9 +618,18 @@ function SettingsProvider({children}) {
             }));
         };
 
+        const setShowNetworkLog = (showNetworkLog) => {
+            setState(state => ({
+                ...state,
+                showNetworkLog,
+            }));
+        };
+
         setState(state => ({
             ...state,
+            setExternalMatrixUrl,
             setIdentities,
+            setShowNetworkLog,
         }));
     }, []);
 
@@ -667,63 +697,6 @@ function AliasResolver({identity}) {
             <strong>Room id:</strong>
             <code style="border: 2px black dotted; user-select:all; margin-left: .5em">${roomId || 'N/A'}</code>
         </div>
-    `;
-}
-
-function About() {
-    return html`
-        <${AppHeader} backUrl="#">About</>
-        <h2>What is Matrix Wrench?</h2>
-        <p>
-            Matrix Wrench is a fast, convenient way to manage Matrix rooms. It's a user interface for tasks where one would have used the terminal application CURL.
-        </p>
-        <p>
-            A common task is to view and edit a room state, e.g. to change the power levels. It works with access tokens of regular users and appservices (bridges and complex bots). If you give it an appservice token you can access any room the appservice has access to, allowing to easily debug and administrate bridges.
-        </p>
-        <p>
-            Furthermore, a few tasks around homeserver administration are supported, like listing media files in unencrypted rooms. The majority of features uses the <a href="https://spec.matrix.org/">standardized Matrix protocol</a>. If a feature makes use of the Synapse Admin API, this is noted.
-        </p>
-        <h2>Identities</h2>
-        <p>
-            You can manage multiple logins to various homeservers. An identity is a combination of a homeserver URL and an access token. The identity name is only used for identification within Matrix Wrench.
-        </p>
-        <h2>Privacy and Security</h2>
-        <p>
-            No information about your homeserver or actions is sent to the author or host of this web application. Identities are optionally stored in your browser. To eliminate the risk of a malicious release which could compromise your Matrix access tokens, download the application's source code and host it on a static HTTP(S) server.
-        </p>
-        <p>
-            Matrix Wrench is my hobby project without a security audit or peer review. I use it at work and try to apply some best practices from my professional work to the development, however, Matrix Wrench is neither backed nor endorsed by my employer. There are a few unit tests that are automatically run on every commit. The project's dependencies are currently limited to <a href="https://www.npmjs.com/package/htm">htm</a> for rendering the interface.
-        </p>
-        <h2>Development</h2>
-        <p>Please file issues and request features on the <a href="https://gitlab.com/jaller94/matrix-wrench/-/issues">issue page on Gitlab.com</a>.</p>
-        <ul>
-            <li>Code: <a href="https://gitlab.com/jaller94/matrix-wrench">Matrix Wrench on Gitlab.com</a></li>
-            <li>License: <a href="https://choosealicense.com/licenses/apache-2.0/">Apache 2.0</a></li>
-            <li>Author: <a href="https://chrpaul.de/about">Christian Paul</a></li>
-        </ul>
-    `;
-}
-
-function AppHeader({backLabel = 'Back', backUrl, children, onBack}) {
-    const handleBack = useCallback(event => {
-        if (backUrl) {
-            event.preventDefault();
-            event.stopPropagation();
-            window.location = backUrl;
-        }
-        if (onBack) {
-            onBack(event);
-        }
-    }, [backUrl, onBack]);
-
-    return html`
-        <header class="app-header">
-            ${(onBack || typeof backUrl === 'string') && html`<button aria-label=${backLabel} class="app-header_back" title=${backLabel} type="button" onclick=${handleBack}>${'<'}</button>`}
-            <h1 class="app-header_label">${children}</h1>
-            <nav class="app-header_nav">
-                <a href="#about">About</a>
-            </nav>
-        </header>
     `;
 }
 
@@ -995,6 +968,7 @@ function RoomSelector({identity, roomId}) {
             <h2>Room management</h2>
             <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
                 <${HighUpLabelInput}
+                    name="room"
                     label="Room alias or ID"
                     pattern="[!#].+:.+"
                     required
@@ -1227,6 +1201,40 @@ function RoomPage({identity, roomId}) {
     `;
 }
 
+function SettingsPage() {
+    const {
+        externalMatrixUrl, setExternalMatrixUrl,
+        showNetworkLog, setShowNetworkLog,
+    } = useContext(Settings);
+
+    return html`
+        <${AppHeader}
+            backUrl="#"
+        >Settings</>
+        <main>
+            <form>
+                <${HighUpLabelInput}
+                    name="external_matrix_links"
+                    label="External Matrix links"
+                    value=${externalMatrixUrl}
+                    oninput=${useCallback(({target}) => setExternalMatrixUrl(target.value), [setExternalMatrixUrl])}
+                />
+                <ul class="checkbox-list">
+                    <li><label>
+                        <input
+                            checked=${showNetworkLog}
+                            type="checkbox"
+                            onChange=${useCallback(({target}) => setShowNetworkLog(target.checked), [setShowNetworkLog])}
+                        />
+                        Show network log
+                    </label></li>
+                </ul>
+            </form>
+        </main>
+        <${NetworkLog} />
+    `;
+}
+
 function AliasActions({ identity, roomId }) {
     const [alias, setAlias] = useState('');
     const [busy, setBusy] = useState(false);
@@ -1303,6 +1311,7 @@ function UserActions({ identity, roomId }) {
     return html`
         <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
             <${HighUpLabelInput}
+                name="user_id"
                 label="User"
                 pattern="@.+:.+"
                 required
@@ -1311,6 +1320,7 @@ function UserActions({ identity, roomId }) {
                 oninput=${useCallback(({target}) => setUserId(target.value), [])}
             />
             <${HighUpLabelInput}
+                name="kick_reason"
                 label="Reason for kick or ban"
                 title="A reason why this user gets kicked or banned."
                 value=${reason}
@@ -1382,12 +1392,14 @@ function StateExplorer({identity, roomId}) {
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
             <${HighUpLabelInput}
+                name="state_type"
                 label="Type"
                 list="state-types"
                 value=${type}
                 oninput=${useCallback(({target}) => setType(target.value), [])}
             />
             <${HighUpLabelInput}
+                name="state_key"
                 label="State Key"
                 value=${stateKey}
                 oninput=${useCallback(({target}) => setStateKey(target.value), [])}
@@ -1666,6 +1678,55 @@ function BulkActionTracker({ action, items, identity, roomId }) {
     `;
 }
 
+function SpaceManagementPage({identity, roomId}) {
+    const [rooms, setRooms] = useState(null);
+    
+    const handleQuery = useCallback(async() => {
+        const state = await getState(identity, roomId);
+        const childrenEvents = state.filter(event => event.type === 'm.space.child');
+        const { name } = state.find(event => event.type === 'm.room.name').content;
+        const childrenRoomIds = childrenEvents.map(event => event.state_key);
+        const rooms = [
+            {
+                id: roomId,
+                name,
+                children: childrenRoomIds.map(roomId => ({
+                    id: roomId,
+                })),
+            },
+        ];
+        console.debug(rooms);
+        setRooms(rooms);
+    }, [identity, roomId]);
+
+    return html`
+        <${AppHeader}
+            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
+        >Space Management</>
+        <main>
+            <button
+                type="button"
+                onClick=${handleQuery}
+            >Query</button>
+            ${rooms && html`
+                <ul>
+                    ${rooms.map(room => (html`
+                        <li key=${room.id}>${room.name ?? room.id}</li>
+                        ${room.children && html`
+                            <ul>
+                                ${room.children.map(room => (html`
+                                    <li key=${room.id}>${room.name ?? room.id}</li>
+                                `))}
+                            </ul>
+                        `}
+                    `))}
+                </ul>
+            `}
+        </main>
+        <${NetworkLog} />
+    `;
+}
+
 // function DesignTest() {
 //     return html`
 //         <${ResponseStatus} status=${undefined}/>
@@ -1702,7 +1763,9 @@ function App() {
     const roomId = matchRoomPage?.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
 
     if (page === 'about') {
-        child = html`<${About} />`;
+        child = html`<${AboutPage} />`;
+    } else if (page === 'settings') {
+        child = html`<${SettingsPage} />`;
     } else if (matchRoomPage) {
         child = html`
             <${IdentityProvider}
@@ -1725,6 +1788,11 @@ function App() {
                             />`;
                         } else if (matchRoomPage.groups.subpage === 'kick') {
                             return html`<${BulkKickPage}
+                                identity=${identity}
+                                roomId=${roomId}
+                            />`;
+                        } else if (matchRoomPage.groups.subpage === 'space-management') {
+                            return html`<${SpaceManagementPage}
                                 identity=${identity}
                                 roomId=${roomId}
                             />`;
