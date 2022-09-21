@@ -17,10 +17,10 @@ import { AppHeader } from './components/header.js';
 import {
     HighUpLabelInput,
 } from './components/inputs.js';
+import AboutPage from './pages/about.js';
 import {
     RoomToYamlPage,
-} from './components/room-to-yaml.js';
-import AboutPage from './pages/about.js';
+} from './pages/room-to-yaml.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -575,7 +575,7 @@ function NetworkRequestsProvider({children}) {
     `;
 }
 
-function NetworkLog() {
+export function NetworkLog() {
     const { showNetworkLog } = useContext(Settings);
     const {isShortened, requests} = useContext(NetworkRequests);
     if (!showNetworkLog) {
