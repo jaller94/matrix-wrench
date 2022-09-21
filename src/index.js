@@ -42,6 +42,9 @@ import {
     unbanUser,
     whoAmI,
 } from './matrix.js';
+import {
+    loginWithPassword,
+} from './matrix-auth.js';
 
 function alert(...args) {
     console.warn(...args);
@@ -390,11 +393,55 @@ function WhatsMyMemberState({identity, roomId}) {
     `;
 }
 
+function PasswordInput({serverAddress, onAccessToken}) {
+    const [user, setUser] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSubmit = useCallback(async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const data = await loginWithPassword(serverAddress, user, password);
+        onAccessToken(data.access_token);
+    }, [password, serverAddress, user, onAccessToken]);
+
+    return html`
+        <form onsubmit=${handleSubmit}>
+            <div>
+                <${HighUpLabelInput}
+                    label="Matrix ID or user name"
+                    name="user"
+                    value=${user}
+                    oninput=${useCallback(({target}) => setUser(target.value), [])}
+                />
+            </div>
+            <div>
+                <${HighUpLabelInput}
+                    autocomplete="current-password"
+                    label="Password"
+                    name="password"
+                    value=${password}
+                    type="password"
+                    oninput=${useCallback(({target}) => setPassword(target.value), [])}
+                />
+            </div>
+            <button>Get access token</button>
+        </div>
+    `;
+}
+
 function IdentityEditor({error, identity, onCancel, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
+    const [authType, setAuthType] = useState('accessToken');
     const [rememberLogin, setRememberLogin] = useState(identity.rememberLogin ?? false);
+
+    const handleReceivedAccessToken = useCallback((accessToken) => {
+        setAccessToken(accessToken);
+        setAuthType('accessToken');
+    }, []);
+
+    const handleAccessTokenInput = useCallback(({target}) => setAccessToken(target.value), []);
 
     const handleSubmit = useCallback(event => {
         event.preventDefault();
@@ -429,15 +476,47 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 />
             </div>
             <div>
-                <${HighUpLabelInput}
-                    autocomplete="current-password"
-                    label="Access token"
-                    name="accessToken"
-                    type="password"
-                    value=${accessToken}
-                    oninput=${useCallback(({target}) => setAccessToken(target.value), [])}
-                />
+                <fieldset>
+                    <legend>Authorization method</legend>
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="authType"
+                            checked=${authType === 'accessToken'}
+                            onclick=${useCallback(() => setAuthType('accessToken'), [])}
+                        />
+                        Access Token
+                    </label>
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="authType"
+                            checked=${authType === 'password'}
+                            onchange=${useCallback(() => setAuthType('password'), [])}
+                        />
+                        Password
+                    </label>
+                </fieldset>
             </div>
+            ${authType === 'accessToken' ? html`
+                <div>
+                    <${HighUpLabelInput}
+                        autocomplete="current-password"
+                        label="Access token"
+                        name="accessToken"
+                        value=${accessToken}
+                        type="password"
+                        oninput=${handleAccessTokenInput}
+                    />
+                </div>
+            ` : html`
+                <${PasswordInput}
+                    serverAddress=${serverAddress}
+                    onAccessToken=${handleReceivedAccessToken}
+                />
+            `}
             ${!!localStorage && html`
                 <div>
                     <ul class="checkbox-list">
@@ -1692,7 +1771,6 @@ function SpaceManagementPage({identity, roomId}) {
                 })),
             },
         ];
-        console.debug(rooms);
         setRooms(rooms);
     }, [identity, roomId]);
 
