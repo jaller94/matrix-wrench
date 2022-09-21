@@ -1,9 +1,5 @@
 # Matrix Wrench
-Matrix Wrench is a fast, convenient way to manage Matrix rooms. It's a user interface for tasks where one would have used the terminal application CURL.
-
-A common task is to read and edit a room state, e.g. to change the power levels. It works with access tokens of regular users and appservices (bridges and complex bots). If you give it an appservice token you can access any room the appservice has access to, allowing to easily debug and administrate bridges.
-
-Furthermore, a few tasks around homeserver administration are supported, like listing media files in unencrypted rooms. The majority of features uses the standardized Matrix protocol. If a feature makes use of the Synapse Admin API, this is noted.
+Matrix Wrench is a fast, convenient way to manage Matrix rooms.
 
 ![](./docs/screenshot.png)
 
