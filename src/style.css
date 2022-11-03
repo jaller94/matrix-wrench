@@ -374,3 +374,23 @@ label {
 .network-log-request_status--pending {
     background-color: lightslategray;
 }
+
+.room-list, .room-list th, .room-list td {
+    border: none;
+    text-align: left;
+    padding: 8px;
+}
+
+.room-list table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.room-list th {
+    background-color: #04AA6D;
+    color: white;
+}
+
+.room-list tr:nth-child(even) {
+    background-color: #f2f2f2;
+}

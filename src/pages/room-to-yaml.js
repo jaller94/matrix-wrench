@@ -18,7 +18,7 @@ async function roomToYaml(identity, roomId) {
         }
         const canonicalAlias = state.find(e => e.type === 'm.room.canonical_alias' && e.state_key === '')?.content?.alias;
         if (typeof canonicalAlias === 'string') {
-            data.canonical_alias = canonicalAlias;
+            data.canonicalAlias = canonicalAlias;
         }
         const name = state.find(e => e.type === 'm.room.name' && e.state_key === '')?.content?.name;
         if (typeof name === 'string') {
@@ -30,15 +30,15 @@ async function roomToYaml(identity, roomId) {
         }
         const joinRule = state.find(e => e.type === 'm.room.join_rules' && e.state_key === '')?.content?.join_rule;
         if (typeof joinRule === 'string') {
-            data.join_rule = joinRule;
+            data.joinRule = joinRule;
         }
         const guestAccess = state.find(e => e.type === 'm.room.guest_access' && e.state_key === '')?.content?.guest_access;
         if (typeof guestAccess === 'string') {
-            data.guest_access = guestAccess;
+            data.guestAccess = guestAccess;
         }
-        const historyVisibility = state.find(e => e.type === 'm.room.guest_access' && e.state_key === '')?.content?.history_visibility;
+        const historyVisibility = state.find(e => e.type === 'm.room.history_visibility' && e.state_key === '')?.content?.history_visibility;
         if (typeof historyVisibility === 'string') {
-            data.history_visibility = historyVisibility;
+            data.historyVisibility = historyVisibility;
         }
         const spaceChildren = state.filter(e => e.type === 'm.space.child').map(e => e.state_key);
         if (spaceChildren.length > 0) {
