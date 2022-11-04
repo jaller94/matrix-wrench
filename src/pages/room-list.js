@@ -51,11 +51,23 @@ async function roomToObject(identity, roomId) {
 //     }
 // };
 
+/**
+ * @param {string[]} userIds
+ */
+function getHomeServers(userIds) {
+    const set = new Set();
+    for (const userId of userIds) {
+        set.add(userId.slice(userId.indexOf(':') + 1));
+    }
+    return [...set];
+}
+
 async function roomMemberStats(identity, roomId, mDirectContent) {
     const joinedMembers = Object.keys((await getJoinedMembers(identity, roomId)).joined);
     return {
         joinedMembersCount: joinedMembers.length,
-        joinedDirectContactsCount: joinedMembers.filter(userId => userId in mDirectContent).length,
+        joinedHomeServers: getHomeServers(joinedMembers),
+        joinedDirectContacts: joinedMembers.filter(userId => userId in mDirectContent),
     };
 }
 
@@ -127,6 +139,9 @@ export function RoomListPage({identity}) {
         >Room to JSON</>
         <main>
             <h2>Room List</h2>
+            <div>
+                <strong>Experimental!</strong> This feature may impact the performance of your home server. It may send a lot of expensive API calls.
+            </div>
             <button
                 type="button"
                 onclick=${handleClick}
@@ -143,6 +158,7 @@ export function RoomListPage({identity}) {
                             <th>Guest Access</th>
                             <th>History Visibility</th>
                             <th>No. of members</th>
+                            <th>No. of home servers</th>
                             <th>No. of direct contacts</th>
                         </tr>
                     </thead>
@@ -156,7 +172,8 @@ export function RoomListPage({identity}) {
                                 <td>${row.guestAccess}</td>
                                 <td>${row.historyVisibility}</td>
                                 <td>${row.joinedMembersCount}</td>
-                                <td>${row.joinedDirectContactsCount}</td>
+                                <td>${row.joinedHomeServers?.length}</td>
+                                <td>${row.joinedDirectContacts?.length}</td>
                             </tr>
                         `)}
                     </tbody>
