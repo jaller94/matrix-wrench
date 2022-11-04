@@ -94,6 +94,12 @@ fieldset {
     padding: .5em;
 }
 
+@media screen and (max-width: 700px) {
+    .card {
+        width: inherit;
+    }
+}
+
 .card>h2 {
     margin-top: 0;
 }
@@ -309,10 +315,6 @@ label {
     box-sizing: border-box;
 }
 
-.high-up-label-input>input::placeholder {
-    color: transparent;
-}
-
 .high-up-label-input_required {
     color: darkred;
 }
@@ -371,4 +373,24 @@ label {
 
 .network-log-request_status--pending {
     background-color: lightslategray;
+}
+
+.room-list, .room-list th, .room-list td {
+    border: none;
+    text-align: left;
+    padding: 8px;
+}
+
+.room-list table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.room-list th {
+    background-color: #04AA6D;
+    color: white;
+}
+
+.room-list tr:nth-child(even) {
+    background-color: #f2f2f2;
 }

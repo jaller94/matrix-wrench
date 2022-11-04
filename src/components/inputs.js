@@ -19,7 +19,7 @@ export const HighUpLabelInput = ({ label, ...props }) => {
     const [id] = useState(uniqueId);
     return html`
         <div class="high-up-label-input">
-            <input id=${id} ...${props} placeholder="Text"/>
+            <input id=${id} ...${props}/>
             <label
                 tabIndex="-1"
                 for=${props.id ?? id}

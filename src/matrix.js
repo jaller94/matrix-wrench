@@ -186,6 +186,19 @@ export async function getAccount(identity, roomId) {
 }
 
 /**
+ * @param {Object} identity
+ * @param {string} type
+ * @param {string=} roomId
+ * @returns {Promise<Object>}
+ */
+export async function getAccountData(identity, user, type) {
+    const userId = user ?? (await whoAmI(identity)).user_id;
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/user/${encodeURIComponent(userId)}/account_data/${encodeURIComponent(type)}`, {
+        method: 'GET',
+    }));
+}
+
+/**
  * Gets a list of joined members of a room.
  * @param {Object} identity
  * @param {string} roomId
