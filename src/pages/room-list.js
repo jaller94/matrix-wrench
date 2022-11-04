@@ -168,7 +168,7 @@ export function RoomListPage({identity}) {
                                 <td>${row.roomId}</td>
                                 <td>${row.name}</td>
                                 <td>${row.type}</td>
-                                <td>${row.join_rule}</td>
+                                <td>${row.joinRule}</td>
                                 <td>${row.guestAccess}</td>
                                 <td>${row.historyVisibility}</td>
                                 <td>${row.joinedMembersCount}</td>
