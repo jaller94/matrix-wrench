@@ -22,6 +22,9 @@ import {
     RoomToYamlPage,
 } from './pages/room-to-yaml.js';
 import {
+    ContactListPage,
+} from './pages/contact-list.js';
+import {
     RoomListPage,
 } from './pages/room-list.js';
 // import {
@@ -1855,6 +1858,10 @@ function App() {
                     if (matchRoomPage) {
                         if (matchRoomPage.groups.roomId === 'synapse-admin') {
                             return html`<${SynapseAdminPage}
+                                identity=${identity}
+                            />`;
+                        } else if (matchRoomPage.groups.roomId === 'contact-list') {
+                            return html`<${ContactListPage}
                                 identity=${identity}
                             />`;
                         } else if (matchRoomPage.groups.roomId === 'room-list') {

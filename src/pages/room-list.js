@@ -60,11 +60,10 @@ async function roomMemberStats(identity, roomId, mDirectContent) {
 }
 
 async function *stats(identity) {
-    let arr = [];
-    yield arr;
     const joinedRooms = (await getJoinedRooms(identity)).joined_rooms;
-    arr = joinedRooms.map(roomId => ({roomId}));
+    let arr = joinedRooms.map(roomId => ({roomId}));
     const mDirectContent = await getAccountData(identity, null, 'm.direct');
+    yield arr;
     for (const roomId of joinedRooms) {
         try {
             const roomInfo = await roomToObject(identity, roomId);
@@ -109,6 +108,8 @@ export function RoomListPage({identity}) {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
+        setData([]);
+        setText('');
         try {
             for await (let array of stats(identity)) {
                 setData(array);
@@ -124,10 +125,10 @@ export function RoomListPage({identity}) {
     return html`
         <${AppHeader}
             backUrl=${`#/${encodeURIComponent(identity.name)}`}
-        >Room to JSON</>
+        >Room List</>
         <main>
-            <h2>Room List</h2>
             <button
+                disabled=${busy}
                 type="button"
                 onclick=${handleClick}
             >Load</button>
