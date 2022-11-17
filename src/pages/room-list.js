@@ -51,11 +51,23 @@ async function roomToObject(identity, roomId) {
 //     }
 // };
 
+/**
+ * @param {string[]} userIds
+ */
+function getHomeServers(userIds) {
+    const set = new Set();
+    for (const userId of userIds) {
+        set.add(userId.slice(userId.indexOf(':') + 1));
+    }
+    return [...set];
+}
+
 async function roomMemberStats(identity, roomId, mDirectContent) {
     const joinedMembers = Object.keys((await getJoinedMembers(identity, roomId)).joined);
     return {
         joinedMembersCount: joinedMembers.length,
-        joinedDirectContactsCount: joinedMembers.filter(userId => userId in mDirectContent).length,
+        joinedHomeServers: getHomeServers(joinedMembers),
+        joinedDirectContacts: joinedMembers.filter(userId => userId in mDirectContent),
     };
 }
 
@@ -127,11 +139,14 @@ export function RoomListPage({identity}) {
             backUrl=${`#/${encodeURIComponent(identity.name)}`}
         >Room List</>
         <main>
+            <div>
+                This feature has not been optimised. It fetches the entire room state of every joined room.
+            </div>
             <button
                 disabled=${busy}
                 type="button"
                 onclick=${handleClick}
-            >Load</button>
+            >Start fetching</button>
             ${busy && html`<progress />`}
             <div className="room-list">
                 <table>
@@ -144,6 +159,7 @@ export function RoomListPage({identity}) {
                             <th>Guest Access</th>
                             <th>History Visibility</th>
                             <th>No. of members</th>
+                            <th>No. of home servers</th>
                             <th>No. of direct contacts</th>
                         </tr>
                     </thead>
@@ -153,17 +169,18 @@ export function RoomListPage({identity}) {
                                 <td>${row.roomId}</td>
                                 <td>${row.name}</td>
                                 <td>${row.type}</td>
-                                <td>${row.join_rule}</td>
+                                <td>${row.joinRule}</td>
                                 <td>${row.guestAccess}</td>
                                 <td>${row.historyVisibility}</td>
                                 <td>${row.joinedMembersCount}</td>
-                                <td>${row.joinedDirectContactsCount}</td>
+                                <td>${row.joinedHomeServers?.length}</td>
+                                <td>${row.joinedDirectContacts?.length}</td>
                             </tr>
                         `)}
                     </tbody>
                 </table>
             </div>
-            <textarea value=${text} />
+            <textarea readonly value=${text} />
         </main>
         <${NetworkLog} />
     `;

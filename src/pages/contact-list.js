@@ -104,7 +104,7 @@ export function ContactListPage({identity}) {
                     </tbody>
                 </table>
             </div>
-            <textarea value=${text} />
+            <textarea readonly value=${text} />
         </main>
         <${NetworkLog} />
     `;
