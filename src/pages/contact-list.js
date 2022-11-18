@@ -39,16 +39,16 @@ async function *stats(identity) {
         yield {
             progressValue,
             progressMax: joinedRooms.length,
-            rows
+            rows,
         };
     }
 }
 
 export function ContactListPage({identity}) {
     const [busy, setBusy] = useState(false);
+    const [data, setData] = useState([]);
     const [progressValue, setProgressValue] = useState(undefined);
     const [progressMax, setProgressMax] = useState(undefined);
-    const [data, setData] = useState([]);
     const [text, setText] = useState('');
 
     const handleClick = useCallback(async(event) => {
@@ -82,7 +82,7 @@ export function ContactListPage({identity}) {
                 disabled=${busy}
                 type="button"
                 onclick=${handleClick}
-            >Load</button>
+            >Start fetching</button>
             ${busy && html`<progress value=${progressValue} max=${progressMax}/>`}
             <div className="room-list">
                 <table>

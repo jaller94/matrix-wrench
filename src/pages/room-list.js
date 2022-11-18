@@ -18,7 +18,7 @@ async function roomToObject(identity, roomId) {
             data.type = roomCreateState?.type;
         }
         if (typeof roomCreateState?.room_version === 'string') {
-            data.roomVersion = roomCreateState?.room_version;
+            data.roomVersion = roomCreateState?.room_version ?? "1";
         }
         const canonicalAlias = state.find(e => e.type === 'm.room.canonical_alias' && e.state_key === '')?.content?.alias;
         if (typeof canonicalAlias === 'string') {
@@ -76,13 +76,16 @@ async function roomMemberStats(identity, roomId, mDirectContent) {
 
 async function *stats(identity) {
     const joinedRooms = (await getJoinedRooms(identity)).joined_rooms;
-    let arr = joinedRooms.map(roomId => ({roomId}));
+    let rows = joinedRooms.map(roomId => ({roomId}));
     const mDirectContent = await getAccountData(identity, null, 'm.direct');
-    yield arr;
+    yield {
+        rows,
+    };
+    let progressValue = 0;
     for (const roomId of joinedRooms) {
         try {
             const roomInfo = await roomToObject(identity, roomId);
-            arr = arr.map(room => {
+            rows = rows.map(room => {
                 if (room.roomId !== roomId) {
                     return room;
                 }
@@ -91,13 +94,12 @@ async function *stats(identity) {
                     ...roomInfo,
                 };
             })
-            yield arr;
         } catch (error) {
             console.error(error);
         }
         try {
             const roomInfo = await roomMemberStats(identity, roomId, mDirectContent);
-            arr = arr.map(room => {
+            rows = rows.map(room => {
                 if (room.roomId !== roomId) {
                     return room;
                 }
@@ -106,17 +108,23 @@ async function *stats(identity) {
                     ...roomInfo,
                 };
             })
-            yield arr;
         } catch (error) {
             console.error(error);
         }
+        progressValue += 1;
+        yield {
+            progressValue,
+            progressMax: joinedRooms.length,
+            rows,
+        };
     }
-    yield arr;
 }
 
 export function RoomListPage({identity}) {
     const [busy, setBusy] = useState(false);
     const [data, setData] = useState([]);
+    const [progressValue, setProgressValue] = useState(undefined);
+    const [progressMax, setProgressMax] = useState(undefined);
     const [text, setText] = useState('');
 
     const handleClick = useCallback(async(event) => {
@@ -126,14 +134,18 @@ export function RoomListPage({identity}) {
         setData([]);
         setText('');
         try {
-            for await (let array of stats(identity)) {
-                setData(array);
-                setText(JSON.stringify(array, null, 2));
+            for await (let result of stats(identity)) {
+                setProgressValue(result.progressValue);
+                setProgressMax(result.progressMax);
+                setData(result.rows);
+                setText(JSON.stringify(result.rows, null, 2));
             }
         } catch(error) {
             setText(error);
         } finally {
             setBusy(false);
+            setProgressValue(undefined);
+            setProgressMax(undefined);
         }
     }, [identity]);
 
@@ -150,7 +162,7 @@ export function RoomListPage({identity}) {
                 type="button"
                 onclick=${handleClick}
             >Start fetching</button>
-            ${busy && html`<progress />`}
+            ${busy && html`<progress value=${progressValue} max=${progressMax}/>`}
             <div className="room-list">
                 <table>
                     <thead>
