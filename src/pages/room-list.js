@@ -13,9 +13,12 @@ async function roomToObject(identity, roomId) {
     const data = {};
     try {
         const state = await getState(identity, roomId);
-        const type = state.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.type;
-        if (typeof type === 'string') {
-            data.type = type;
+        const roomCreateState = state.find(e => e.type === 'm.room.create' && e.state_key === '')?.content;
+        if (typeof roomCreateState?.type === 'string') {
+            data.type = roomCreateState?.type;
+        }
+        if (typeof roomCreateState?.room_version === 'string') {
+            data.roomVersion = roomCreateState?.room_version;
         }
         const canonicalAlias = state.find(e => e.type === 'm.room.canonical_alias' && e.state_key === '')?.content?.alias;
         if (typeof canonicalAlias === 'string') {
@@ -154,6 +157,7 @@ export function RoomListPage({identity}) {
                         <tr>
                             <th>Id</th>
                             <th>Name</th>
+                            <th>Version</th>
                             <th>Type</th>
                             <th>Join Rule</th>
                             <th>Guest Access</th>
@@ -168,6 +172,7 @@ export function RoomListPage({identity}) {
                             <tr key=${row.roomId}>
                                 <td>${row.roomId}</td>
                                 <td>${row.name}</td>
+                                <td>${row.roomVersion}</td>
                                 <td>${row.type}</td>
                                 <td>${row.joinRule}</td>
                                 <td>${row.guestAccess}</td>
