@@ -61,30 +61,44 @@ export async function doRequest(resource, init) {
 }
 
 /**
- * Constructs a curl command. Use it like fetch().
- * @param {string} resource
- * @param {{method?: string, body?: string, headers: Record<string, string>}} init
+ * Escapes a string to be used in Bash.
+ * This assumes that the string is to be wrapped with single quotation marks.
+ * @param {string} str
  * @returns {string}
  */
-export function toCurlCommand(resource, init) {
+export function escapeBashString(str) {
+    return str.replace(/\\/g, '\\\\').replace(/'/g, '\\\'');
+}
+
+/**
+ * Constructs a curl command. Use it like fetch().
+ * @param {string} resource
+ * @param {{method?: string, body?: string, headers: Record<string, string>}=} init
+ * @param {boolean=} maskAuthorization
+ * @returns {string}
+ */
+export function toCurlCommand(resource, init = {}, maskAuthorization = false) {
     let cmd = 'curl ';
     if (init.method !== undefined && init.method !== 'GET') {
         cmd += `-X ${init.method} `;
     }
     if (init.body) {
-        cmd += `--data '${init.body.replace(/'/g, '\\\'')}' `;
+        cmd += `--data '${escapeBashString(init.body)}' `;
     }
-    for (const [key, value] of Object.entries(init.headers ?? {})) {
-        cmd += `-H '${key}: ${value.replace(/'/g, '\\\'')}' `;
+    for (let [key, value] of Object.entries(init.headers ?? {})) {
+        if (maskAuthorization && key.toLocaleLowerCase() === 'authorization') {
+            value = 'Bearer your_access_token';
+        }
+        cmd += `-H '${escapeBashString(key)}: ${escapeBashString(value)}' `;
     }
-    cmd += `'${resource.replace(/'/g, '\\\'')}'`;
+    cmd += `'${escapeBashString(resource)}'`;
     return cmd;
 }
 
 /**
  * Summarizes a network request. Use it like fetch().
  * @param {string} resource
- * @param {{method?: string, body?: string, headers: Record<string, string>}} init
+ * @param {{method?: string, body?: string, headers: Record<string, string>}=} init
  * @returns {string}
  */
 export function summarizeFetch(resource, init) {
@@ -96,21 +110,30 @@ export function summarizeFetch(resource, init) {
     return `${init.method} ${url}`;
 }
 
-export function auth(identity, resource, init) {
-    const url = identity.masqueradeAs ? `${resource}?user_id=${identity.masqueradeAs}` : resource;
-
+/**
+ * Apply the authorization headers of an identity to the parameters of `fetch()`.
+ * @param {Object} identity
+ * @param {string} resource
+ * @param {Object=} init
+ * @returns {[string, Object]} An array of parameters to hand to `fetch()`
+ */
+export function auth(identity, resource, init = {}) {
+    const url = new URL(resource);
+    if (identity.masqueradeAs) {
+        url.searchParams.set('user_id', identity.masqueradeAs);
+    }
     return [
-        url,
+        url.toString(),
         {
             ...init,
             headers: {
-                ...(init ?? {}).headers,
+                ...init?.headers,
                 ...(identity.accessToken && {
                     Authorization: `Bearer ${identity.accessToken}`,
                 }),
             },
         },
-    ]
+    ];
 }
 
 /* END Helper functions */
