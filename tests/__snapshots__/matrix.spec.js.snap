@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`toCurlCommand translates a fetch with a JSON body 1`] = `"curl -X PUT --data '{"foo":"bar"}' 'https://localhost:8080/_matrix/v3/test'"`;
+
+exports[`toCurlCommand translates a fetch with a JSON body 2`] = `
+"curl -X PUT --data '{
+  "foo":"bar"
+}' 'https://localhost:8080/_matrix/v3/test'"
+`;

@@ -7,7 +7,7 @@ import {
 describe('classnames', () => {
     test('works with 1 string', () => {
         expect(classnames('test')).toBe('test');
-    }); 
+    });
     test('works with a 2 strings', () => {
         expect(classnames('test', 'ok')).toBe('test ok');
     });
