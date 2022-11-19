@@ -1,4 +1,4 @@
-import { html, useCallback, useState } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useMemo, useState } from '../node_modules/htm/preact/standalone.module.js';
 import { AppHeader } from '../components/header.js';
 import { NetworkLog } from '../index.js';
 
@@ -18,7 +18,7 @@ async function roomToObject(identity, roomId) {
             data.type = roomCreateState?.type;
         }
         if (typeof roomCreateState?.room_version === 'string') {
-            data.roomVersion = roomCreateState?.room_version ?? "1";
+            data.roomVersion = roomCreateState?.room_version ?? '1';
         }
         const canonicalAlias = state.find(e => e.type === 'm.room.canonical_alias' && e.state_key === '')?.content?.alias;
         if (typeof canonicalAlias === 'string') {
@@ -120,12 +120,159 @@ async function *stats(identity) {
     }
 }
 
+export function sortSymbol(direction) {
+    if (direction === 'ascending') {
+        return ' 🔼';
+    } else if (direction === 'descending') {
+        return ' 🔽';
+    }
+    return '';
+}
+
+export function TableHead({ propertyName, label, sortBys, onSortBys }) {
+    const handleClick = useCallback(() => {
+        const currentDirection = sortBys.find(([key]) => key === propertyName)?.[1];
+        const flippedDirection = currentDirection === 'ascending' ? 'descending' : 'ascending';
+        return onSortBys([[propertyName, flippedDirection]]);
+    }, [sortBys, onSortBys]);
+    return html`<th onclick=${handleClick}>${label}${sortSymbol(sortBys.find(([key]) => key === propertyName)?.[1])}</th>`;
+}
+
+export function RoomListTable({data, sortBys, onSortBys}) {
+    return html`
+        <div className="room-list">
+            <table>
+                <thead>
+                    <tr>
+                        <${TableHead} propertyName="roomId" label="Id" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="name" label="Name" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="roomVersion" label="Version" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="type" label="Type" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="joinRule" label="Join Rule" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="guestAccess" label="Guest Access" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="historyVisibility" label="History Visibility" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="joinedMembersCount" label="No. of members" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="joinedHomeServers.length" label="No. of home servers" sortBys=${sortBys} onSortBys=${onSortBys} />
+                        <${TableHead} propertyName="joinedDirectContacts.length" label="No. of direct contacts" sortBys=${sortBys} onSortBys=${onSortBys} />
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(row => html`
+                        <tr key=${row.roomId}>
+                            <td>${row.roomId}</td>
+                            <td>${row.name}</td>
+                            <td>${row.roomVersion}</td>
+                            <td>${row.type}</td>
+                            <td>${row.joinRule}</td>
+                            <td>${row.guestAccess}</td>
+                            <td>${row.historyVisibility}</td>
+                            <td>${row.joinedMembersCount}</td>
+                            <td>${row.joinedHomeServers?.length}</td>
+                            <td>${row.joinedDirectContacts?.length}</td>
+                        </tr>
+                    `)}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+export function RoomListSorter({ data, ...props }) {
+    const [sortBys, setSortBys] = useState([]);
+    const processedData = useMemo(() => {
+        let array = [...data];
+        for (const [key, direction] of sortBys) {
+            const directionFactor = direction === 'ascending' ? 1 : -1;
+            if (key.endsWith('Count')) {
+                // numeric values
+                array.sort((a, b) => directionFactor * ((a[key] ?? 0) - (b[key] ?? 0)));
+            } else if (key.endsWith('.length')) {
+                // length of an array
+                const actualKey = key.slice(0, -7);
+                array.sort((a, b) => directionFactor * ((a[actualKey]?.length ?? 0) - (b[actualKey]?.length ?? 0)));
+            } else {
+                // string values
+                array.sort((a, b) => directionFactor * (a[key] ?? '').localeCompare((b[key] ?? '')));
+            }
+        }
+        return array;
+    }, [data, sortBys]);
+    return html`<${RoomListTable}
+        ...${props}
+        data=${processedData}
+        sortBys=${sortBys}
+        onSortBys=${setSortBys}
+    />`;
+}
+
+export function RoomListFilterer({ data, ...props }) {
+    const [filters, setFilters] = useState([]);
+    const processedData = useMemo(() => {
+        return data.filter((row) => filters.every(filter => row[filter[0]].includes(filter[1])));
+    }, [data, filters]);
+    return html`<${RoomListSorter}
+        ...${props}
+        data=${processedData}
+        onFilters=${setFilters}
+    />`;
+}
+
 export function RoomListPage({identity}) {
     const [busy, setBusy] = useState(false);
     const [data, setData] = useState([]);
     const [progressValue, setProgressValue] = useState(undefined);
     const [progressMax, setProgressMax] = useState(undefined);
     const [text, setText] = useState('');
+
+    // const handleClick = useCallback(async (event) => {
+    //     event.preventDefault();
+    //     event.stopPropagation();
+    //     setData([
+    //         {
+    //             roomId: '!abc:matrix.org',
+    //             name: 'User Meetup',
+    //             roomVersion: '6',
+    //             joinedMembersCount: 156,
+    //             joinedHomeServers: ['matrix.org', 'example.org'],
+    //             joinedDirectContacts: ['@test:matrix.org', '@test:example.org'],
+    //         },
+    //         {
+    //             roomId: '!xyz:matrix.org',
+    //             name: 'Manjaro User Group',
+    //             roomVersion: '6',
+    //             joinedMembersCount: 10232,
+    //             joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+    //             joinedDirectContacts: ['@test:example.com', '@test:matrix.org', '@test:example.org'],
+    //         },
+    //         {
+    //             roomId: '!efg:matrix.org',
+    //             joinedMembersCount: 1,
+    //             joinedHomeServers: ['matrix.org'],
+    //         },
+    //         {
+    //             roomId: '!cde:matrix.org',
+    //             roomVersion: '1',
+    //             joinedMembersCount: 19,
+    //             joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+    //         },
+    //         {
+    //             roomId: '!thx:matrix.org',
+    //             name: 'Matrix Berlin Space',
+    //             roomVersion: '9',
+    //             type: 'm.space',
+    //             joinedMembersCount: 236,
+    //             joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+    //         },
+    //         {
+    //             roomId: '!mno:matrix.org',
+    //             name: 'All German Matrix Spaces',
+    //             roomVersion: '10',
+    //             type: 'm.space',
+    //             joinedMembersCount: 4536,
+    //             joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+    //         },
+    //     ]);
+    // }, [identity]);
 
     const handleClick = useCallback(async(event) => {
         event.preventDefault();
@@ -162,41 +309,8 @@ export function RoomListPage({identity}) {
                 type="button"
                 onclick=${handleClick}
             >Start fetching</button>
-            ${busy && html`<progress value=${progressValue} max=${progressMax}/>`}
-            <div className="room-list">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Id</th>
-                            <th>Name</th>
-                            <th>Version</th>
-                            <th>Type</th>
-                            <th>Join Rule</th>
-                            <th>Guest Access</th>
-                            <th>History Visibility</th>
-                            <th>No. of members</th>
-                            <th>No. of home servers</th>
-                            <th>No. of direct contacts</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.map(row => html`
-                            <tr key=${row.roomId}>
-                                <td>${row.roomId}</td>
-                                <td>${row.name}</td>
-                                <td>${row.roomVersion}</td>
-                                <td>${row.type}</td>
-                                <td>${row.joinRule}</td>
-                                <td>${row.guestAccess}</td>
-                                <td>${row.historyVisibility}</td>
-                                <td>${row.joinedMembersCount}</td>
-                                <td>${row.joinedHomeServers?.length}</td>
-                                <td>${row.joinedDirectContacts?.length}</td>
-                            </tr>
-                        `)}
-                    </tbody>
-                </table>
-            </div>
+            ${busy && html`<progress value=${progressValue} max=${progressMax} />`}
+            <${RoomListFilterer} data=${data} />
             <textarea readonly value=${text} />
         </main>
         <${NetworkLog} />
