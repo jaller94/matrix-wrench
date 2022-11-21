@@ -10,67 +10,67 @@ import {
     getState,
 } from '../matrix.js';
 
-const fakeData = [
-    {
-        roomId: '!abc:matrix.org',
-        name: 'User Meetup',
-        roomVersion: '6',
-        joinRule: 'invite',
-        guestAccess: 'public',
-        historyVisibility: 'world_readable',
-        joinedMembersCount: 156,
-        joinedHomeServers: ['matrix.org', 'example.org'],
-        joinedDirectContacts: ['@test:matrix.org', '@test:example.org'],
-    },
-    {
-        roomId: '!xyz:matrix.org',
-        name: 'Manjaro User Group',
-        roomVersion: '6',
-        joinRule: 'public',
-        guestAccess: 'public',
-        historyVisibility: 'world_readable',
-        joinedMembersCount: 10232,
-        joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
-        joinedDirectContacts: ['@test:example.com', '@test:matrix.org', '@test:example.org'],
-    },
-    {
-        roomId: '!efg:matrix.org',
-        joinRule: 'invite',
-        historyVisibility: 'invited',
-        joinedMembersCount: 1,
-        joinedHomeServers: ['matrix.org'],
-    },
-    {
-        roomId: '!cde:matrix.org',
-        roomVersion: '1',
-        joinRule: 'restricted',
-        historyVisibility: 'invited',
-        joinedMembersCount: 19,
-        joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
-    },
-    {
-        roomId: '!thx:matrix.org',
-        name: 'Matrix Berlin Space',
-        roomVersion: '9',
-        type: 'm.space',
-        joinRule: 'restricted',
-        guestAccess: 'forbidden',
-        historyVisibility: 'shared',
-        joinedMembersCount: 236,
-        joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
-    },
-    {
-        roomId: '!mno:matrix.org',
-        name: 'All German Matrix Spaces',
-        roomVersion: '10',
-        type: 'm.space',
-        joinRule: 'public',
-        guestAccess: 'can_join',
-        historyVisibility: 'world_readable',
-        joinedMembersCount: 4536,
-        joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
-    },
-];
+// const fakeData = [
+//     {
+//         roomId: '!abc:matrix.org',
+//         name: 'User Meetup',
+//         roomVersion: '6',
+//         joinRule: 'invite',
+//         guestAccess: 'public',
+//         historyVisibility: 'world_readable',
+//         joinedMembersCount: 156,
+//         joinedHomeServers: ['matrix.org', 'example.org'],
+//         joinedDirectContacts: ['@test:matrix.org', '@test:example.org'],
+//     },
+//     {
+//         roomId: '!xyz:matrix.org',
+//         name: 'Manjaro User Group',
+//         roomVersion: '6',
+//         joinRule: 'public',
+//         guestAccess: 'public',
+//         historyVisibility: 'world_readable',
+//         joinedMembersCount: 10232,
+//         joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+//         joinedDirectContacts: ['@test:example.com', '@test:matrix.org', '@test:example.org'],
+//     },
+//     {
+//         roomId: '!efg:matrix.org',
+//         joinRule: 'invite',
+//         historyVisibility: 'invited',
+//         joinedMembersCount: 1,
+//         joinedHomeServers: ['matrix.org'],
+//     },
+//     {
+//         roomId: '!cde:matrix.org',
+//         roomVersion: '1',
+//         joinRule: 'restricted',
+//         historyVisibility: 'invited',
+//         joinedMembersCount: 19,
+//         joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+//     },
+//     {
+//         roomId: '!thx:matrix.org',
+//         name: 'Matrix Berlin Space',
+//         roomVersion: '9',
+//         type: 'm.space',
+//         joinRule: 'restricted',
+//         guestAccess: 'forbidden',
+//         historyVisibility: 'shared',
+//         joinedMembersCount: 236,
+//         joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+//     },
+//     {
+//         roomId: '!mno:matrix.org',
+//         name: 'All German Matrix Spaces',
+//         roomVersion: '10',
+//         type: 'm.space',
+//         joinRule: 'public',
+//         guestAccess: 'can_join',
+//         historyVisibility: 'world_readable',
+//         joinedMembersCount: 4536,
+//         joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+//     },
+// ];
 
 async function roomToObject(identity, roomId) {
     const data = {};
@@ -236,27 +236,24 @@ export function RoomListPage({identity}) {
     const handleClick = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
-        if (window.NOT_A_TEST === true) {
-            setBusy(true);
-            setData([]);
-            setText('');
-            try {
-                for await (let result of stats(identity)) {
-                    setProgressValue(result.progressValue);
-                    setProgressMax(result.progressMax);
-                    setData(result.rows);
-                    setText(JSON.stringify(result.rows, null, 2));
-                }
-            } catch(error) {
-                setText(error);
-            } finally {
-                setBusy(false);
-                setProgressValue(undefined);
-                setProgressMax(undefined);
+        setBusy(true);
+        setData([]);
+        setText('');
+        try {
+            for await (let result of stats(identity)) {
+                setProgressValue(result.progressValue);
+                setProgressMax(result.progressMax);
+                setData(result.rows);
+                setText(JSON.stringify(result.rows, null, 2));
             }
-        } else {
-            setData(fakeData);
+        } catch(error) {
+            setText(error);
+        } finally {
+            setBusy(false);
+            setProgressValue(undefined);
+            setProgressMax(undefined);
         }
+        // setData(fakeData);
     }, [identity]);
 
     return html`
