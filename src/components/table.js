@@ -9,6 +9,15 @@ export function sortSymbol(direction) {
     return '';
 }
 
+function printValue(accessor, row) {
+    if (accessor.endsWith('.length')) {
+        return row[accessor.slice(0, -7)]?.length;
+    } else if (accessor.endsWith('[,]')) {
+        return ([...row[accessor.slice(0, -3)] ?? []]).join(', ');
+    }
+    return row[accessor];
+}
+
 export function TableHead({ propertyName, label, sortBys, onSortBys }) {
     const handleClick = useCallback(() => {
         const currentDirection = sortBys.find(([key]) => key === propertyName)?.[1];
@@ -18,7 +27,7 @@ export function TableHead({ propertyName, label, sortBys, onSortBys }) {
     return html`<th onclick=${handleClick}>${label}${sortSymbol(sortBys.find(([key]) => key === propertyName)?.[1])}</th>`;
 }
 
-export function RoomListTable({ columns, data, sortBys, onSortBys }) {
+export function RoomListTable({ columns, data, primaryAccessor, sortBys, onSortBys }) {
     return html`
         <div className="room-list">
             <table>
@@ -31,9 +40,9 @@ export function RoomListTable({ columns, data, sortBys, onSortBys }) {
                 </thead>
                 <tbody>
                     ${data.map(row => html`
-                        <tr key=${row.roomId}>
+                        <tr key=${row[primaryAccessor]}>
                             ${columns.map(column => html`
-                                <td key=${column.accessor}>${column.accessor.endsWith('.length') ? row[column.accessor.slice(0, -7)]?.length : row[column.accessor]}</td>
+                                <td key=${column.accessor}>${printValue(column.accessor, row)}</td>
                             `)}
                         </tr>
                     `)}

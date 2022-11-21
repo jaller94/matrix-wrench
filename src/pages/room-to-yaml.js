@@ -12,9 +12,12 @@ async function roomToYaml(identity, roomId) {
     };
     try {
         const state = await getState(identity, roomId);
-        const type = state.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.type;
-        if (typeof type === 'string') {
-            data.type = type;
+        const roomCreateState = state.find(e => e.type === 'm.room.create' && e.state_key === '')?.content;
+        if (typeof roomCreateState?.type === 'string') {
+            data.type = roomCreateState?.type;
+        }
+        if (typeof roomCreateState?.room_version === 'string') {
+            data.roomVersion = roomCreateState?.room_version ?? '1';
         }
         const canonicalAlias = state.find(e => e.type === 'm.room.canonical_alias' && e.state_key === '')?.content?.alias;
         if (typeof canonicalAlias === 'string') {

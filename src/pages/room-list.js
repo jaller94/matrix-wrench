@@ -270,7 +270,7 @@ export function RoomListPage({identity}) {
                 onclick=${handleClick}
             >Start fetching</button>
             ${busy && html`<progress value=${progressValue} max=${progressMax} />`}
-            <${RoomListFilterer} columns=${columns} data=${data} />
+            <${RoomListFilterer} columns=${columns} data=${data} primaryAccessor="roomId" />
             <textarea readonly value=${text} />
         </main>
         <${NetworkLog} />

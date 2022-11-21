@@ -1,5 +1,6 @@
-import { html, useCallback, useState } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useMemo, useState } from '../node_modules/htm/preact/standalone.module.js';
 import { AppHeader } from '../components/header.js';
+import { RoomListFilterer } from '../components/table.js';
 import { NetworkLog } from '../index.js';
 
 import {
@@ -73,6 +74,21 @@ export function ContactListPage({identity}) {
         }
     }, [identity]);
 
+    const columns = useMemo(() => [
+        {
+            Header: 'User ID',
+            accessor: 'userId',
+        },
+        {
+            Header: 'No. of shared rooms',
+            accessor: 'sharedRoomsCount',
+        },
+        {
+            Header: 'Names',
+            accessor: 'names[,]',
+        },
+    ], []);
+
     return html`
         <${AppHeader}
             backUrl=${`#/${encodeURIComponent(identity.name)}`}
@@ -84,26 +100,7 @@ export function ContactListPage({identity}) {
                 onclick=${handleClick}
             >Start fetching</button>
             ${busy && html`<progress value=${progressValue} max=${progressMax}/>`}
-            <div className="room-list">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User Id</th>
-                            <th>No. of shared rooms</th>
-                            <th>Names</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.map(row => html`
-                            <tr key=${row.userId}>
-                                <td>${row.userId}</td>
-                                <td>${row.sharedRoomsCount}</td>
-                                <td>${[...row.names ?? []].join(', ')}</td>
-                            </tr>
-                        `)}
-                    </tbody>
-                </table>
-            </div>
+            <${RoomListFilterer} columns=${columns} data=${data} primaryAccessor="userId" />
             <textarea readonly value=${text} />
         </main>
         <${NetworkLog} />
