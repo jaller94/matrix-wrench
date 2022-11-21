@@ -1,5 +1,6 @@
 import { html, useCallback, useMemo, useState } from '../node_modules/htm/preact/standalone.module.js';
 import { AppHeader } from '../components/header.js';
+import { RoomListFilterer } from '../components/table.js';
 import { NetworkLog } from '../index.js';
 
 import {
@@ -8,6 +9,68 @@ import {
     getJoinedRooms,
     getState,
 } from '../matrix.js';
+
+const fakeData = [
+    {
+        roomId: '!abc:matrix.org',
+        name: 'User Meetup',
+        roomVersion: '6',
+        joinRule: 'invite',
+        guestAccess: 'public',
+        historyVisibility: 'world_readable',
+        joinedMembersCount: 156,
+        joinedHomeServers: ['matrix.org', 'example.org'],
+        joinedDirectContacts: ['@test:matrix.org', '@test:example.org'],
+    },
+    {
+        roomId: '!xyz:matrix.org',
+        name: 'Manjaro User Group',
+        roomVersion: '6',
+        joinRule: 'public',
+        guestAccess: 'public',
+        historyVisibility: 'world_readable',
+        joinedMembersCount: 10232,
+        joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+        joinedDirectContacts: ['@test:example.com', '@test:matrix.org', '@test:example.org'],
+    },
+    {
+        roomId: '!efg:matrix.org',
+        joinRule: 'invite',
+        historyVisibility: 'invited',
+        joinedMembersCount: 1,
+        joinedHomeServers: ['matrix.org'],
+    },
+    {
+        roomId: '!cde:matrix.org',
+        roomVersion: '1',
+        joinRule: 'restricted',
+        historyVisibility: 'invited',
+        joinedMembersCount: 19,
+        joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+    },
+    {
+        roomId: '!thx:matrix.org',
+        name: 'Matrix Berlin Space',
+        roomVersion: '9',
+        type: 'm.space',
+        joinRule: 'restricted',
+        guestAccess: 'forbidden',
+        historyVisibility: 'shared',
+        joinedMembersCount: 236,
+        joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+    },
+    {
+        roomId: '!mno:matrix.org',
+        name: 'All German Matrix Spaces',
+        roomVersion: '10',
+        type: 'm.space',
+        joinRule: 'public',
+        guestAccess: 'can_join',
+        historyVisibility: 'world_readable',
+        joinedMembersCount: 4536,
+        joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
+    },
+];
 
 async function roomToObject(identity, roomId) {
     const data = {};
@@ -120,103 +183,6 @@ async function *stats(identity) {
     }
 }
 
-export function sortSymbol(direction) {
-    if (direction === 'ascending') {
-        return ' 🔼';
-    } else if (direction === 'descending') {
-        return ' 🔽';
-    }
-    return '';
-}
-
-export function TableHead({ propertyName, label, sortBys, onSortBys }) {
-    const handleClick = useCallback(() => {
-        const currentDirection = sortBys.find(([key]) => key === propertyName)?.[1];
-        const flippedDirection = currentDirection === 'ascending' ? 'descending' : 'ascending';
-        return onSortBys([[propertyName, flippedDirection]]);
-    }, [sortBys, onSortBys]);
-    return html`<th onclick=${handleClick}>${label}${sortSymbol(sortBys.find(([key]) => key === propertyName)?.[1])}</th>`;
-}
-
-export function RoomListTable({data, sortBys, onSortBys}) {
-    return html`
-        <div className="room-list">
-            <table>
-                <thead>
-                    <tr>
-                        <${TableHead} propertyName="roomId" label="Id" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="name" label="Name" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="roomVersion" label="Version" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="type" label="Type" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="joinRule" label="Join Rule" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="guestAccess" label="Guest Access" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="historyVisibility" label="History Visibility" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="joinedMembersCount" label="No. of members" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="joinedHomeServers.length" label="No. of home servers" sortBys=${sortBys} onSortBys=${onSortBys} />
-                        <${TableHead} propertyName="joinedDirectContacts.length" label="No. of direct contacts" sortBys=${sortBys} onSortBys=${onSortBys} />
-                    </tr>
-                </thead>
-                <tbody>
-                    ${data.map(row => html`
-                        <tr key=${row.roomId}>
-                            <td>${row.roomId}</td>
-                            <td>${row.name}</td>
-                            <td>${row.roomVersion}</td>
-                            <td>${row.type}</td>
-                            <td>${row.joinRule}</td>
-                            <td>${row.guestAccess}</td>
-                            <td>${row.historyVisibility}</td>
-                            <td>${row.joinedMembersCount}</td>
-                            <td>${row.joinedHomeServers?.length}</td>
-                            <td>${row.joinedDirectContacts?.length}</td>
-                        </tr>
-                    `)}
-                </tbody>
-            </table>
-        </div>
-    `;
-}
-
-export function RoomListSorter({ data, ...props }) {
-    const [sortBys, setSortBys] = useState([]);
-    const processedData = useMemo(() => {
-        let array = [...data];
-        for (const [key, direction] of sortBys) {
-            const directionFactor = direction === 'ascending' ? 1 : -1;
-            if (key.endsWith('Count')) {
-                // numeric values
-                array.sort((a, b) => directionFactor * ((a[key] ?? 0) - (b[key] ?? 0)));
-            } else if (key.endsWith('.length')) {
-                // length of an array
-                const actualKey = key.slice(0, -7);
-                array.sort((a, b) => directionFactor * ((a[actualKey]?.length ?? 0) - (b[actualKey]?.length ?? 0)));
-            } else {
-                // string values
-                array.sort((a, b) => directionFactor * (a[key] ?? '').localeCompare((b[key] ?? '')));
-            }
-        }
-        return array;
-    }, [data, sortBys]);
-    return html`<${RoomListTable}
-        ...${props}
-        data=${processedData}
-        sortBys=${sortBys}
-        onSortBys=${setSortBys}
-    />`;
-}
-
-export function RoomListFilterer({ data, ...props }) {
-    const [filters, setFilters] = useState([]);
-    const processedData = useMemo(() => {
-        return data.filter((row) => filters.every(filter => row[filter[0]].includes(filter[1])));
-    }, [data, filters]);
-    return html`<${RoomListSorter}
-        ...${props}
-        data=${processedData}
-        onFilters=${setFilters}
-    />`;
-}
-
 export function RoomListPage({identity}) {
     const [busy, setBusy] = useState(false);
     const [data, setData] = useState([]);
@@ -224,75 +190,72 @@ export function RoomListPage({identity}) {
     const [progressMax, setProgressMax] = useState(undefined);
     const [text, setText] = useState('');
 
-    // const handleClick = useCallback(async (event) => {
-    //     event.preventDefault();
-    //     event.stopPropagation();
-    //     setData([
-    //         {
-    //             roomId: '!abc:matrix.org',
-    //             name: 'User Meetup',
-    //             roomVersion: '6',
-    //             joinedMembersCount: 156,
-    //             joinedHomeServers: ['matrix.org', 'example.org'],
-    //             joinedDirectContacts: ['@test:matrix.org', '@test:example.org'],
-    //         },
-    //         {
-    //             roomId: '!xyz:matrix.org',
-    //             name: 'Manjaro User Group',
-    //             roomVersion: '6',
-    //             joinedMembersCount: 10232,
-    //             joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
-    //             joinedDirectContacts: ['@test:example.com', '@test:matrix.org', '@test:example.org'],
-    //         },
-    //         {
-    //             roomId: '!efg:matrix.org',
-    //             joinedMembersCount: 1,
-    //             joinedHomeServers: ['matrix.org'],
-    //         },
-    //         {
-    //             roomId: '!cde:matrix.org',
-    //             roomVersion: '1',
-    //             joinedMembersCount: 19,
-    //             joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
-    //         },
-    //         {
-    //             roomId: '!thx:matrix.org',
-    //             name: 'Matrix Berlin Space',
-    //             roomVersion: '9',
-    //             type: 'm.space',
-    //             joinedMembersCount: 236,
-    //             joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
-    //         },
-    //         {
-    //             roomId: '!mno:matrix.org',
-    //             name: 'All German Matrix Spaces',
-    //             roomVersion: '10',
-    //             type: 'm.space',
-    //             joinedMembersCount: 4536,
-    //             joinedHomeServers: ['matrix.org', 'example.org', 'example.com'],
-    //         },
-    //     ]);
-    // }, [identity]);
+    const columns = useMemo(() => [
+        {
+            Header: 'ID',
+            accessor: 'roomId',
+        },
+        {
+            Header: 'Name',
+            accessor: 'name',
+        },
+        {
+            Header: 'Version',
+            accessor: 'roomVersion',
+        },
+        {
+            Header: 'Type',
+            accessor: 'type',
+        },
+        {
+            Header: 'Join Rule',
+            accessor: 'joinRule',
+        },
+        {
+            Header: 'Guest Access',
+            accessor: 'guestAccess',
+        },
+        {
+            Header: 'History Visibility',
+            accessor: 'historyVisibility',
+        },
+        {
+            Header: 'No. of members',
+            accessor: 'joinedMembersCount',
+        },
+        {
+            Header: 'No. of home servers',
+            accessor: 'joinedHomeServers.length',
+        },
+        {
+            Header: 'No. of direct contacts',
+            accessor: 'joinedDirectContacts.length',
+        },
+    ], []);
 
     const handleClick = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
-        setBusy(true);
-        setData([]);
-        setText('');
-        try {
-            for await (let result of stats(identity)) {
-                setProgressValue(result.progressValue);
-                setProgressMax(result.progressMax);
-                setData(result.rows);
-                setText(JSON.stringify(result.rows, null, 2));
+        if (window.NOT_A_TEST === true) {
+            setBusy(true);
+            setData([]);
+            setText('');
+            try {
+                for await (let result of stats(identity)) {
+                    setProgressValue(result.progressValue);
+                    setProgressMax(result.progressMax);
+                    setData(result.rows);
+                    setText(JSON.stringify(result.rows, null, 2));
+                }
+            } catch(error) {
+                setText(error);
+            } finally {
+                setBusy(false);
+                setProgressValue(undefined);
+                setProgressMax(undefined);
             }
-        } catch(error) {
-            setText(error);
-        } finally {
-            setBusy(false);
-            setProgressValue(undefined);
-            setProgressMax(undefined);
+        } else {
+            setData(fakeData);
         }
     }, [identity]);
 
@@ -310,7 +273,7 @@ export function RoomListPage({identity}) {
                 onclick=${handleClick}
             >Start fetching</button>
             ${busy && html`<progress value=${progressValue} max=${progressMax} />`}
-            <${RoomListFilterer} data=${data} />
+            <${RoomListFilterer} columns=${columns} data=${data} />
             <textarea readonly value=${text} />
         </main>
         <${NetworkLog} />
