@@ -77,11 +77,22 @@ async function roomToObject(identity, roomId) {
     try {
         const state = await getState(identity, roomId);
         const roomCreateState = state.find(e => e.type === 'm.room.create' && e.state_key === '')?.content;
-        if (typeof roomCreateState?.type === 'string') {
+        if (typeof roomCreateState === 'object' && ['undefined', 'string'].includes(typeof roomCreateState.type)) {
             data.type = roomCreateState?.type;
+        } else {
+            data.roomVersion = '!invalid!';
         }
-        if (typeof roomCreateState?.room_version === 'string') {
-            data.roomVersion = roomCreateState?.room_version ?? '1';
+        if (typeof roomCreateState === 'object' && ['undefined', 'string'].includes(typeof roomCreateState.room_version)) {
+            data.roomVersion = roomCreateState?.room_version  ?? '1';
+        } else {
+            data.roomVersion = '!invalid!';
+        }
+        const tombstoneState = state.find(e => e.type === 'm.room.tombstone' && e.state_key === '')?.content;
+        if (typeof tombstoneState?.body === 'string') {
+            data.tombstoneBody = tombstoneState?.body;
+        }
+        if (typeof tombstoneState?.replacement_room === 'string') {
+            data.tombstoneReplacementRoom = tombstoneState?.replacement_room;
         }
         const canonicalAlias = state.find(e => e.type === 'm.room.canonical_alias' && e.state_key === '')?.content?.alias;
         if (typeof canonicalAlias === 'string') {
@@ -200,12 +211,16 @@ export function RoomListPage({identity}) {
             accessor: 'name',
         },
         {
+            Header: 'Type',
+            accessor: 'type',
+        },
+        {
             Header: 'Version',
             accessor: 'roomVersion',
         },
         {
-            Header: 'Type',
-            accessor: 'type',
+            Header: 'Tombstone',
+            accessor: 'tombstoneReplacementRoom',
         },
         {
             Header: 'Join Rule',
@@ -220,15 +235,15 @@ export function RoomListPage({identity}) {
             accessor: 'historyVisibility',
         },
         {
-            Header: 'No. of members',
+            Header: 'Members',
             accessor: 'joinedMembersCount',
         },
         {
-            Header: 'No. of home servers',
+            Header: 'Home servers',
             accessor: 'joinedHomeServers.length',
         },
         {
-            Header: 'No. of direct contacts',
+            Header: 'Direct contacts',
             accessor: 'joinedDirectContacts.length',
         },
     ], []);

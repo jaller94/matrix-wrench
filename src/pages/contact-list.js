@@ -80,7 +80,7 @@ export function ContactListPage({identity}) {
             accessor: 'userId',
         },
         {
-            Header: 'No. of shared rooms',
+            Header: 'Shared rooms',
             accessor: 'sharedRoomsCount',
         },
         {
