@@ -7,6 +7,7 @@ import {
     getAccountData,
     getJoinedMembers,
     getJoinedRooms,
+    whoAmI,
     getState,
 } from '../matrix.js';
 
@@ -72,10 +73,11 @@ import {
 //     },
 // ];
 
-async function roomToObject(identity, roomId) {
+async function roomToObject(identity, roomId, myUserId) {
     const data = {};
     try {
         const state = await getState(identity, roomId);
+
         const roomCreateState = state.find(e => e.type === 'm.room.create' && e.state_key === '')?.content;
         if (typeof roomCreateState === 'object' && ['undefined', 'string'].includes(typeof roomCreateState.type)) {
             data.type = roomCreateState?.type;
@@ -87,6 +89,18 @@ async function roomToObject(identity, roomId) {
         } else {
             data.roomVersion = '!invalid!';
         }
+        
+        const roomPowerLevelState = state.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
+        if (typeof roomPowerLevelState.users === 'object') {
+            data.highestCustomPowerLevel = Math.max(...Object.values(roomPowerLevelState.users));
+            data.myPowerLevel = roomPowerLevelState.users[myUserId] ?? roomPowerLevelState.users_default;
+            data.defaultPowerLevel = roomPowerLevelState.users_default;
+            data.canIBan = data.myPowerLevel >= roomPowerLevelState.ban;
+            data.canIKick = data.myPowerLevel >= roomPowerLevelState.kick;
+            data.canIInvite = data.myPowerLevel >= roomPowerLevelState.invite;
+            data.canIRedact = data.myPowerLevel >= roomPowerLevelState.redact;
+        }
+
         const tombstoneState = state.find(e => e.type === 'm.room.tombstone' && e.state_key === '')?.content;
         if (typeof tombstoneState?.body === 'string') {
             data.tombstoneBody = tombstoneState?.body;
@@ -151,14 +165,15 @@ async function roomMemberStats(identity, roomId, mDirectContent) {
 async function *stats(identity) {
     const joinedRooms = (await getJoinedRooms(identity)).joined_rooms;
     let rows = joinedRooms.map(roomId => ({roomId}));
-    const mDirectContent = await getAccountData(identity, null, 'm.direct');
+    const myMatrixId = (await whoAmI(identity)).user_id;
+    const mDirectContent = await getAccountData(identity, myMatrixId, 'm.direct');
     yield {
         rows,
     };
     let progressValue = 0;
     for (const roomId of joinedRooms) {
         try {
-            const roomInfo = await roomToObject(identity, roomId);
+            const roomInfo = await roomToObject(identity, roomId, myMatrixId);
             rows = rows.map(room => {
                 if (room.roomId !== roomId) {
                     return room;
@@ -210,42 +225,50 @@ export function RoomListPage({identity}) {
             Header: 'Name',
             accessor: 'name',
         },
+        // {
+        //     Header: 'Highest PL',
+        //     accessor: 'highestCustomPowerLevel',
+        // },
         {
-            Header: 'Type',
-            accessor: 'type',
+            Header: 'My PL',
+            accessor: 'myPowerLevel',
         },
         {
-            Header: 'Version',
-            accessor: 'roomVersion',
-        },
-        {
-            Header: 'Tombstone',
+            Header: 'Replaced?',
             accessor: 'tombstoneReplacementRoom',
-        },
-        {
-            Header: 'Join Rule',
-            accessor: 'joinRule',
-        },
-        {
-            Header: 'Guest Access',
-            accessor: 'guestAccess',
-        },
-        {
-            Header: 'History Visibility',
-            accessor: 'historyVisibility',
         },
         {
             Header: 'Members',
             accessor: 'joinedMembersCount',
         },
         {
-            Header: 'Home servers',
-            accessor: 'joinedHomeServers.length',
-        },
-        {
             Header: 'Direct contacts',
             accessor: 'joinedDirectContacts.length',
         },
+        {
+            Header: 'Type',
+            accessor: 'type',
+        },
+        {
+            Header: 'Join Rule',
+            accessor: 'joinRule',
+        },
+        {
+            Header: 'History Visibility',
+            accessor: 'historyVisibility',
+        },
+        // {
+        //     Header: 'Guest Access',
+        //     accessor: 'guestAccess',
+        // },
+        // {
+        //     Header: 'Version',
+        //     accessor: 'roomVersion',
+        // },
+        // {
+        //     Header: 'Home servers',
+        //     accessor: 'joinedHomeServers.length',
+        // },
     ], []);
 
     const handleClick = useCallback(async(event) => {

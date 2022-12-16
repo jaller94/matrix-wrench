@@ -23,7 +23,7 @@ export function TableHead({ propertyName, label, sortBys, onSortBys }) {
         const currentDirection = sortBys.find(([key]) => key === propertyName)?.[1];
         const flippedDirection = currentDirection === 'ascending' ? 'descending' : 'ascending';
         return onSortBys([[propertyName, flippedDirection]]);
-    }, [sortBys, onSortBys]);
+    }, [propertyName, sortBys, onSortBys]);
     return html`<th onclick=${handleClick}>${label}${sortSymbol(sortBys.find(([key]) => key === propertyName)?.[1])}</th>`;
 }
 
@@ -58,7 +58,7 @@ export function RoomListSorter({ data, ...props }) {
         let array = [...data];
         for (const [key, direction] of sortBys) {
             const directionFactor = direction === 'ascending' ? 1 : -1;
-            if (key.endsWith('Count')) {
+            if (key.endsWith('Count') || key.endsWith('PowerLevel')) {
                 // numeric values
                 array.sort((a, b) => directionFactor * ((a[key] ?? 0) - (b[key] ?? 0)));
             } else if (key.endsWith('.length')) {

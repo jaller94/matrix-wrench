@@ -198,8 +198,8 @@ export async function deleteRoomAlias(identity, roomAlias) {
 
 /**
  * @param {Object} identity
- * @param {string} type
- * @param {string=} roomId
+ * @param {string=} user The Matrix User ID of the current user, if already known.
+ * @param {string} type The type of the account data object
  * @returns {Promise<Object>}
  */
 export async function getAccountData(identity, user, type) {
