@@ -2,12 +2,16 @@
 
 ## Future
 * Added: Act as other users when using AppService tokens.
-* Added: Create and mutate users using the Synapse API.
-* Added: Password login
 
 ### Alpha Features
 * Added: Space Management Page
 * Added: Room to YAML
+* Added: Room table
+* Added: Direct Contacts table
+
+## v0.9.0 (2022-12-16)
+* Added: Password login
+* Added: Create and mutate users using the Synapse API.
 
 ## v0.8.1 (2022-08-15)
 * Fixed: When creating or mutating a user, the deactivated status would not get applied, if it was changed last in the interface.
