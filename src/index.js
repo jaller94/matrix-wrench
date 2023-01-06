@@ -347,9 +347,9 @@ function WhoAmI({identity}) {
             onclick=${handleSubmit}
         >Who am I?</button>
         <p>
-            Matrix ID: ${(info || {}).user_id || 'unknown'}
+            Matrix ID: ${info?.user_id || 'unknown'}
             <br/>
-            Device ID: ${(info || {}).device_id || 'unknown'}
+            Device ID: ${info?.device_id || 'unknown'}
         </p>
     `;
 }
@@ -438,7 +438,54 @@ function PasswordInput({serverAddress, onAccessToken}) {
     `;
 }
 
-function IdentityEditor({error, identity, onCancel, onSave}) {
+function IdentityEditorPage({identityName}) {
+    const {identities, setIdentities} = useContext(Settings);
+    const [editedIdentity, setEditedIdentity] = useState(identities.find(ident => ident.name === identityName) ?? {});
+    const [editingError, setEditingError] = useState(null);
+
+    const handleSave = useCallback((identity) => {
+        setEditingError(null);
+        setIdentities(identities => {
+            const newIdentities = [...identities];
+            if (!identity.name) {
+                setEditingError('Identity must have a name!');
+                return identities;
+            }
+            const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
+            const conflicts = newIdentities.findIndex(ident => ident.name === identity.name) !== -1;
+            // The name may only conflict if this is the name we're editing.
+            if (conflicts && editedIdentity.name !== identity.name) {
+                setEditingError('Identity name taken!');
+                return identities;
+            }
+            if (index === -1) {
+                // Add new identity
+                newIdentities.push(identity);
+            } else {
+                // Replace existing identity
+                newIdentities.splice(index, 1, identity);
+            }
+            if (identity.rememberLogin) {
+                try {
+                    saveIdentitiesToLocalStorage(newIdentities);
+                } catch (error) {
+                    console.warn('Failed to store identities in localStorage', error);
+                }
+            }
+            setEditedIdentity(null);
+            setEditingError(null);
+            return newIdentities;
+        });
+    }, [editedIdentity, setIdentities]);
+
+    return html`<${IdentityEditor}
+        error=${editingError}
+        identity=${editedIdentity}
+        onSave=${handleSave}
+    />`;
+}
+
+function IdentityEditor({error, identity, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
@@ -462,18 +509,20 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
 
     return html`
         <${AppHeader}
-            onBack=${onCancel}
+            backUrl="#"
         >Identity Editor</>
         <form class="identity-editor-form" onsubmit=${handleSubmit}>
             <div>
                 <${HighUpLabelInput}
                     label="Name"
                     name="name"
+                    pattern="[^/]+"
                     required
                     value=${name}
                     oninput=${useCallback(({target}) => setName(target.value), [])}
                 />
             </div>
+            ${name.includes('/') && html`<p>The identity name must not include a slash character (/).</p>`}
             <div>
                 <${HighUpLabelInput}
                     label="Server address (e.g. https://matrix-client.matrix.org)"
@@ -541,7 +590,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 </div>
             `}
             ${!!error && html`<p>${error}</p>`}
-            <button type="button" onclick=${onCancel}>Cancel</button>
+            <a href="#">Cancel</a>
             <button type="submit" class="primary">Save</button>
         </form>
     `;
@@ -725,23 +774,21 @@ function SettingsProvider({children}) {
     `;
 }
 
-function IdentitySelectorRow({identity, onDelete, onEdit}) {
+function IdentitySelectorRow({identity, onDelete}) {
     return html`<li>
         <a class="identity-page_name" href=${`#/${identity.name}`}>${identity.name}</a>
-        <button type="button" title="Edit identity ${identity.name}" onclick=${useCallback(() => onEdit(identity), [identity, onEdit])}>✏️</button>
+        <a href="#identity/${identity.name}" title="Edit identity ${identity.name}">✏️</a>
         <button type="button" title="Delete identity ${identity.name}" onclick=${useCallback(() => onDelete(identity), [identity, onDelete])}>❌</button>
     </li>`;
 }
 
-function IdentitySelector({identities, onDelete, onEdit, onSelect}) {
+function IdentitySelector({identities, onDelete}) {
     return html`
         ${identities.map(identity => {
             return html`<${IdentitySelectorRow}
                 key=${identity.name}
                 identity=${identity}
                 onDelete=${onDelete}
-                onEdit=${onEdit}
-                onSelect=${onSelect}
             />`;
         })}
     `;
@@ -835,17 +882,6 @@ function MainPage({identity, roomId}) {
 
 function IdentitySelectorPage() {
     const {identities, setIdentities} = useContext(Settings);
-    const [editedIdentity, setEditedIdentity] = useState(null);
-    const [editingError, setEditingError] = useState(null);
-
-    const handleAddIdentity = useCallback(() => {
-        setEditedIdentity({});
-    }, []);
-
-    const handleCancel = useCallback(() => {
-        setEditingError(null);
-        setEditedIdentity(null);
-    }, []);
 
     const handleDelete = useCallback((identity) => {
         const confirmed = confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
@@ -861,63 +897,20 @@ function IdentitySelectorPage() {
         });
     }, [setIdentities]);
 
-    const handleSave = useCallback((identity) => {
-        setEditingError(null);
-        setIdentities(identities => {
-            const newIdentities = [...identities];
-            if (!identity.name) {
-                setEditingError('Identity must have a name!');
-                return identities;
-            }
-            const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
-            const conflicts = newIdentities.findIndex(ident => ident.name === identity.name) !== -1;
-            // The name may only conflict if this is the name we're editing.
-            if (conflicts && editedIdentity.name !== identity.name) {
-                setEditingError('Identity name taken!');
-                return identities;
-            }
-            if (index === -1) {
-                // Add new identity
-                newIdentities.push(identity);
-            } else {
-                // Replace existing identity
-                newIdentities.splice(index, 1, identity);
-            }
-            if (identity.rememberLogin) {
-                try {
-                    saveIdentitiesToLocalStorage(newIdentities);
-                } catch (error) {
-                    console.warn('Failed to store identities in localStorage', error);
-                }
-            }
-            setEditedIdentity(null);
-            setEditingError(null);
-            return newIdentities;
-        });
-    }, [editedIdentity, setIdentities]);
-
-    if (editedIdentity) {
-        return html`<${IdentityEditor}
-            error=${editingError}
-            identity=${editedIdentity}
-            onCancel=${handleCancel}
-            onSave=${handleSave}
-        />`;
-    }
     return html`
         <${AppHeader}>Identities</>
         <main>
             <p>Add or choose an identity. An identity is a combination of a homeserver URL and an access token.</p>
             <ul class="identity-page_list">
-                <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} />
+                <${IdentitySelector} identities=${identities} onDelete=${handleDelete} />
             </ul>
-            <button type="button" onclick=${handleAddIdentity}>Add identity</button>
+            <a href="#identity">Add identity</a>
         </main>
     `;
 }
 
 function RoomList({roomIds, onSelectRoom}) {
-    const { externalMatrixUrl } = useContext(Settings);
+    const {externalMatrixUrl} = useContext(Settings);
     const handleSelectRoom = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
@@ -1836,6 +1829,7 @@ function App() {
         };
     }, []);
 
+    const matchIdentityEditorPage = page.match(/^identity(?:\/(?<identityName>[^/]*))?$/);
     const matchRoomPage = page.match(/^\/(?<identityName>[^/]*)(?:\/(?<roomId>[^/]*)(?:\/(?<subpage>.*))?)?$/);
 
     let child = html`
@@ -1843,13 +1837,17 @@ function App() {
         <${NetworkLog} />
     `;
 
-    const identityName = matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName);
+    const identityName =
+        (matchIdentityEditorPage?.groups.identityName && decodeURIComponent(matchIdentityEditorPage.groups.identityName)) ||
+        (matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName));
     const roomId = matchRoomPage?.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
 
     if (page === 'about') {
         child = html`<${AboutPage} />`;
     } else if (page === 'settings') {
         child = html`<${SettingsPage} />`;
+    } else if (matchIdentityEditorPage) {
+        child = html`<${IdentityEditorPage} identityName=${identityName} />`;
     } else if (matchRoomPage) {
         child = html`
             <${IdentityProvider}
