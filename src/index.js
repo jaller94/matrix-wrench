@@ -440,9 +440,12 @@ function PasswordInput({serverAddress, onAccessToken}) {
 
 function IdentityEditorPage({identityName}) {
     const {identities, setIdentities} = useContext(Settings);
-    const [editedIdentity, setEditedIdentity] = useState(identities.find(ident => ident.name === identityName) ?? {});
     const [editingError, setEditingError] = useState(null);
 
+    const editedIdentity = useMemo(() => {
+        return identities.find(ident => ident.name === identityName) ?? {}
+    }, [identities, identityName]);
+    
     const handleSave = useCallback((identity) => {
         setEditingError(null);
         setIdentities(identities => {
@@ -451,10 +454,10 @@ function IdentityEditorPage({identityName}) {
                 setEditingError('Identity must have a name!');
                 return identities;
             }
-            const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
+            const index = newIdentities.findIndex(ident => ident.name === identityName);
             const conflicts = newIdentities.findIndex(ident => ident.name === identity.name) !== -1;
             // The name may only conflict if this is the name we're editing.
-            if (conflicts && editedIdentity.name !== identity.name) {
+            if (conflicts && identityName !== identity.name) {
                 setEditingError('Identity name taken!');
                 return identities;
             }
@@ -472,11 +475,11 @@ function IdentityEditorPage({identityName}) {
                     console.warn('Failed to store identities in localStorage', error);
                 }
             }
-            setEditedIdentity(null);
             setEditingError(null);
+            window.location = '#';
             return newIdentities;
         });
-    }, [editedIdentity, setIdentities]);
+    }, [identityName, setIdentities]);
 
     return html`<${IdentityEditor}
         error=${editingError}
@@ -776,9 +779,21 @@ function SettingsProvider({children}) {
 
 function IdentitySelectorRow({identity, onDelete}) {
     return html`<li>
-        <a class="identity-page_name" href=${`#/${identity.name}`}>${identity.name}</a>
-        <a href="#identity/${identity.name}" title="Edit identity ${identity.name}">✏️</a>
-        <button type="button" title="Delete identity ${identity.name}" onclick=${useCallback(() => onDelete(identity), [identity, onDelete])}>❌</button>
+        <a
+            class="identity-page_name"
+            href=${`#/${identity.name}`}
+        >${identity.name}</a>
+        <a
+            class="identity-page_action"
+            href="#identity/${identity.name}"
+            title="Edit identity ${identity.name}"
+        >✏️</a>
+        <button
+            class="identity-page_action"
+            title="Delete identity ${identity.name}"
+            type="button"
+            onclick=${useCallback(() => onDelete(identity), [identity, onDelete])}
+        >❌</button>
     </li>`;
 }
 
@@ -900,10 +915,18 @@ function IdentitySelectorPage() {
     return html`
         <${AppHeader}>Identities</>
         <main>
-            <p>Add or choose an identity. An identity is a combination of a homeserver URL and an access token.</p>
-            <ul class="identity-page_list">
-                <${IdentitySelector} identities=${identities} onDelete=${handleDelete} />
-            </ul>
+        ${identities.length === 0 ? (html`
+                <p>
+                    Hi there! Need to tweak some Matrix rooms?<br/>
+                    First, you need to add an identity. An identity is a combination of a homeserver URL and an access token.<br/>
+                    Wrench can handle multiple identities. It assumes that identities are sensitive, so they aren't stored by default.
+                </p>
+            `) : (html`
+                <p>Choose an identity. An identity is a combination of a homeserver URL and an access token.</p>
+                <ul class="identity-page_list">
+                    <${IdentitySelector} identities=${identities} onDelete=${handleDelete} />
+                </ul>
+            `)}
             <a href="#identity">Add identity</a>
         </main>
     `;
