@@ -21,7 +21,6 @@ export const HighUpLabelInput = ({ label, ...props }) => {
         <div class="high-up-label-input">
             <input id=${id} ...${props}/>
             <label
-                tabIndex="-1"
                 for=${props.id ?? id}
             >${label}${props.required && html`<span class="high-up-label-input_required" aria-label="required"> *</span>`}</label>
         </div>
