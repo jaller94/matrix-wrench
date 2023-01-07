@@ -102,13 +102,14 @@ export function toCurlCommand(resource, init = {}, maskAuthorization = false) {
  * @returns {string}
  */
 export function summarizeFetch(resource, init) {
-    const match = resource.match(/\/_matrix\/client\/.+?\/(?<command>.*)$/);
+    const match = resource.match(basePathRegExp);
     let url = resource;
     if (match && match.groups.command) {
         url = match.groups.command;
     }
     return `${init.method} ${url}`;
 }
+const basePathRegExp = /\/_matrix\/client\/.+?\/(?<command>.*)$/
 
 /**
  * Apply the authorization headers of an identity to the parameters of `fetch()`.

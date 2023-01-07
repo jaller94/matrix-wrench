@@ -1,3 +1,9 @@
+/**
+ * Takes CSS class names and combines them to one string.
+ * Conditional class names may be defined as an object. Keys with a truthy value will be added as class names.
+ * Similar to the NPM package classnames.
+ * @returns {string}
+ */
 export function classnames(...arr) {
     const classNames = new Set();
     for(const item of arr) {
@@ -18,20 +24,25 @@ export function classnames(...arr) {
 /**
  * Takes a string and fills placeholders with variables values.
  * e.g. "I like !{softwareProject}." could become "I like Matrix."
+ * @param {string} template
+ * @param {Record<string, string>} variables
  */
-const variablePattern = /!{(?<key>.+?)}/;
 export function fillInVariables(template, variables) {
     let result = template;
-    let match = result.match(variablePattern);
-    while (match) {
+    let match;
+    while ((match = result.match(variablePattern,))) {
         result = result.slice(0, match.index) + encodeURIComponent(variables[match.groups.key]) + result.slice(match.index + match[0].length);
-        match = result.match(variablePattern);
     }
     return result;
 }
+const variablePattern = /!{(?<key>.+?)}/;
 
-let lastId = 0;
+/**
+ * Generates unique IDs.
+ * These can be used as stable IDs for HTML inputs and labels.
+ */
 export function uniqueId(prefix = 'id-') {
     lastId += 1;
     return `${prefix}${lastId}`;
 }
+let lastId = 0;

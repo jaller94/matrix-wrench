@@ -1671,7 +1671,8 @@ function BulkInviteForm({actionLabel, onSubmit}) {
         event.stopPropagation();
         let userIds = userIdsString.split(/[\s,;]/);
         userIds = userIds.map(userIds => userIds.trim());
-        userIds = userIds.filter(userId => /^@.*:/.test(userId));
+        const userIdRegExp = /^@.*:/;
+        userIds = userIds.filter(userId => userIdRegExp.test(userId));
         await onSubmit({
             userIds,   
         });
@@ -1852,19 +1853,15 @@ function App() {
         };
     }, []);
 
-    const matchIdentityEditorPage = page.match(/^identity(?:\/(?<identityName>[^/]*))?$/);
-    const matchRoomPage = page.match(/^\/(?<identityName>[^/]*)(?:\/(?<roomId>[^/]*)(?:\/(?<subpage>.*))?)?$/);
-
-    let child = html`
-        <${IdentitySelectorPage} />
-        <${NetworkLog} />
-    `;
+    const matchIdentityEditorPage = page.match(matchIdentityEditorPageRegExp);
+    const matchRoomPage = page.match(matchRoomPageRegExp);
 
     const identityName =
         (matchIdentityEditorPage?.groups.identityName && decodeURIComponent(matchIdentityEditorPage.groups.identityName)) ||
         (matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName));
     const roomId = matchRoomPage?.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
-
+    
+    let child;
     if (page === 'about') {
         child = html`<${AboutPage} />`;
     } else if (page === 'settings') {
@@ -1918,6 +1915,11 @@ function App() {
                 }}
             />
         `;
+    } else {
+        child = html`
+            <${IdentitySelectorPage} />
+            <${NetworkLog} />
+        `;
     }
 
     return html`
@@ -1928,5 +1930,7 @@ function App() {
         </>
     `;
 }
+const matchIdentityEditorPageRegExp = /^identity(?:\/(?<identityName>[^/]*))?$/;
+const matchRoomPageRegExp = /^\/(?<identityName>[^/]*)(?:\/(?<roomId>[^/]*)(?:\/(?<subpage>.*))?)?$/;
 
 render(html`<${App} />`, document.body);
