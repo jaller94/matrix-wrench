@@ -10,23 +10,16 @@ import {
 } from './node_modules/htm/preact/standalone.module.js';
 import {
     classnames,
-    fillInVariables,
     uniqueId,
 } from './helper.js';
+import { CustomButton, CustomForm } from './components/custom-forms.js';
 import { AppHeader } from './components/header.js';
-import {
-    HighUpLabelInput,
-} from './components/inputs.js';
+import { HighUpLabelInput } from './components/inputs.js';
 import AboutPage from './pages/about.js';
-import {
-    RoomToYamlPage,
-} from './pages/room-to-yaml.js';
-import {
-    ContactListPage,
-} from './pages/contact-list.js';
-import {
-    RoomListPage,
-} from './pages/room-list.js';
+import { RoomToYamlPage } from './pages/room-to-yaml.js';
+import { ContactListPage } from './pages/contact-list.js';
+import { RoomListPage } from './pages/room-list.js';
+import { SynapseAdminPage } from './pages/synapse-admin.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -98,58 +91,6 @@ const Settings = createContext({
 //     `;
 // }
 
-function CustomForm({ body, children, identity, method, requiresConfirmation, url, variables, ...props }) {
-    const handleSubmit = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (requiresConfirmation) {
-            const confirmed = confirm('This is a high-risk action!\nAre you sure?');
-            if (!confirmed) return;
-        }
-        let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
-        try {
-            await doRequest(...auth(identity, actualUrl, {
-                method,
-                ...(body && {
-                    body: typeof body === 'string' ? body : JSON.stringify(body),
-                }),
-            }));
-        } catch (error) {
-            alert(error);
-        }
-    }, [body, identity, method, requiresConfirmation, url, variables]);
-
-    return html`
-        <form onsubmit=${handleSubmit} ...${props}>${children}</form>
-    `;
-}
-
-function CustomButton({ body, identity, label, method, requiresConfirmation, url, variables }) {
-    const handlePress = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (requiresConfirmation) {
-            const confirmed = confirm('This is a high-risk action!\nAre you sure?');
-            if (!confirmed) return;
-        }
-        let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
-        try {
-            await doRequest(...auth(identity, actualUrl, {
-                method,
-                ...(body && {
-                    body: typeof body === 'string' ? body : JSON.stringify(body),
-                }),
-            }));
-        } catch (error) {
-            alert(error);
-        }
-    }, [body, identity, method, requiresConfirmation, url, variables]);
-
-    return html`
-        <button type="button" onclick=${handlePress}>${label}</button>
-    `;
-}
-
 function RoomActions({identity, roomId}) {
     const variables = useMemo(() => ({
         roomId,
@@ -192,90 +133,6 @@ function RoomActions({identity, roomId}) {
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/kick`}>Bulk kick</a></li>
         </ul>
-    `;
-}
-
-function MutateUserForm({ identity }) {
-    const [admin, setAdmin] = useState(false);
-    const [deactivated, setDeactivated] = useState(false);
-    const [logoutDevices, setLogoutDevices] = useState(true);
-    const [password, setPassword] = useState('');
-    const [userId, setUserId] = useState('');
-    const [userType, setUserType] = useState('');
-
-    const body = useMemo(() => ({
-        admin,
-        deactivated,
-        password,
-        user_type: userType || null,
-    }), [admin, deactivated, password, userType]);
-
-    const variables = useMemo(() => ({
-        userId,
-    }), [userId]);
-
-    return html`
-        <${CustomForm}
-            body=${body}
-            identity=${identity}
-            method="PUT"
-            requiresConfirmation=${true}
-            url="/_synapse/admin/v2/users/!{userId}"
-            variables=${variables}
-        >
-            <${HighUpLabelInput}
-                label="User"
-                pattern="@.+:.+"
-                required
-                title="A user id, e.g. @user:server.com"
-                value=${userId}
-                oninput=${useCallback(({target}) => setUserId(target.value), [])}
-            />
-            <${HighUpLabelInput}
-                label="Password"
-                title="Optional password"
-                value=${password}
-                oninput=${useCallback(({target}) => setPassword(target.value), [])}
-            />
-            <p>
-                <label>User type
-                    <select
-                        oninput=${useCallback(({target}) => setUserType(target.value), [])}
-                    >
-                        <option value="">None</>
-                        <option value="bot">Bot</>
-                        <option value="support">Support</>
-                    </select>
-                </label>
-            </p>
-            <ul class="checkbox-list">
-                <li><label>
-                    <input
-                        checked=${logoutDevices}
-                        type="checkbox"
-                        onChange=${useCallback(({target}) => setLogoutDevices(target.checked), [])}
-                    />
-                    Log out all devices
-                </label></li>
-                <li><label>
-                    <input
-                        checked=${admin}
-                        type="checkbox"
-                        onChange=${useCallback(({target}) => setAdmin(target.checked), [])}
-                    />
-                    Synapse admin
-                </label></li>
-                <li><label>
-                    <input
-                        checked=${deactivated}
-                        type="checkbox"
-                        onChange=${useCallback(({ target }) => setDeactivated(target.checked), [])}
-                    />
-                    Deactivated
-                </label></li>
-            </ul>
-            <button>Create/mutate user</button>
-        </>
     `;
 }
 
@@ -856,20 +713,6 @@ function saveIdentitiesToLocalStorage(identities) {
         return copyOfIdentity;
     });
     localStorage.setItem('identities', JSON.stringify(identitiesToStore));
-}
-
-function SynapseAdminPage({identity}) {
-    return html`
-        <${AppHeader}
-            backLabel="Switch identity"
-            backUrl="#"
-        >${identity.name ?? 'No authentication'}</>
-        <div class="card">
-            <h2>Create/Mutate user</h2>
-            <${MutateUserForm} identity=${identity}/>
-        </div>
-        <${NetworkLog} />
-    `;
 }
 
 function MainPage({identity, roomId}) {
