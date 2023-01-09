@@ -116,6 +116,10 @@ async function roomToObject(identity, roomId, myUserId) {
         if (typeof name === 'string') {
             data.name = name;
         }
+        const avatarUrl = state.find(e => e.type === 'm.room.avatar' && e.state_key === '')?.content?.url;
+        if (typeof avatarUrl === 'string') {
+            data.avatarUrl = avatarUrl;
+        }
         const joinRule = state.find(e => e.type === 'm.room.join_rules' && e.state_key === '')?.content?.join_rule;
         if (typeof joinRule === 'string') {
             data.joinRule = joinRule;
@@ -134,13 +138,13 @@ async function roomToObject(identity, roomId, myUserId) {
     return data;
 }
 
-// const roomIdToDmUserId = (mDirectContent, roomId) => {
-//     for (const [userId, roomIds] of Object.entries(mDirectContent)) {
-//         if (roomIds.includes(roomId)) {
-//             return userId;
-//         }
-//     }
-// };
+const roomIdToDmUserId = (mDirectContent, roomId) => {
+    for (const [userId, roomIds] of Object.entries(mDirectContent)) {
+        if (roomIds.includes(roomId)) {
+            return userId;
+        }
+    }
+};
 
 /**
  * @param {string[]} userIds
@@ -156,6 +160,8 @@ function getHomeServers(userIds) {
 async function roomMemberStats(identity, roomId, mDirectContent) {
     const joinedMembers = Object.keys((await getJoinedMembers(identity, roomId)).joined);
     return {
+        isDirect: roomIdToDmUserId(mDirectContent, roomId) !== undefined,
+        joinedMembers,
         joinedMembersCount: joinedMembers.length,
         joinedHomeServers: getHomeServers(joinedMembers),
         joinedDirectContacts: joinedMembers.filter(userId => userId in mDirectContent),
