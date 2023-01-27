@@ -13,6 +13,7 @@ import {
     fillInVariables,
     uniqueId,
 } from './helper.js';
+import { AlertSingleton, confirm } from './components/alert.js';
 import { AppHeader } from './components/header.js';
 import {
     HighUpLabelInput,
@@ -54,11 +55,6 @@ import {
 import {
     loginWithPassword,
 } from './matrix-auth.js';
-
-function alert(...args) {
-    console.warn(...args);
-    window.alert(...args);
-}
 
 const NETWORKLOG_MAX_ENTRIES = 500;
 
@@ -103,7 +99,7 @@ function CustomForm({ body, children, identity, method, requiresConfirmation, ur
         event.preventDefault();
         event.stopPropagation();
         if (requiresConfirmation) {
-            const confirmed = confirm('This is a high-risk action!\nAre you sure?');
+            const confirmed = await confirm('This is a high-risk action!\nAre you sure?');
             if (!confirmed) return;
         }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
@@ -129,7 +125,7 @@ function CustomButton({ body, identity, label, method, requiresConfirmation, url
         event.preventDefault();
         event.stopPropagation();
         if (requiresConfirmation) {
-            const confirmed = confirm('This is a high-risk action!\nAre you sure?');
+            const confirmed = await confirm('This is a high-risk action!\nAre you sure?');
             if (!confirmed) return;
         }
         let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
@@ -847,8 +843,8 @@ function IdentitySelectorPage() {
         setEditedIdentity(null);
     }, []);
 
-    const handleDelete = useCallback((identity) => {
-        const confirmed = confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
+    const handleDelete = useCallback(async(identity) => {
+        const confirmed = await confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
         if (!confirmed) return;
         setIdentities((identities) => {
             const newIdentities = identities.filter(obj => obj.name !== identity.name);
@@ -1204,20 +1200,20 @@ function DeleteSpaceRecursivelyButton({ body, identity, roomId, onBusy, onProgre
     const handlePress = useCallback(async() => {
         onBusy(true);
         try {
-            let confirmed = confirm('Fetching a list of all subspaces and rooms can take many minutes.\nAre you ok to wait?');
+            let confirmed = await confirm('Fetching a list of all subspaces and rooms can take many minutes.\nAre you ok to wait?');
             if (!confirmed) return;
             const rooms = await getRoomsInASpace(identity, roomId, -1);
             const roomIds = new Set(rooms.map(r => r.roomId));
             roomIds.add(roomId);
             onTotal(roomIds.size);
-            confirmed = confirm(`Found ${roomIds.size} rooms (includes spaces) to delete.\nAre you sure you want to DELETE ALL?`);
+            confirmed = await confirm(`Found ${roomIds.size} rooms (includes spaces) to delete.\nAre you sure you want to DELETE ALL?`);
             if (!confirmed) return;
             let progress = 0;
             for (const roomId of roomIds.values()) {
                 try {
                     await deleteRoom(identity, roomId, body);
                 } catch (error) {
-                    let confirmed = confirm(`Failed to delete room ${roomId}.\n${error.error || error.message}\nContinue?`);
+                    let confirmed = await confirm(`Failed to delete room ${roomId}.\n${error.error || error.message}\nContinue?`);
                     if (!confirmed) return;
                 }
                 progress += 1;
@@ -1429,7 +1425,7 @@ function StateExplorer({identity, roomId}) {
         event.preventDefault();
         event.stopPropagation();
         if (!type) {
-            const answer = confirm('Room states can be REALLY big.\nConfirm, if you don\'t want to filter for a type.');
+            const answer = await confirm('Room states can be REALLY big.\nConfirm, if you don\'t want to filter for a type.');
             if (!answer) return;
         }
         setBusy(true);
@@ -1464,7 +1460,7 @@ function StateExplorer({identity, roomId}) {
                 warning += `with state_key ${stateKey} `;
             }
             warning += `in room ${roomId}?`;
-            const confirmed = confirm(warning);
+            const confirmed = await confirm(warning);
             if (!confirmed) return;
             await setState(identity, roomId, type, stateKey || undefined, content);
         } catch (error) {
@@ -1841,6 +1837,7 @@ function App() {
     let child = html`
         <${IdentitySelectorPage} />
         <${NetworkLog} />
+        <${AlertSingleton} />
     `;
 
     const identityName = matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName);

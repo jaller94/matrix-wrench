@@ -394,3 +394,27 @@ label {
 .room-list tr:nth-child(even) {
     background-color: #f2f2f2;
 }
+
+.modal_frame {
+    max-width: 400px;
+}
+
+.modal_title {
+    margin-top: 0;
+}
+
+.modal_buttons {
+    text-align: end;
+}
+
+.modal_buttons>button {
+    margin-left: .5em;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+:modal {
+    box-shadow: 3px 3px 10px rgba(0 0 0 / 0.7);
+}
