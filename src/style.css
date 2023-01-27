@@ -211,7 +211,6 @@ button.primary {
     border-bottom: 1px solid gray;
 }
 
-.identity-page_list>li:focus-within,
 .identity-page_list>li:hover {
     background-color: #eee;
 }
@@ -228,9 +227,7 @@ button.primary {
     font: inherit;
 }
 
-.identity-page_list>li a:focus,
 .identity-page_list>li a:hover,
-.identity-page_list>li button:focus,
 .identity-page_list>li button:hover {
     background-color: #ddd;
 }
