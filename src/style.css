@@ -203,11 +203,36 @@ button.primary {
     list-style: none;
     max-width: 500px;
     padding-left: 0;
+    border: 1px solid gray;
 }
 
 .identity-page_list>li {
     display: flex;
-    margin-bottom: .3em;
+    border-bottom: 1px solid gray;
+}
+
+.identity-page_list>li:focus-within,
+.identity-page_list>li:hover {
+    background-color: #eee;
+}
+
+.identity-page_list>li a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.identity-page_list>li button {
+    background: inherit;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+}
+
+.identity-page_list>li a:focus,
+.identity-page_list>li a:hover,
+.identity-page_list>li button:focus,
+.identity-page_list>li button:hover {
+    background-color: #ddd;
 }
 
 .identity-page_list>li>.identity-page_name {
@@ -216,6 +241,12 @@ button.primary {
     white-space: nowrap;
     overflow-x: hidden;
     text-overflow: ellipsis;
+    padding: .25em;
+}
+
+.identity-page_list>li>.identity-page_action {
+    padding: .25em;
+    border-left: 1px solid lightgray;
 }
 
 .identity-editor-form {

@@ -10,24 +10,17 @@ import {
 } from './node_modules/htm/preact/standalone.module.js';
 import {
     classnames,
-    fillInVariables,
     uniqueId,
 } from './helper.js';
 import { AlertSingleton, confirm } from './components/alert.js';
+import { CustomButton, CustomForm } from './components/custom-forms.js';
 import { AppHeader } from './components/header.js';
-import {
-    HighUpLabelInput,
-} from './components/inputs.js';
+import { HighUpLabelInput } from './components/inputs.js';
 import AboutPage from './pages/about.js';
-import {
-    RoomToYamlPage,
-} from './pages/room-to-yaml.js';
-import {
-    ContactListPage,
-} from './pages/contact-list.js';
-import {
-    RoomListPage,
-} from './pages/room-list.js';
+import { RoomToYamlPage } from './pages/room-to-yaml.js';
+import { ContactListPage } from './pages/contact-list.js';
+import { RoomListPage } from './pages/room-list.js';
+import { SynapseAdminPage } from './pages/synapse-admin.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -94,58 +87,6 @@ const Settings = createContext({
 //     `;
 // }
 
-function CustomForm({ body, children, identity, method, requiresConfirmation, url, variables, ...props }) {
-    const handleSubmit = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (requiresConfirmation) {
-            const confirmed = await confirm('This is a high-risk action!\nAre you sure?');
-            if (!confirmed) return;
-        }
-        let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
-        try {
-            await doRequest(...auth(identity, actualUrl, {
-                method,
-                ...(body && {
-                    body: typeof body === 'string' ? body : JSON.stringify(body),
-                }),
-            }));
-        } catch (error) {
-            alert(error);
-        }
-    }, [body, identity, method, requiresConfirmation, url, variables]);
-
-    return html`
-        <form onsubmit=${handleSubmit} ...${props}>${children}</form>
-    `;
-}
-
-function CustomButton({ body, identity, label, method, requiresConfirmation, url, variables }) {
-    const handlePress = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (requiresConfirmation) {
-            const confirmed = await confirm('This is a high-risk action!\nAre you sure?');
-            if (!confirmed) return;
-        }
-        let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
-        try {
-            await doRequest(...auth(identity, actualUrl, {
-                method,
-                ...(body && {
-                    body: typeof body === 'string' ? body : JSON.stringify(body),
-                }),
-            }));
-        } catch (error) {
-            alert(error);
-        }
-    }, [body, identity, method, requiresConfirmation, url, variables]);
-
-    return html`
-        <button type="button" onclick=${handlePress}>${label}</button>
-    `;
-}
-
 function RoomActions({identity, roomId}) {
     const variables = useMemo(() => ({
         roomId,
@@ -188,90 +129,6 @@ function RoomActions({identity, roomId}) {
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/kick`}>Bulk kick</a></li>
         </ul>
-    `;
-}
-
-function MutateUserForm({ identity }) {
-    const [admin, setAdmin] = useState(false);
-    const [deactivated, setDeactivated] = useState(false);
-    const [logoutDevices, setLogoutDevices] = useState(true);
-    const [password, setPassword] = useState('');
-    const [userId, setUserId] = useState('');
-    const [userType, setUserType] = useState('');
-
-    const body = useMemo(() => ({
-        admin,
-        deactivated,
-        password,
-        user_type: userType || null,
-    }), [admin, deactivated, password, userType]);
-
-    const variables = useMemo(() => ({
-        userId,
-    }), [userId]);
-
-    return html`
-        <${CustomForm}
-            body=${body}
-            identity=${identity}
-            method="PUT"
-            requiresConfirmation=${true}
-            url="/_synapse/admin/v2/users/!{userId}"
-            variables=${variables}
-        >
-            <${HighUpLabelInput}
-                label="User"
-                pattern="@.+:.+"
-                required
-                title="A user id, e.g. @user:server.com"
-                value=${userId}
-                oninput=${useCallback(({target}) => setUserId(target.value), [])}
-            />
-            <${HighUpLabelInput}
-                label="Password"
-                title="Optional password"
-                value=${password}
-                oninput=${useCallback(({target}) => setPassword(target.value), [])}
-            />
-            <p>
-                <label>User type
-                    <select
-                        oninput=${useCallback(({target}) => setUserType(target.value), [])}
-                    >
-                        <option value="">None</>
-                        <option value="bot">Bot</>
-                        <option value="support">Support</>
-                    </select>
-                </label>
-            </p>
-            <ul class="checkbox-list">
-                <li><label>
-                    <input
-                        checked=${logoutDevices}
-                        type="checkbox"
-                        onChange=${useCallback(({target}) => setLogoutDevices(target.checked), [])}
-                    />
-                    Log out all devices
-                </label></li>
-                <li><label>
-                    <input
-                        checked=${admin}
-                        type="checkbox"
-                        onChange=${useCallback(({target}) => setAdmin(target.checked), [])}
-                    />
-                    Synapse admin
-                </label></li>
-                <li><label>
-                    <input
-                        checked=${deactivated}
-                        type="checkbox"
-                        onChange=${useCallback(({ target }) => setDeactivated(target.checked), [])}
-                    />
-                    Deactivated
-                </label></li>
-            </ul>
-            <button>Create/mutate user</button>
-        </>
     `;
 }
 
@@ -343,9 +200,9 @@ function WhoAmI({identity}) {
             onclick=${handleSubmit}
         >Who am I?</button>
         <p>
-            Matrix ID: ${(info || {}).user_id || 'unknown'}
+            Matrix ID: ${info?.user_id || 'unknown'}
             <br/>
-            Device ID: ${(info || {}).device_id || 'unknown'}
+            Device ID: ${info?.device_id || 'unknown'}
         </p>
     `;
 }
@@ -434,7 +291,57 @@ function PasswordInput({serverAddress, onAccessToken}) {
     `;
 }
 
-function IdentityEditor({error, identity, onCancel, onSave}) {
+function IdentityEditorPage({identityName}) {
+    const {identities, setIdentities} = useContext(Settings);
+    const [editingError, setEditingError] = useState(null);
+
+    const editedIdentity = useMemo(() => {
+        return identities.find(ident => ident.name === identityName) ?? {}
+    }, [identities, identityName]);
+    
+    const handleSave = useCallback((identity) => {
+        setEditingError(null);
+        setIdentities(identities => {
+            const newIdentities = [...identities];
+            if (!identity.name) {
+                setEditingError('Identity must have a name!');
+                return identities;
+            }
+            const index = newIdentities.findIndex(ident => ident.name === identityName);
+            const conflicts = newIdentities.findIndex(ident => ident.name === identity.name) !== -1;
+            // The name may only conflict if this is the name we're editing.
+            if (conflicts && identityName !== identity.name) {
+                setEditingError('Identity name taken!');
+                return identities;
+            }
+            if (index === -1) {
+                // Add new identity
+                newIdentities.push(identity);
+            } else {
+                // Replace existing identity
+                newIdentities.splice(index, 1, identity);
+            }
+            if (identity.rememberLogin) {
+                try {
+                    saveIdentitiesToLocalStorage(newIdentities);
+                } catch (error) {
+                    console.warn('Failed to store identities in localStorage', error);
+                }
+            }
+            setEditingError(null);
+            window.location = '#';
+            return newIdentities;
+        });
+    }, [identityName, setIdentities]);
+
+    return html`<${IdentityEditor}
+        error=${editingError}
+        identity=${editedIdentity}
+        onSave=${handleSave}
+    />`;
+}
+
+function IdentityEditor({error, identity, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
@@ -458,18 +365,20 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
 
     return html`
         <${AppHeader}
-            onBack=${onCancel}
+            backUrl="#"
         >Identity Editor</>
         <form class="identity-editor-form" onsubmit=${handleSubmit}>
             <div>
                 <${HighUpLabelInput}
                     label="Name"
                     name="name"
+                    pattern="[^/]+"
                     required
                     value=${name}
                     oninput=${useCallback(({target}) => setName(target.value), [])}
                 />
             </div>
+            ${name.includes('/') && html`<p>The identity name must not include a slash character (/).</p>`}
             <div>
                 <${HighUpLabelInput}
                     label="Server address (e.g. https://matrix-client.matrix.org)"
@@ -537,7 +446,7 @@ function IdentityEditor({error, identity, onCancel, onSave}) {
                 </div>
             `}
             ${!!error && html`<p>${error}</p>`}
-            <button type="button" onclick=${onCancel}>Cancel</button>
+            <a href="#">Cancel</a>
             <button type="submit" class="primary">Save</button>
         </form>
     `;
@@ -721,23 +630,33 @@ function SettingsProvider({children}) {
     `;
 }
 
-function IdentitySelectorRow({identity, onDelete, onEdit}) {
+function IdentitySelectorRow({identity, onDelete}) {
     return html`<li>
-        <a class="identity-page_name" href=${`#/${identity.name}`}>${identity.name}</a>
-        <button type="button" title="Edit identity ${identity.name}" onclick=${useCallback(() => onEdit(identity), [identity, onEdit])}>✏️</button>
-        <button type="button" title="Delete identity ${identity.name}" onclick=${useCallback(() => onDelete(identity), [identity, onDelete])}>❌</button>
+        <a
+            class="identity-page_name"
+            href=${`#/${identity.name}`}
+        >${identity.name}</a>
+        <a
+            class="identity-page_action"
+            href="#identity/${identity.name}"
+            title="Edit identity ${identity.name}"
+        >✏️</a>
+        <button
+            class="identity-page_action"
+            title="Delete identity ${identity.name}"
+            type="button"
+            onclick=${useCallback(() => onDelete(identity), [identity, onDelete])}
+        >❌</button>
     </li>`;
 }
 
-function IdentitySelector({identities, onDelete, onEdit, onSelect}) {
+function IdentitySelector({identities, onDelete}) {
     return html`
         ${identities.map(identity => {
             return html`<${IdentitySelectorRow}
                 key=${identity.name}
                 identity=${identity}
                 onDelete=${onDelete}
-                onEdit=${onEdit}
-                onSelect=${onSelect}
             />`;
         })}
     `;
@@ -792,20 +711,6 @@ function saveIdentitiesToLocalStorage(identities) {
     localStorage.setItem('identities', JSON.stringify(identitiesToStore));
 }
 
-function SynapseAdminPage({identity}) {
-    return html`
-        <${AppHeader}
-            backLabel="Switch identity"
-            backUrl="#"
-        >${identity.name ?? 'No authentication'}</>
-        <div class="card">
-            <h2>Create/Mutate user</h2>
-            <${MutateUserForm} identity=${identity}/>
-        </div>
-        <${NetworkLog} />
-    `;
-}
-
 function MainPage({identity, roomId}) {
     return html`
         <${AppHeader}
@@ -831,17 +736,6 @@ function MainPage({identity, roomId}) {
 
 function IdentitySelectorPage() {
     const {identities, setIdentities} = useContext(Settings);
-    const [editedIdentity, setEditedIdentity] = useState(null);
-    const [editingError, setEditingError] = useState(null);
-
-    const handleAddIdentity = useCallback(() => {
-        setEditedIdentity({});
-    }, []);
-
-    const handleCancel = useCallback(() => {
-        setEditingError(null);
-        setEditedIdentity(null);
-    }, []);
 
     const handleDelete = useCallback(async(identity) => {
         const confirmed = await confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
@@ -857,63 +751,28 @@ function IdentitySelectorPage() {
         });
     }, [setIdentities]);
 
-    const handleSave = useCallback((identity) => {
-        setEditingError(null);
-        setIdentities(identities => {
-            const newIdentities = [...identities];
-            if (!identity.name) {
-                setEditingError('Identity must have a name!');
-                return identities;
-            }
-            const index = newIdentities.findIndex(ident => ident.name === editedIdentity.name);
-            const conflicts = newIdentities.findIndex(ident => ident.name === identity.name) !== -1;
-            // The name may only conflict if this is the name we're editing.
-            if (conflicts && editedIdentity.name !== identity.name) {
-                setEditingError('Identity name taken!');
-                return identities;
-            }
-            if (index === -1) {
-                // Add new identity
-                newIdentities.push(identity);
-            } else {
-                // Replace existing identity
-                newIdentities.splice(index, 1, identity);
-            }
-            if (identity.rememberLogin) {
-                try {
-                    saveIdentitiesToLocalStorage(newIdentities);
-                } catch (error) {
-                    console.warn('Failed to store identities in localStorage', error);
-                }
-            }
-            setEditedIdentity(null);
-            setEditingError(null);
-            return newIdentities;
-        });
-    }, [editedIdentity, setIdentities]);
-
-    if (editedIdentity) {
-        return html`<${IdentityEditor}
-            error=${editingError}
-            identity=${editedIdentity}
-            onCancel=${handleCancel}
-            onSave=${handleSave}
-        />`;
-    }
     return html`
         <${AppHeader}>Identities</>
         <main>
-            <p>Add or choose an identity. An identity is a combination of a homeserver URL and an access token.</p>
-            <ul class="identity-page_list">
-                <${IdentitySelector} identities=${identities} onDelete=${handleDelete} onEdit=${setEditedIdentity} />
-            </ul>
-            <button type="button" onclick=${handleAddIdentity}>Add identity</button>
+        ${identities.length === 0 ? (html`
+                <p>
+                    Hi there! Need to tweak some Matrix rooms?<br/>
+                    First, you need to add an identity. An identity is a combination of a homeserver URL and an access token.<br/>
+                    Wrench can handle multiple identities. It assumes that identities are sensitive, so they aren't stored by default.
+                </p>
+            `) : (html`
+                <p>Choose an identity. An identity is a combination of a homeserver URL and an access token.</p>
+                <ul class="identity-page_list">
+                    <${IdentitySelector} identities=${identities} onDelete=${handleDelete} />
+                </ul>
+            `)}
+            <a href="#identity">Add identity</a>
         </main>
     `;
 }
 
 function RoomList({roomIds, onSelectRoom}) {
-    const { externalMatrixUrl } = useContext(Settings);
+    const {externalMatrixUrl} = useContext(Settings);
     const handleSelectRoom = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
@@ -1651,7 +1510,8 @@ function BulkInviteForm({actionLabel, onSubmit}) {
         event.stopPropagation();
         let userIds = userIdsString.split(/[\s,;]/);
         userIds = userIds.map(userIds => userIds.trim());
-        userIds = userIds.filter(userId => /^@.*:/.test(userId));
+        const userIdRegExp = /^@.*:/;
+        userIds = userIds.filter(userId => userIdRegExp.test(userId));
         await onSubmit({
             userIds,   
         });
@@ -1832,21 +1692,21 @@ function App() {
         };
     }, []);
 
-    const matchRoomPage = page.match(/^\/(?<identityName>[^/]*)(?:\/(?<roomId>[^/]*)(?:\/(?<subpage>.*))?)?$/);
+    const matchIdentityEditorPage = page.match(matchIdentityEditorPageRegExp);
+    const matchRoomPage = page.match(matchRoomPageRegExp);
 
-    let child = html`
-        <${IdentitySelectorPage} />
-        <${NetworkLog} />
-        <${AlertSingleton} />
-    `;
-
-    const identityName = matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName);
+    const identityName =
+        (matchIdentityEditorPage?.groups.identityName && decodeURIComponent(matchIdentityEditorPage.groups.identityName)) ||
+        (matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName));
     const roomId = matchRoomPage?.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
-
+    
+    let child;
     if (page === 'about') {
         child = html`<${AboutPage} />`;
     } else if (page === 'settings') {
         child = html`<${SettingsPage} />`;
+    } else if (matchIdentityEditorPage) {
+        child = html`<${IdentityEditorPage} identityName=${identityName} />`;
     } else if (matchRoomPage) {
         child = html`
             <${IdentityProvider}
@@ -1894,6 +1754,11 @@ function App() {
                 }}
             />
         `;
+    } else {
+        child = html`
+            <${IdentitySelectorPage} />
+            <${NetworkLog} />
+        `;
     }
 
     return html`
@@ -1902,7 +1767,10 @@ function App() {
                 ${child}
             </>
         </>
+        <${AlertSingleton} />
     `;
 }
+const matchIdentityEditorPageRegExp = /^identity(?:\/(?<identityName>[^/]*))?$/;
+const matchRoomPageRegExp = /^\/(?<identityName>[^/]*)(?:\/(?<roomId>[^/]*)(?:\/(?<subpage>.*))?)?$/;
 
 render(html`<${App} />`, document.body);

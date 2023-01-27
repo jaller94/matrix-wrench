@@ -71,6 +71,7 @@ export function AlertSingleton() {
 }
 
 export const confirm = (title) => new Promise((resolve) => {
+    console.log('confirm', title);
     window.dispatchEvent(new CustomEvent('confirm', {
         detail: {
             title,

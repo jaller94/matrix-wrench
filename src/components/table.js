@@ -29,7 +29,7 @@ export function TableHead({ propertyName, label, sortBys, onSortBys }) {
 
 export function RoomListTable({ columns, data, primaryAccessor, sortBys, onSortBys }) {
     return html`
-        <div className="room-list">
+        <div class="room-list">
             <table>
                 <thead>
                     <tr>

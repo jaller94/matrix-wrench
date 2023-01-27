@@ -9,6 +9,10 @@
 * Added: Room table
 * Added: Direct Contacts table
 
+## Next release
+* Added: Urls and proper browser navigation for the identity editor
+* Fixed: Disallow identity names with a slash character
+
 ## v0.9.0 (2022-12-16)
 * Added: Password login
 * Added: Create and mutate users using the Synapse API.
