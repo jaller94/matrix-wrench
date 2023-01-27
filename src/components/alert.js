@@ -80,6 +80,7 @@ export const confirm = (title) => new Promise((resolve) => {
     const handleClose = async (event) => {
         resolve(event.detail.response);
     }
+    // eslint-disable-next-line no-warning-comments
     // FIXME: Memory leak. This will not be cleaned up.
     window.addEventListener('confirmed', handleClose);
 });
