@@ -446,7 +446,7 @@ function IdentityEditor({error, identity, onSave}) {
                 </div>
             `}
             ${!!error && html`<p>${error}</p>`}
-            <a href="#">Cancel</a>
+            <a class="button" href="#">Cancel</a>
             <button type="submit" class="primary">Save</button>
         </form>
     `;
@@ -766,7 +766,7 @@ function IdentitySelectorPage() {
                     <${IdentitySelector} identities=${identities} onDelete=${handleDelete} />
                 </ul>
             `)}
-            <a href="#identity">Add identity</a>
+            <a class="button" href="#identity">Add identity</a>
         </main>
     `;
 }
@@ -1535,6 +1535,10 @@ function BulkInvitePage({identity, roomId}) {
         setUserIds(userIds);
     }, []);
 
+    const action = useCallback(userId => {
+        inviteUser(identity, roomId, userId);
+    }, [identity, roomId])
+
     return html`
         <${AppHeader}
             backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
@@ -1544,7 +1548,7 @@ function BulkInvitePage({identity, roomId}) {
             ${userIds === null ? html` 
                 <${BulkInviteForm} actionLabel="Invite" onSubmit=${handleSubmit} />
             ` : html`
-                <${BulkActionTracker} action=${inviteUser} identity=${identity} items=${userIds} roomId=${roomId} />
+                <${BulkActionTracker} action=${action} items=${userIds} />
             `}
         </main>
         <${NetworkLog} />
@@ -1558,6 +1562,10 @@ function BulkKickPage({identity, roomId}) {
         setUserIds(userIds);
     }, []);
 
+    const action = useCallback(userId => {
+        kickUser(identity, roomId, userId);
+    }, [identity, roomId]);
+
     return html`
         <${AppHeader}
             backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
@@ -1567,14 +1575,14 @@ function BulkKickPage({identity, roomId}) {
             ${userIds === null ? html` 
                 <${BulkInviteForm} actionLabel="Kick" onSubmit=${handleSubmit} />
             ` : html`
-                <${BulkActionTracker} action=${kickUser} identity=${identity} items=${userIds} roomId=${roomId} />
+                <${BulkActionTracker} action=${action} items=${userIds} />
             `}
         </main>
         <${NetworkLog} />
     `;
 }
 
-function BulkActionTracker({ action, items, identity, roomId }) {
+function BulkActionTracker({ action, items}) {
     const [currentItem, setCurrentItem] = useState(null);
     const [progress, setProgress] = useState(0);
     const [errors, setErrors] = useState([]);
@@ -1584,7 +1592,7 @@ function BulkActionTracker({ action, items, identity, roomId }) {
             for (const item of items) {
                 try {
                     setCurrentItem(item);
-                    await action(identity, roomId, item);
+                    await action(item);
                 } catch (error) {
                     setErrors(errors => [
                         ...errors,
@@ -1600,7 +1608,7 @@ function BulkActionTracker({ action, items, identity, roomId }) {
             setCurrentItem(null);
         }
         doAction();
-    }, [action, identity, items, roomId]);
+    }, [action, items]);
 
     return html`
         <h3>Progress</h3>

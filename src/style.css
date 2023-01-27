@@ -10,11 +10,6 @@ body {
 
 details {
     border: 2px grey solid;
-}
-
-details {
-    border: 2px grey solid;
-    border-radius: .5em;
     padding: .5em;
     margin-bottom: .5em;
     margin-right: .5em;
@@ -90,8 +85,8 @@ fieldset {
     box-shadow: 0 1px 1px 0 rgba(66, 66, 66, 0.08), 0 1px 3px 1px rgba(66, 66, 66, 0.16);
     width: 500px;
     border: 2px solid grey;
-    border-radius: .5em;
     padding: .5em;
+    margin-bottom: .5em;
 }
 
 @media screen and (max-width: 700px) {
@@ -104,11 +99,40 @@ fieldset {
     margin-top: 0;
 }
 
+button {
+    cursor: pointer;
+    font-size: inherit;
+}
+
+button.primary,
+a.button {
+    font-size: inherit;
+    padding: .1em .3em;
+}
+
 button.primary {
     background-color: #6716ec;
     border-color: #6716ec;
     color: white;
     border-radius: 3px;
+}
+
+button.primary:hover {
+    background-color: #915ae8;
+    border-color: #915ae8;
+}
+
+a.button {
+    background-color: #e9e9ed;
+    border: 1px solid black;
+    border-radius: 3px;
+    color: inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+a.button:hover {
+    background-color: #c9c9cb;
 }
 
 .app-header {
