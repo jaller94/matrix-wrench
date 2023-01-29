@@ -283,6 +283,7 @@ export async function getState(identity, roomId, type, stateKey) {
  * Invite a user to a room.
  * @param {Object} identity
  * @param {string} roomId
+ * @param {string} userId
  * @returns {Promise<Object>}
  */
 export async function inviteUser(identity, roomId, userId) {
@@ -293,6 +294,24 @@ export async function inviteUser(identity, roomId, userId) {
         },
         body: JSON.stringify({
             user_id: userId,
+        }),
+    }));
+}
+
+/**
+ * Join a room.
+ * @param {Object} identity
+ * @param {string} roomId
+ * @returns {Promise<Object>}
+ */
+export async function joinRoom(identity, roomId) {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/join`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            roomId,
         }),
     }));
 }

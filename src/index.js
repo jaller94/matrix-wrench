@@ -37,6 +37,7 @@ import {
     getMembers,
     getState,
     inviteUser,
+    joinRoom,
     kickUser,
     resolveAlias,
     setState,
@@ -128,6 +129,7 @@ function RoomActions({identity, roomId}) {
         <ul>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/kick`}>Bulk kick</a></li>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/mass-joiner`}>Mass joiner (AppService API)</a></li>
         </ul>
     `;
 }
@@ -298,7 +300,7 @@ function IdentityEditorPage({identityName}) {
     const editedIdentity = useMemo(() => {
         return identities.find(ident => ident.name === identityName) ?? {}
     }, [identities, identityName]);
-    
+
     const handleSave = useCallback((identity) => {
         setEditingError(null);
         setIdentities(identities => {
@@ -360,7 +362,7 @@ function IdentityEditor({error, identity, onSave}) {
         event.stopPropagation();
         onSave({name, serverAddress, accessToken, rememberLogin});
     }, [accessToken, name, onSave, serverAddress, rememberLogin]);
-    
+
     const handleRememberLoginClick = useCallback(({target}) => setRememberLogin(target.checked), []);
 
     return html`
@@ -600,7 +602,7 @@ function SettingsProvider({children}) {
                 externalMatrixUrl,
             }));
         };
-        
+
         const setIdentities = (callback) => {
             setState(state => ({
                 ...state,
@@ -778,7 +780,7 @@ function RoomList({roomIds, onSelectRoom}) {
         event.stopPropagation();
         onSelectRoom(event.target.dataset.roomId);
     }, [onSelectRoom]);
- 
+
     if (roomIds.length === 0) {
         return html`
             <p>There's no room in this list.</p>
@@ -977,7 +979,7 @@ function SynapseAdminDelete({ identity, roomId }) {
     const handleSubmit = useCallback((event) => {
         // Just ignore submit. We have two buttons - no submit button.
         event.preventDefault();
-        event.stopPropagation();   
+        event.stopPropagation();
     }, []);
 
     const handleBusy = useCallback(newBusy => {
@@ -1348,7 +1350,10 @@ function StateExplorer({identity, roomId}) {
         </fieldset></form>
         <form onsubmit=${handlePut}><fieldset disabled=${busy}>
             <label>State
-                <textarea oninput=${useCallback(({target}) => setData(target.value), [])}>${data}</textarea>
+                <textarea
+                    value=${data}
+                    oninput=${useCallback(({target}) => setData(target.value), [])}
+                />
             </label>
             <div><button type="submit">Overwrite state</button></div>
         </fieldset></form>
@@ -1513,7 +1518,7 @@ function BulkInviteForm({actionLabel, onSubmit}) {
         const userIdRegExp = /^@.*:/;
         userIds = userIds.filter(userId => userIdRegExp.test(userId));
         await onSubmit({
-            userIds,   
+            userIds,
         });
     }, [userIdsString, onSubmit]);
 
@@ -1521,7 +1526,10 @@ function BulkInviteForm({actionLabel, onSubmit}) {
         <form onsubmit=${handleSubmit}>
             <label>
                 User IDs (separated by spaces, new lines, commas or semi-colons)
-                <textarea onchange=${useCallback(event => setUserIdsString(event.target.value), [])}>${userIdsString}</teaxtarea>
+                <textarea
+                    value=${userIdsString}
+                    oninput=${useCallback(({target}) => setUserIdsString(target.value), [])}
+                />
             </label>
             <button>${actionLabel}</button>
         </form>
@@ -1530,13 +1538,13 @@ function BulkInviteForm({actionLabel, onSubmit}) {
 
 function BulkInvitePage({identity, roomId}) {
     const [userIds, setUserIds] = useState(null);
-    
+
     const handleSubmit = useCallback(({userIds}) => {
         setUserIds(userIds);
     }, []);
 
-    const action = useCallback(userId => {
-        inviteUser(identity, roomId, userId);
+    const action = useCallback(async userId => {
+        return inviteUser(identity, roomId, userId);
     }, [identity, roomId])
 
     return html`
@@ -1545,7 +1553,7 @@ function BulkInvitePage({identity, roomId}) {
         >Bulk Invite</>
         <main>
             <h2>${roomId}</h2>
-            ${userIds === null ? html` 
+            ${userIds === null ? html`
                 <${BulkInviteForm} actionLabel="Invite" onSubmit=${handleSubmit} />
             ` : html`
                 <${BulkActionTracker} action=${action} items=${userIds} />
@@ -1557,13 +1565,13 @@ function BulkInvitePage({identity, roomId}) {
 
 function BulkKickPage({identity, roomId}) {
     const [userIds, setUserIds] = useState(null);
-    
+
     const handleSubmit = useCallback(({userIds}) => {
         setUserIds(userIds);
     }, []);
 
-    const action = useCallback(userId => {
-        kickUser(identity, roomId, userId);
+    const action = useCallback(async userId => {
+        return kickUser(identity, roomId, userId);
     }, [identity, roomId]);
 
     return html`
@@ -1572,7 +1580,7 @@ function BulkKickPage({identity, roomId}) {
         >Bulk Kick</>
         <main>
             <h2>${roomId}</h2>
-            ${userIds === null ? html` 
+            ${userIds === null ? html`
                 <${BulkInviteForm} actionLabel="Kick" onSubmit=${handleSubmit} />
             ` : html`
                 <${BulkActionTracker} action=${action} items=${userIds} />
@@ -1582,14 +1590,106 @@ function BulkKickPage({identity, roomId}) {
     `;
 }
 
-function BulkActionTracker({ action, items}) {
+function SpaceRoomPicker({identity, roomId, onChange}) {
+    const [roomIdsString, setRoomIdsString] = useState(roomId ?? '');
+    const [queryRunning, setQueryRunning] = useState(false);
+
+    useEffect(() => {
+        let roomIds = roomIdsString.split(/[\s,;]/);
+        roomIds = roomIds.map(roomIds => roomIds.trim());
+        const roomIdRegExp = /^!.+/;
+        roomIds = roomIds.filter(roomId => roomIdRegExp.test(roomId));
+        onChange(roomIds);
+    }, [roomIdsString, onChange]);
+
+    const handleQueryChildSpaces = useCallback(async () => {
+        setQueryRunning(true);
+        await new Promise(resolve => {
+            setTimeout(resolve, 1000);
+        });
+        setRoomIdsString(str => {
+            return `${str}\nNot implemented`;
+        });
+        setQueryRunning(false);
+    }, []);
+
+    return html`
+        <label>
+            Room IDs (separated by spaces, new lines, commas or semi-colons)
+            <textarea
+                value=${roomIdsString}
+                oninput=${useCallback(({target}) => setRoomIdsString(target.value), [])}
+            />
+        </label>
+        <button
+            disabled=${queryRunning}
+            type="button"
+            onclick=${handleQueryChildSpaces}
+        >Query child Spaces</button>
+    `;
+}
+
+function FosdemJoinerPage({identity, roomId}) {
+    const [roomIds, setRoomIds] = useState([]);
+    const [userIds, setUserIds] = useState([]);
+
+    const handleSubmit = useCallback(({userIds}) => {
+        setUserIds(userIds);
+    }, []);
+
+    const items = useMemo(() => {
+        const items = [];
+        for (const userId of userIds) {
+            const masqueradedIdentity = {
+                ...identity,
+                masqueradeAs: userId,
+            };
+            for (const roomId of roomIds) {
+                items.push({
+                    masqueradedIdentity,
+                    roomId,
+                });
+            }
+        }
+        return items;
+    }, [identity, roomIds, userIds]);
+
+    const action = useCallback(async ({masqueradedIdentity, roomId}) => {
+        return joinRoom(masqueradedIdentity, roomId);
+    }, []);
+
+    return html`
+        <${AppHeader}
+            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
+        >FOSDEM Joiner</>
+        <main>
+            <h2>${roomId}</h2>
+            <${SpaceRoomPicker} identity=${identity} roomId=${roomId} onChange=${setRoomIds} />
+            <${BulkInviteForm} actionLabel="Make users join" onSubmit=${handleSubmit} />
+            <${BulkActionTracker} action=${action} items=${items} />
+        </main>
+        <${NetworkLog} />
+    `;
+}
+
+function BulkActionTracker({action, items}) {
     const [currentItem, setCurrentItem] = useState(null);
     const [progress, setProgress] = useState(0);
     const [errors, setErrors] = useState([]);
+    // const [pendingItems, setPendingItems] = useState(items);
+    const [allItems, setAllItems] = useState(items);
+
+    useEffect(() => {
+        // TODO: Intelligently add new items to the queue and remove deleted ones.
+        if (allItems.length !== 0) {
+            return;
+        }
+        setAllItems(items);
+    }, [allItems, items]);
 
     useEffect(() => {
         async function doAction() {
-            for (const item of items) {
+            for (const item of allItems) {
                 try {
                     setCurrentItem(item);
                     await action(item);
@@ -1608,20 +1708,21 @@ function BulkActionTracker({ action, items}) {
             setCurrentItem(null);
         }
         doAction();
-    }, [action, items]);
+    }, [action, allItems]);
 
+    // FIXME: error.item can be an object. Cannot use JSON.stringify()
     return html`
         <h3>Progress</h3>
-        <progress value=${progress} max=${items.length}>Processed ${progress} of ${items.length} items.</progress>
+        <progress value=${progress} max=${allItems.length}>Processed ${progress} of ${allItems.length} items.</progress>
         ${currentItem ? html`
             Processing ${currentItem}…
         ` : html`
-            ${progress} / ${items.length}
+            ${progress} / ${allItems.length}
         `}
         <h3>Errors (${errors.length})</h3>
         ${errors.length === 0 ? html`<p>No errors</p>` : html`
             <ol>
-                ${errors.map(error => html`<li key=${error.id}>${error.item} - ${error.message}</li>`)}
+                ${errors.map(error => html`<li key=${error.id}>${`${error.item}`} - ${error.message}</li>`)}
             </ol>
         `}
     `;
@@ -1629,7 +1730,7 @@ function BulkActionTracker({ action, items}) {
 
 function SpaceManagementPage({identity, roomId}) {
     const [rooms, setRooms] = useState(null);
-    
+
     const handleQuery = useCallback(async() => {
         const state = await getState(identity, roomId);
         const childrenEvents = state.filter(event => event.type === 'm.space.child');
@@ -1707,7 +1808,7 @@ function App() {
         (matchIdentityEditorPage?.groups.identityName && decodeURIComponent(matchIdentityEditorPage.groups.identityName)) ||
         (matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName));
     const roomId = matchRoomPage?.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
-    
+
     let child;
     if (page === 'about') {
         child = html`<${AboutPage} />`;
@@ -1740,6 +1841,11 @@ function App() {
                             />`;
                         } else if (matchRoomPage.groups.subpage === 'invite') {
                             return html`<${BulkInvitePage}
+                                identity=${identity}
+                                roomId=${roomId}
+                            />`;
+                        } else if (matchRoomPage.groups.subpage === 'mass-joiner') {
+                            return html`<${FosdemJoinerPage}
                                 identity=${identity}
                                 roomId=${roomId}
                             />`;

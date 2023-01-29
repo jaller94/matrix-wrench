@@ -30,7 +30,7 @@ export function classnames(...arr) {
 export function fillInVariables(template, variables) {
     let result = template;
     let match;
-    while ((match = result.match(variablePattern,))) {
+    while ((match = result.match(variablePattern))) {
         result = result.slice(0, match.index) + encodeURIComponent(variables[match.groups.key]) + result.slice(match.index + match[0].length);
     }
     return result;

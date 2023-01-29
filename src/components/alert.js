@@ -4,7 +4,6 @@ export function Alert({open, title, onClose}) {
     const ref = useRef();
 
     useEffect(() => {
-        console.log('open', open, ref.current);
         if (open) {
             ref.current?.showModal();
             // prevent bg scroll
@@ -41,7 +40,6 @@ export function AlertSingleton() {
 
     useEffect(() => {
         const handleConfirmDialog = event => {
-            console.log('confirm event', event);
             setTitle(event.detail.title);
             setOpen(true);
         }
@@ -53,7 +51,6 @@ export function AlertSingleton() {
     
     const handleClose = (response) => {
         setOpen(false);
-        console.log('confirmed', response);
         window.dispatchEvent(new CustomEvent('confirmed', {
             detail: {
                 response,
@@ -71,7 +68,6 @@ export function AlertSingleton() {
 }
 
 export const confirm = (title) => new Promise((resolve) => {
-    console.log('confirm', title);
     window.dispatchEvent(new CustomEvent('confirm', {
         detail: {
             title,
