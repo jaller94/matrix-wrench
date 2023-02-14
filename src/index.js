@@ -10,13 +10,14 @@ import {
 } from './node_modules/htm/preact/standalone.module.js';
 import {
     classnames,
-    uniqueId,
 } from './helper.js';
 import { AlertSingleton, confirm } from './components/alert.js';
 import { CustomButton, CustomForm } from './components/custom-forms.js';
+import { BulkActionTracker, BulkActionForm } from '../components/bulk-actions.js';
 import { AppHeader } from './components/header.js';
 import { HighUpLabelInput } from './components/inputs.js';
 import AboutPage from './pages/about.js';
+import { MassJoinerPage } from './pages/mass-joiner.js';
 import { RoomToYamlPage } from './pages/room-to-yaml.js';
 import { ContactListPage } from './pages/contact-list.js';
 import { RoomListPage } from './pages/room-list.js';
@@ -37,7 +38,6 @@ import {
     getMembers,
     getState,
     inviteUser,
-    joinRoom,
     kickUser,
     resolveAlias,
     setState,
@@ -126,11 +126,13 @@ function RoomActions({identity, roomId}) {
             variables=${variables}
         />
         <hr/>
-        <ul>
+        <h3>Other pages</h3>
+        <nav><ul>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/kick`}>Bulk kick</a></li>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/mass-joiner`}>Mass joiner (AppService API)</a></li>
-        </ul>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/yaml`}>JSON export</a></li>
+        </ul></nav>
     `;
 }
 
@@ -713,6 +715,16 @@ function saveIdentitiesToLocalStorage(identities) {
     localStorage.setItem('identities', JSON.stringify(identitiesToStore));
 }
 
+function IdentityNav({identity}) {
+    return html`
+        <h2>Other pages</h2>
+        <nav><ul>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/room-list`}>Your rooms</a></li>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/contact-list`}>Your direct contacts</a></li>
+        </ul></nav>
+    `;
+}
+
 function MainPage({identity, roomId}) {
     return html`
         <${AppHeader}
@@ -723,6 +735,9 @@ function MainPage({identity, roomId}) {
             ${identity.accessToken ? html`
                 <div class="card">
                     <${WhoAmI} identity=${identity}/>
+                </div>
+                <div class="card">
+                    <${IdentityNav} identity=${identity}/>
                 </div>
                 <${RoomSelector} identity=${identity} roomId=${roomId}/>
             ` : html`
@@ -1092,7 +1107,7 @@ function DeleteSpaceRecursivelyButton({ body, identity, roomId, onBusy, onProgre
 
 function RoomPage({identity, roomId}) {
     return html`
-        <h3>${roomId}</h3>
+        <h2>${roomId}</h2>
         <div class="page">
             <div class="section">
                 <details open>
@@ -1507,35 +1522,6 @@ function IdentityProvider({render, identityName}) {
     return render(identity);
 }
 
-function BulkInviteForm({actionLabel, onSubmit}) {
-    const [userIdsString, setUserIdsString] = useState('');
-
-    const handleSubmit = useCallback(async event => {
-        event.preventDefault();
-        event.stopPropagation();
-        let userIds = userIdsString.split(/[\s,;]/);
-        userIds = userIds.map(userIds => userIds.trim());
-        const userIdRegExp = /^@.*:/;
-        userIds = userIds.filter(userId => userIdRegExp.test(userId));
-        await onSubmit({
-            userIds,
-        });
-    }, [userIdsString, onSubmit]);
-
-    return html`
-        <form onsubmit=${handleSubmit}>
-            <label>
-                User IDs (separated by spaces, new lines, commas or semi-colons)
-                <textarea
-                    value=${userIdsString}
-                    oninput=${useCallback(({target}) => setUserIdsString(target.value), [])}
-                />
-            </label>
-            <button>${actionLabel}</button>
-        </form>
-    `;
-}
-
 function BulkInvitePage({identity, roomId}) {
     const [userIds, setUserIds] = useState(null);
 
@@ -1554,7 +1540,7 @@ function BulkInvitePage({identity, roomId}) {
         <main>
             <h2>${roomId}</h2>
             ${userIds === null ? html`
-                <${BulkInviteForm} actionLabel="Invite" onSubmit=${handleSubmit} />
+                <${BulkActionForm} actionLabel="Invite" onSubmit=${handleSubmit} />
             ` : html`
                 <${BulkActionTracker} action=${action} items=${userIds} />
             `}
@@ -1581,150 +1567,12 @@ function BulkKickPage({identity, roomId}) {
         <main>
             <h2>${roomId}</h2>
             ${userIds === null ? html`
-                <${BulkInviteForm} actionLabel="Kick" onSubmit=${handleSubmit} />
+                <${BulkActionForm} actionLabel="Kick" onSubmit=${handleSubmit} />
             ` : html`
                 <${BulkActionTracker} action=${action} items=${userIds} />
             `}
         </main>
         <${NetworkLog} />
-    `;
-}
-
-function SpaceRoomPicker({identity, roomId, onChange}) {
-    const [roomIdsString, setRoomIdsString] = useState(roomId ?? '');
-    const [queryRunning, setQueryRunning] = useState(false);
-
-    useEffect(() => {
-        let roomIds = roomIdsString.split(/[\s,;]/);
-        roomIds = roomIds.map(roomIds => roomIds.trim());
-        const roomIdRegExp = /^!.+/;
-        roomIds = roomIds.filter(roomId => roomIdRegExp.test(roomId));
-        onChange(roomIds);
-    }, [roomIdsString, onChange]);
-
-    const handleQueryChildSpaces = useCallback(async () => {
-        setQueryRunning(true);
-        await new Promise(resolve => {
-            setTimeout(resolve, 1000);
-        });
-        setRoomIdsString(str => {
-            return `${str}\nNot implemented`;
-        });
-        setQueryRunning(false);
-    }, []);
-
-    return html`
-        <label>
-            Room IDs (separated by spaces, new lines, commas or semi-colons)
-            <textarea
-                value=${roomIdsString}
-                oninput=${useCallback(({target}) => setRoomIdsString(target.value), [])}
-            />
-        </label>
-        <button
-            disabled=${queryRunning}
-            type="button"
-            onclick=${handleQueryChildSpaces}
-        >Query child Spaces</button>
-    `;
-}
-
-function FosdemJoinerPage({identity, roomId}) {
-    const [roomIds, setRoomIds] = useState([]);
-    const [userIds, setUserIds] = useState([]);
-
-    const handleSubmit = useCallback(({userIds}) => {
-        setUserIds(userIds);
-    }, []);
-
-    const items = useMemo(() => {
-        const items = [];
-        for (const userId of userIds) {
-            const masqueradedIdentity = {
-                ...identity,
-                masqueradeAs: userId,
-            };
-            for (const roomId of roomIds) {
-                items.push({
-                    masqueradedIdentity,
-                    roomId,
-                });
-            }
-        }
-        return items;
-    }, [identity, roomIds, userIds]);
-
-    const action = useCallback(async ({masqueradedIdentity, roomId}) => {
-        return joinRoom(masqueradedIdentity, roomId);
-    }, []);
-
-    return html`
-        <${AppHeader}
-            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
-        >FOSDEM Joiner</>
-        <main>
-            <h2>${roomId}</h2>
-            <${SpaceRoomPicker} identity=${identity} roomId=${roomId} onChange=${setRoomIds} />
-            <${BulkInviteForm} actionLabel="Make users join" onSubmit=${handleSubmit} />
-            <${BulkActionTracker} action=${action} items=${items} />
-        </main>
-        <${NetworkLog} />
-    `;
-}
-
-function BulkActionTracker({action, items}) {
-    const [currentItem, setCurrentItem] = useState(null);
-    const [progress, setProgress] = useState(0);
-    const [errors, setErrors] = useState([]);
-    // const [pendingItems, setPendingItems] = useState(items);
-    const [allItems, setAllItems] = useState(items);
-
-    useEffect(() => {
-        // TODO: Intelligently add new items to the queue and remove deleted ones.
-        if (allItems.length !== 0) {
-            return;
-        }
-        setAllItems(items);
-    }, [allItems, items]);
-
-    useEffect(() => {
-        async function doAction() {
-            for (const item of allItems) {
-                try {
-                    setCurrentItem(item);
-                    await action(item);
-                } catch (error) {
-                    setErrors(errors => [
-                        ...errors,
-                        {
-                            id: uniqueId(),
-                            item,
-                            message: error.content?.errcode || error.message,
-                        },
-                    ]);
-                }
-                setProgress(value => value + 1);
-            }
-            setCurrentItem(null);
-        }
-        doAction();
-    }, [action, allItems]);
-
-    // FIXME: error.item can be an object. Cannot use JSON.stringify()
-    return html`
-        <h3>Progress</h3>
-        <progress value=${progress} max=${allItems.length}>Processed ${progress} of ${allItems.length} items.</progress>
-        ${currentItem ? html`
-            Processing ${currentItem}…
-        ` : html`
-            ${progress} / ${allItems.length}
-        `}
-        <h3>Errors (${errors.length})</h3>
-        ${errors.length === 0 ? html`<p>No errors</p>` : html`
-            <ol>
-                ${errors.map(error => html`<li key=${error.id}>${`${error.item}`} - ${error.message}</li>`)}
-            </ol>
-        `}
     `;
 }
 
@@ -1845,7 +1693,7 @@ function App() {
                                 roomId=${roomId}
                             />`;
                         } else if (matchRoomPage.groups.subpage === 'mass-joiner') {
-                            return html`<${FosdemJoinerPage}
+                            return html`<${MassJoinerPage}
                                 identity=${identity}
                                 roomId=${roomId}
                             />`;

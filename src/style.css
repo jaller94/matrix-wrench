@@ -64,6 +64,7 @@ input[type="text"] */
 textarea {
     display: block;
     width: 100%;
+    max-width: calc(100% - 12px);
     min-width: 100px;
 }
 

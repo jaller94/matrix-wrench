@@ -76,6 +76,7 @@ export function RoomToYamlPage({identity, roomId}) {
         <main>
             <h2>${roomId}</h2>
             <button
+                disabled=${busy}
                 type="button"
                 onclick=${handleClick}
             >Load</button>

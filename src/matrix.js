@@ -211,6 +211,17 @@ export async function getAccountData(identity, user, type) {
 }
 
 /**
+ * Gets a paginated hierachy of a room and its space childs.
+ * @param {Object} identity
+ * @param {string} roomId
+ */
+export async function getHierachy(identity, roomId) {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v1/rooms/${encodeURIComponent(roomId)}/hierarchy`, {
+        method: 'GET',
+    }));
+}
+
+/**
  * Gets a list of joined members of a room.
  * @param {Object} identity
  * @param {string} roomId

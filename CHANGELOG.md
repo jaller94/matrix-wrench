@@ -5,12 +5,13 @@
 
 ### Alpha Features
 * Added: Space Management Page
-* Added: Room to YAML
-* Added: Room table
-* Added: Direct Contacts table
 
 ## Next release
 * Added: Urls and proper browser navigation for the identity editor
+* Added: Room to JSON
+* Added: Room table
+* Added: Direct Contacts table
+* Added: Experimental AppService Joiner page
 * Fixed: Disallow identity names with a slash character
 
 ## v0.9.0 (2022-12-16)
