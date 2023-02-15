@@ -522,6 +522,21 @@ function NetworkLogRequest({request}) {
             <div>
                 <strong>Sent:</strong> ${request.sent.toLocaleString()}
             </div>
+            ${request.received && html`
+                <div>
+                    <strong>Received:</strong> ${request.received.toLocaleString()}
+                </div>
+            `}
+            ${request.errcode && html`
+                <div>
+                    <strong>Error Code:</strong> ${request.errcode}
+                </div>
+            `}
+            ${request.error && html`
+                <div>
+                    <strong>Error:</strong> ${request.error}
+                </div>
+            `}
             <div>
                 <strong>Curl command:</strong>
                 <code class="network-log-request_curl">${toCurlCommand(request.resource, request.init)}</code>
@@ -563,6 +578,9 @@ function NetworkRequestsProvider({children}) {
                 }
                 const newRequest = {
                     ...state.requests[index],
+                    errcode: event.detail.errcode || null,
+                    error: event.detail.error || null,
+                    received: new Date(),
                     status: event.detail.status || null,
                 };
                 return {

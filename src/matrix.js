@@ -49,6 +49,8 @@ export async function doRequest(resource, init) {
             isNotJson,
             requestId,
             status: response.status,
+            errcode: data?.errcode,
+            error: data?.error,
         },
     }));
     if (isNotJson) {

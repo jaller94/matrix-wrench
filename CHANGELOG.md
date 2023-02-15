@@ -8,6 +8,7 @@
 
 ## Next release
 * Added: New input for identities: Masquerade As Matrix ID (for AppService tokens)
+* Added: Network log shows timestamp when the server response was received and Matrix error codes
 * Fixed: Improved error handling for "Am I a (room) member?" button
 * Fixed: Knocking button didn't work ("Error: Content not JSON.")
 
