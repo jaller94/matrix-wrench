@@ -89,6 +89,8 @@ const Settings = createContext({
 //     `;
 // }
 
+const knockingBody = {};
+
 function RoomActions({identity, roomId}) {
     const variables = useMemo(() => ({
         roomId,
@@ -98,6 +100,14 @@ function RoomActions({identity, roomId}) {
         <div>
             <${WhatsMyMemberState} identity=${identity} roomId=${roomId} />
         </div>
+        <${CustomButton}
+            identity=${identity}
+            label="Knock"
+            method="POST"
+            url="/_matrix/client/v3/knock/!{roomId}"
+            variables=${variables}
+            body=${knockingBody}
+        />
         <${CustomButton}
             identity=${identity}
             label="Join"
@@ -117,13 +127,6 @@ function RoomActions({identity, roomId}) {
             label="Forget"
             method="POST"
             url="/_matrix/client/v3/rooms/!{roomId}/forget"
-            variables=${variables}
-        />
-        <${CustomButton}
-            identity=${identity}
-            label="Knock"
-            method="POST"
-            url="/_matrix/client/v3/knock/!{roomId}"
             variables=${variables}
         />
         <hr/>

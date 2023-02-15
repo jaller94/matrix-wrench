@@ -7,6 +7,7 @@
 * Added: Space Management Page
 
 ## Next release
+* Fixed: Knocking button didn't work ("Error: Content not JSON.")
 
 ## v0.10.1 (2023-03-15)
 * Fixed: Update package-lock.json
