@@ -235,7 +235,7 @@ function WhatsMyMemberState({identity, roomId}) {
             };
             setInfo(translations[data.membership] ?? data.membership);
         } catch(error) {
-            if (error instanceof MatrixError && error.content && error.content.errcode === 'string') {
+            if (error instanceof MatrixError && typeof error.content?.errcode === 'string') {
                 if (error.content.errcode === 'M_UNKNOWN_TOKEN') {
                     setInfo('Invalid access token');
                 } else if (error.content.errcode === 'M_FORBIDDEN') {
