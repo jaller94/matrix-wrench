@@ -8,6 +8,9 @@
 
 ## Next release
 
+## v0.10.1 (2023-03-15)
+* Fixed: Update package-lock.json
+
 ## v0.10.0 (2023-03-15)
 *Welcome to the world, Baby Christian!*
 
