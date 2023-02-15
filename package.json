@@ -1,7 +1,7 @@
 {
   "name": "matrix-wrench",
   "description": "Webapp to tweak Matrix rooms",
-  "version": "0.9.0",
+  "version": "0.10.1",
   "type": "module",
   "scripts": {
     "cypress": "cypress open",
