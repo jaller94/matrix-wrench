@@ -7,22 +7,49 @@ import {
     yieldHierachy,
 } from '../matrix.js';
 
+function populateRoomChildren(root, rooms) {
+    for (const roomInfo of root.childrenInfo) {
+        const room = rooms.find(r => r.id === roomInfo.id) ?? roomInfo;
+        root.children = root.children ?? [];
+        root.children.push(room);
+        if (room.childrenInfo) {
+            populateRoomChildren(room, rooms);
+        }
+    }
+}
+
+function convertRoomsToHierarchyTree(rawRooms) {
+    if (rawRooms.length === 0) {
+        return [];
+    }
+    console.log('rawRooms', rawRooms);
+    const rooms = rawRooms.map(r => ({
+        id: r.room_id,
+        name: r.name,
+        joinRule: r.join_rule,
+        childrenInfo: r.children_state.map(r => ({
+            id: r.state_key,
+        })),
+    }));
+    const root = rooms.shift();
+    populateRoomChildren(root, rooms);
+    return [root];
+}
+
 function SpaceViewer({identity, rooms}) {
-    console.log('rooms', rooms);
     return html`<ul>
         ${rooms.map(room => html`
             <li key=${room.id}>
                 <a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(room.id)}}`}>${room.name ?? room.id}</a>
             </li>
-            ${room.children && html`<${SpaceViewer} key=${room.id} identity=${identity} rooms=${room} />`}
+            ${room.children && html`<${SpaceViewer} key=${room.id} identity=${identity} rooms=${room.children} />`}
         `)}
     </ul>`;
 }
 
 export function SpaceManagementPage({identity, roomId}) {
     const [busy, setBusy] = useState(false);
-    const [rooms, setRooms] = useState();
-    const [data, setData] = useState([]);
+    const [data, setData] = useState();
     const [text, setText] = useState('');
 
     const handleClick = useCallback(async(event) => {
@@ -33,13 +60,10 @@ export function SpaceManagementPage({identity, roomId}) {
         setText('');
         try {
             for await (let result of yieldHierachy(identity, roomId)) {
-                setRooms(result.rooms);
-                setData(result.rooms.map(r => ({
-                    id: r.room_id,
-                    name: r.name,
-                })));
+                setData(convertRoomsToHierarchyTree(result.rooms));
             }
         } catch(error) {
+            console.error(error);
             setText(error);
         } finally {
             setBusy(false);
@@ -57,7 +81,7 @@ export function SpaceManagementPage({identity, roomId}) {
                 onclick=${handleClick}
             >Start fetching</button>
             ${text && html`<p>${text}</p>`}
-            ${rooms && html`<${SpaceViewer} identity=${identity} rooms=${data} />`}
+            ${data && html`<${SpaceViewer} identity=${identity} rooms=${data} />`}
         </main>
         <${NetworkLog} />
     `;
