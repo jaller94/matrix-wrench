@@ -7,6 +7,10 @@
 * Added: Space Management Page
 
 ## Next release
+
+## v0.10.0 (2023-03-15)
+*Welcome to the world, Baby Christian!*
+
 * Added: Urls and proper browser navigation for the identity editor
 * Added: Room to JSON
 * Added: Room table

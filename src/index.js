@@ -17,6 +17,7 @@ import { BulkActionTracker, BulkActionForm } from '../components/bulk-actions.js
 import { AppHeader } from './components/header.js';
 import { HighUpLabelInput } from './components/inputs.js';
 import AboutPage from './pages/about.js';
+import { SpaceManagementPage } from './pages/space-viewer.js';
 import { MassJoinerPage } from './pages/mass-joiner.js';
 import { RoomToYamlPage } from './pages/room-to-yaml.js';
 import { ContactListPage } from './pages/contact-list.js';
@@ -1570,54 +1571,6 @@ function BulkKickPage({identity, roomId}) {
                 <${BulkActionForm} actionLabel="Kick" onSubmit=${handleSubmit} />
             ` : html`
                 <${BulkActionTracker} action=${action} items=${userIds} />
-            `}
-        </main>
-        <${NetworkLog} />
-    `;
-}
-
-function SpaceManagementPage({identity, roomId}) {
-    const [rooms, setRooms] = useState(null);
-
-    const handleQuery = useCallback(async() => {
-        const state = await getState(identity, roomId);
-        const childrenEvents = state.filter(event => event.type === 'm.space.child');
-        const { name } = state.find(event => event.type === 'm.room.name').content;
-        const childrenRoomIds = childrenEvents.map(event => event.state_key);
-        const rooms = [
-            {
-                id: roomId,
-                name,
-                children: childrenRoomIds.map(roomId => ({
-                    id: roomId,
-                })),
-            },
-        ];
-        setRooms(rooms);
-    }, [identity, roomId]);
-
-    return html`
-        <${AppHeader}
-            backUrl=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
-        >Space Management</>
-        <main>
-            <button
-                type="button"
-                onClick=${handleQuery}
-            >Query</button>
-            ${rooms && html`
-                <ul>
-                    ${rooms.map(room => (html`
-                        <li key=${room.id}>${room.name ?? room.id}</li>
-                        ${room.children && html`
-                            <ul>
-                                ${room.children.map(room => (html`
-                                    <li key=${room.id}>${room.name ?? room.id}</li>
-                                `))}
-                            </ul>
-                        `}
-                    `))}
-                </ul>
             `}
         </main>
         <${NetworkLog} />

@@ -161,6 +161,16 @@ export async function banUser(identity, roomId, userId, reason) {
 }
 
 /**
+ * Get a list of client features and versions supported by the server.
+ * @returns {Promise<Object>}
+ */
+export async function clientVersions(identity) {
+    return doRequest(`${identity.serverAddress}/_matrix/client/versions`, {
+        method: 'GET',
+    });
+}
+
+/**
  * Create a new room alias.
  * @param {Object} identity
  * @param {string} roomAlias
@@ -214,9 +224,14 @@ export async function getAccountData(identity, user, type) {
  * Gets a paginated hierachy of a room and its space childs.
  * @param {Object} identity
  * @param {string} roomId
+ * @param {string=} from A pagination token from a previous result.
  */
-export async function getHierachy(identity, roomId) {
-    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v1/rooms/${encodeURIComponent(roomId)}/hierarchy`, {
+export async function getHierachy(identity, roomId, from) {
+    let url = `${identity.serverAddress}/_matrix/client/v1/rooms/${encodeURIComponent(roomId)}/hierarchy`;
+    if (from) {
+        url += `?from=${encodeURIComponent(from)}`;
+    }
+    return doRequest(...auth(identity, url, {
         method: 'GET',
     }));
 }
@@ -438,12 +453,18 @@ export async function whoAmI(identity) {
     }));
 }
 
-/**
- * Get a list of client features and versions supported by the server.
- * @returns {Promise<Object>}
- */
-export async function clientVersions(identity) {
-    return doRequest(`${identity.serverAddress}/_matrix/client/versions`, {
-        method: 'GET',
-    });
+export async function *yieldHierachy(identity, roomId) {
+    let rooms = [];
+    let nextBatch;
+    do {
+        const response = await getHierachy(identity, roomId, nextBatch);
+        rooms = [
+            ...rooms,
+            ...response.rooms,
+        ];
+        yield {
+            rooms,
+        };
+        nextBatch = response.next_batch;
+    } while (nextBatch);
 }
