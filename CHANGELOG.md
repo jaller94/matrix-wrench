@@ -7,6 +7,7 @@
 * Added: Space Management Page
 
 ## Next release
+* Added: New input for identities: Masquerade As Matrix ID (for AppService tokens)
 * Fixed: Improved error handling for "Am I a (room) member?" button
 * Fixed: Knocking button didn't work ("Error: Content not JSON.")
 

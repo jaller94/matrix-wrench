@@ -353,6 +353,7 @@ function IdentityEditor({error, identity, onSave}) {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
+    const [masqueradeAs, setMasqueradeAs] = useState(identity.masqueradeAs ?? '');
     const [authType, setAuthType] = useState('accessToken');
     const [rememberLogin, setRememberLogin] = useState(identity.rememberLogin ?? false);
 
@@ -362,12 +363,19 @@ function IdentityEditor({error, identity, onSave}) {
     }, []);
 
     const handleAccessTokenInput = useCallback(({target}) => setAccessToken(target.value), []);
+    const handleMasqueradeAsInput = useCallback(({ target }) => setMasqueradeAs(target.value), []);
 
     const handleSubmit = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
-        onSave({name, serverAddress, accessToken, rememberLogin});
-    }, [accessToken, name, onSave, serverAddress, rememberLogin]);
+        onSave({
+            name,
+            serverAddress,
+            accessToken,
+            rememberLogin,
+            masqueradeAs: masqueradeAs || undefined,
+        });
+    }, [accessToken, masqueradeAs, name, rememberLogin, serverAddress, onSave]);
 
     const handleRememberLoginClick = useCallback(({target}) => setRememberLogin(target.checked), []);
 
@@ -431,6 +439,16 @@ function IdentityEditor({error, identity, onSave}) {
                         value=${accessToken}
                         type="password"
                         oninput=${handleAccessTokenInput}
+                    />
+                </div>
+                <div>
+                    <${HighUpLabelInput}
+                        autocomplete=""
+                        label="Masquerade As Matrix ID (for AppService tokens)"
+                        name="masqueradeAs"
+                        pattern="@.+:.+"
+                        value=${masqueradeAs}
+                        oninput=${handleMasqueradeAsInput}
                     />
                 </div>
             ` : html`
