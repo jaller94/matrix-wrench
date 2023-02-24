@@ -14,8 +14,16 @@ export function SynapseAdminPage({identity}) {
             <h2>Create/Mutate user</h2>
             <${MutateUserForm} identity=${identity}/>
         </div>
+        <div class="card">
+            <h2>Bulk create users</h2>
+            <${BulkCreateUsersForm} identity=${identity}/>
+        </div>
         <${NetworkLog} />
     `;
+}
+
+function BulkCreateUsersForm({ identity }) {
+    return html`Bulk`;
 }
 
 function MutateUserForm({ identity }) {
