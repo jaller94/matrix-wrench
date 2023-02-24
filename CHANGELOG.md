@@ -6,7 +6,9 @@
 ### Alpha Features
 * Added: Space Management Page
 
-## Next release
+## v0.11.0 (2023-03-24)
+*#StandWithUkraine*
+
 * Added: New input for identities: Masquerade As Matrix ID (for AppService tokens)
 * Added: Network log shows timestamp when the server response was received and Matrix error codes
 * Fixed: Improved error handling for "Am I a (room) member?" button
