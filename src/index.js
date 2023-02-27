@@ -31,6 +31,7 @@ import {
     auth,
     MatrixError,
     banUser,
+    createRoom,
     createRoomAlias,
     deleteRoomAlias,
     doRequest,
@@ -41,6 +42,7 @@ import {
     inviteUser,
     kickUser,
     resolveAlias,
+    sendEvent,
     setState,
     summarizeFetch,
     toCurlCommand,
@@ -130,6 +132,9 @@ function RoomActions({identity, roomId}) {
             variables=${variables}
         />
         <hr/>
+        <h3>Moderation</h3>
+        <${UserActions} identity=${identity} roomId=${roomId}/>
+        <hr/>
         <h3>Other pages</h3>
         <nav><ul>
             <li><a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
@@ -218,6 +223,10 @@ function WhoAmI({identity}) {
 function WhatsMyMemberState({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState(null);
+
+    useEffect(() => {
+        setInfo(null);
+    }, [roomId]);
 
     const handleSubmit = useCallback(async event => {
         event.preventDefault();
@@ -1151,20 +1160,14 @@ function RoomPage({identity, roomId}) {
         <div class="page">
             <div class="section">
                 <details open>
+                    <summary><h2>Summary</h2></summary>
+                    <${RoomSummaryWrapper} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
+            <div class="section">
+                <details open>
                     <summary><h2>Membership</h2></summary>
                     <${RoomActions} identity=${identity} roomId=${roomId}/>
-                </details>
-            </div>
-            <div class="section">
-                <details open>
-                    <summary><h2>State</h2></summary>
-                    <${StateExplorer} identity=${identity} roomId=${roomId}/>
-                </details>
-            </div>
-            <div class="section">
-                <details open>
-                    <summary><h2>Moderation</h2></summary>
-                    <${UserActions} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
             <div class="section">
@@ -1175,8 +1178,20 @@ function RoomPage({identity, roomId}) {
             </div>
             <div class="section">
                 <details open>
+                    <summary><h2>State</h2></summary>
+                    <${StateExplorer} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
+            <div class="section">
+                <details open>
                     <summary><h2>Aliases</h2></summary>
                     <${AliasActions} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
+            <div class="section">
+                <details open>
+                    <summary><h2>Room Upgrade</h2></summary>
+                    <${RoomUpgradeActions} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
             <div class="section">
@@ -1278,7 +1293,212 @@ function AliasActions({ identity, roomId }) {
     `;
 }
 
-function UserActions({ identity, roomId }) {
+function RoomSummaryWrapper({identity, roomId}) {
+    const [busy, setBusy] = useState(false);
+    const [stateEvents, setStateEvents] = useState();
+
+    useEffect(() => {
+        setStateEvents(undefined);
+    }, [roomId]);
+
+    const handleClick = useCallback(async () => {
+        setBusy(true);
+        try {
+            setStateEvents(await getState(identity, roomId));
+        } finally {
+            setBusy(false);
+        }
+    }, [identity, roomId]);
+
+    return html`
+        <button disabled=${busy} type="button" onclick=${handleClick}>Get state</button>
+        ${stateEvents && html`<${RoomSummary} identity=${identity} stateEvents=${stateEvents}/>`}
+    `;
+}
+
+function RoomLink({identity, roomId}) {
+    return html`<a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}>${roomId}</a>`;
+}
+
+function getHighestPowerLevel(powerLevelsContent, defaultUserPowerLevel) {
+    let highest = defaultUserPowerLevel;
+    for (const powerLevel of Object.values(powerLevelsContent?.users ?? {})) {
+        if (highest < powerLevel) {
+            highest = powerLevel;
+        }
+    }
+    return highest;
+}
+
+function getUnchangeableEventTypes(powerLevelsContent, powerLevel) {
+    const unchangableEventTypes = [];
+    for (const [type, requiredPowerLevel] of Object.entries(powerLevelsContent?.events ?? {})) {
+        if (powerLevel < requiredPowerLevel) {
+            unchangableEventTypes.push(type);
+        }
+    }
+    return unchangableEventTypes.length === 0 ? undefined : unchangableEventTypes;
+}
+
+function RoomSummary({identity, stateEvents}) {
+    const doesFederate = stateEvents.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.['m.federate'] ?? true;
+    const powerLevelsContent = stateEvents.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
+    const encryptionAlgorithm = stateEvents.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content?.algorithm;
+    const joinRule = stateEvents.find(e => e.type === 'm.room.join_rules' && e.state_key === '')?.content?.join_rule;
+    // const guestAccess = stateEvents.find(e => e.type === 'm.room.guest_access' && e.state_key === '')?.content?.guest_access;
+    const historyVisibility = stateEvents.find(e => e.type === 'm.room.history_visibility' && e.state_key === '')?.content?.history_visibility;
+    const defaultUserPowerLevel = powerLevelsContent?.users_default;
+    const highestPowerLevel = getHighestPowerLevel(powerLevelsContent, defaultUserPowerLevel);
+    const predecessorRoom = stateEvents.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.predecessor?.room_id;
+    const roomVersion = stateEvents.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.room_version;
+    const replacementRoom = stateEvents.find(e => e.type === 'm.room.tombstone' && e.state_key === '')?.content?.replacement_room;
+    const unchangableEventTypes = getUnchangeableEventTypes(powerLevelsContent, highestPowerLevel);
+    return html`
+        <ul>
+            <li>This room does ${doesFederate === false && html`<strong>NOT</strong> `}federate.</li>
+            ${roomVersion && html`<li>The room version is ${roomVersion}.</li>`}
+            ${predecessorRoom && html`<li>This room replaced <${RoomLink} identity=${identity} roomId=${predecessorRoom}/>.</li>`}
+            ${replacementRoom && html`<li>⚠️ This room was replaced by <${RoomLink} identity=${identity} roomId=${replacementRoom}/>.</li>`}
+            ${typeof highestPowerLevel === 'number' && html`<li>The highest power level is ${highestPowerLevel}.</li>`}
+            ${unchangableEventTypes && html`<li><strong>⚠️Unusual:</strong> No user has the power level to post these event types: ${unchangableEventTypes.join(', ')}</li>`}
+            ${unchangableEventTypes?.includes('m.room.power_levels') && html`<li><strong>💔Broken:</strong> No user can change the power levels.</li>`}
+            ${(defaultUserPowerLevel >= highestPowerLevel) && html`<li><strong>⚠️Unusual:</strong> No user has a higher power level than the default.</li>`}
+            ${(encryptionAlgorithm && historyVisibility === 'world_readable') && html`<li><strong>⚠️Unusual:</strong> The room uses encryption but is readable without joining.</li>`}
+            ${(encryptionAlgorithm && joinRule === 'public') && html`<li><strong>⚠️Unusual:</strong> The room uses encryption but is publicly joinable.</li>`}
+        </ul>
+    `;
+}
+
+function assertTombstone(myMatrixId, stateEvents) {
+    const isTombstoned = stateEvents.some(e => e.type === 'm.room.tombstone' && e.state_key === '');
+    if (isTombstoned) {
+        throw Error('Room already has a tombstone.');
+    }
+    const powerLevels = stateEvents.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
+    const tombstoneRequirement = powerLevels.events?.['m.room.tombstone'] ?? powerLevels.events_default;
+    const myPowerLevel = powerLevels.users?.[myMatrixId] ?? powerLevels.users_default;
+    if (typeof tombstoneRequirement !== 'number') {
+        throw Error('Unsure which power level is required for a tombstone.');
+    }
+    if (typeof myPowerLevel !== 'number') {
+        throw Error('Unsure which power level is required for a tombstone.');
+    }
+    if (myPowerLevel < tombstoneRequirement) {
+        throw Error('Insufficient permission to place tombstone.');
+    }
+}
+
+function RoomUpgradeActions({identity, roomId}) {
+    const [replacementRoom, setReplacementRoom] = useState('');
+    const [busy, setBusy] = useState(false);
+
+    const handleSubmit = useCallback(event => {
+        event.preventDefault();
+        event.stopPropagation();
+    }, []);
+
+    const handleRoomCreation = useCallback(async () => {
+        setBusy(true);
+        try {
+            const stateEvents = await getState(identity, roomId);
+            const toMigrate = [];
+            const myMatrixId = (await whoAmI(identity)).user_id;
+            assertTombstone(myMatrixId, stateEvents);
+            for (const event of stateEvents) {
+                if (['m.room.create', 'm.room.encryption', 'm.room.member', 'm.room.power_levels'].includes(event.type)) {
+                    continue;
+                }
+                toMigrate.push({
+                    content: event.content,
+                    type: event.type,
+                    state_key: event.state_key,
+                });
+            }
+            const powerLevels = stateEvents.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
+            if (!powerLevels) {
+                throw Error('No m.room.power_levels state found.');
+            }
+            console.log(powerLevels);
+            console.log(toMigrate);
+            const lastEventId = await sendEvent(identity, roomId, 'm.room.message', {
+                msgtype: 'm.text',
+                body: 'This room will be replaced.',
+            }).event_id;
+            console.log(lastEventId);
+            const replacementRoom = (await createRoom(identity, {
+                creation_content: {
+                    // type: roomType,
+                    predecessor: {
+                        room_id: roomId,
+                        event_id: lastEventId,
+                    },
+                },
+                initial_state: toMigrate,
+                power_level_content_override: powerLevels,
+            })).room_id;
+            console.log(replacementRoom);
+            // for (const event of toMigrate) {
+            //     await setState(identity, replacementRoom, event.type, event.state_key, event.content);
+            // }
+            setReplacementRoom(replacementRoom);
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    }, [identity, roomId]);
+
+    const handleInviteMembers = useCallback(async () => {
+        setBusy(true);
+        try {
+            const data = await getMembers(identity, roomId);
+            const groups = memberEventsToGroups(data.chunk);
+            const myMatrixId = (await whoAmI(identity)).user_id;
+            const toInvite = groups.get('join').filter(u => u !== myMatrixId && !u.startsWith('@slack_'));
+            for (const userId of toInvite) {
+                await inviteUser(identity, replacementRoom, userId);
+            }
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    }, [replacementRoom, identity, roomId]);
+
+    const handleTombstone = useCallback(async () => {
+        setBusy(true);
+        try {
+            await setState(identity, roomId, 'm.room.tombstone', '', {
+                replacement_room: replacementRoom,
+            });
+        } catch (error) {
+            alert(error);
+        } finally {
+            setBusy(false);
+        }
+    }, [replacementRoom, identity, roomId]);
+
+    return html`
+        <form onsubmit=${handleSubmit}><fieldset disabled=${busy}>
+            <ol>
+                <li>
+                    <button disabled=${busy} type="button" onclick=${handleRoomCreation}>Create new room</button>
+                    <${HighUpLabelInput}
+                        label="Replacement room"
+                        pattern="!.+"
+                        title="A room id"
+                        value=${replacementRoom}
+                        oninput=${useCallback(({target}) => setReplacementRoom(target.value), [])}
+                    />
+                </li>
+                <li><button disabled=${busy} type="button" onclick=${handleInviteMembers}>Invite members</button></li>
+                <li><button disabled=${busy} type="button" onclick=${handleTombstone}>Create tombstone</button></li>
+            </ol>
+        </fieldset></form>
+    `;
+}
+
+function UserActions({identity, roomId}) {
     const [userId, setUserId] = useState('');
     const [reason, setReason] = useState('');
     const [busy, setBusy] = useState(false);
@@ -1445,9 +1665,33 @@ function MediaList({list}) {
     `;
 }
 
+function memberEventsToGroups(memberEvents) {
+    if (!Array.isArray(memberEvents)) {
+        return null;
+    }
+    const membersByMembership = new Map(Object.entries({
+        join: [],
+        invite: [],
+        knock: [],
+        leave: [],
+        ban: [],
+    }));
+    for (const event of memberEvents) {
+        if (!membersByMembership.has(event.content.membership)) {
+            membersByMembership.set(event.content.membership, []);
+        }
+        membersByMembership.get(event.content.membership).push(event);
+    }
+    return membersByMembership;
+}
+
 function MembersExplorer({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [members, setMembers] = useState(null);
+
+    useEffect(() => {
+        setMembers(null);
+    }, [roomId]);
 
     const handleGet = useCallback(async event => {
         event.preventDefault();
@@ -1463,25 +1707,7 @@ function MembersExplorer({identity, roomId}) {
         }
     }, [identity, roomId]);
 
-    const groups = useMemo(() => {
-        if (!Array.isArray(members)) {
-            return null;
-        }
-        const membersByMembership = {
-            join: [],
-            invite: [],
-            knock: [],
-            leave: [],
-            ban: [],
-        };
-        for (const event of members) {
-            if (membersByMembership[event.content.membership] === undefined) {
-                membersByMembership[event.content.membership] = [];
-            }
-            membersByMembership[event.content.membership].push(event);
-        }
-        return membersByMembership;
-    }, [members]);
+    const groups = useMemo(() => memberEventsToGroups(members), [members]);
 
     return html`
         <form onsubmit=${handleGet}><fieldset disabled=${busy}>
@@ -1490,24 +1716,24 @@ function MembersExplorer({identity, roomId}) {
         </fieldset></form>
         ${groups && (html`
             <details open>
-                <summary><h3>Joined (${groups.join.length})</h3></summary>
-                <${MemberList} members=${groups.join} />
+                <summary><h3>Joined (${groups.get('join').length})</h3></summary>
+                <${MemberList} members=${groups.get('join')} />
             </details>
             <details open>
-                <summary><h3>Invited (${groups.invite.length})</h3></summary>
-                <${MemberList} members=${groups.invite} />
+                <summary><h3>Invited (${groups.get('invite').length})</h3></summary>
+                <${MemberList} members=${groups.get('invite')} />
             </details>
             <details>
-                <summary><h3>Knocking (${groups.knock.length})</h3></summary>
-                <${MemberList} members=${groups.knock} />
+                <summary><h3>Knocking (${groups.get('knock').length})</h3></summary>
+                <${MemberList} members=${groups.get('knock')} />
             </details>
             <details>
-                <summary><h3>Left (${groups.leave.length})</h3></summary>
-                <${MemberList} members=${groups.leave} />
+                <summary><h3>Left (${groups.get('leave').length})</h3></summary>
+                <${MemberList} members=${groups.get('leave')} />
             </details>
             <details>
-                <summary><h3>Banned (${groups.ban.length})</h3></summary>
-                <${MemberList} members=${groups.ban} />
+                <summary><h3>Banned (${groups.get('ban').length})</h3></summary>
+                <${MemberList} members=${groups.get('ban')} />
             </details>
         `)}
     `;

@@ -101,6 +101,12 @@ async function roomToObject(identity, roomId, myUserId) {
             data.canIRedact = data.myPowerLevel >= roomPowerLevelState.redact;
         }
 
+        const encryptionState = state.find(e => e.type === 'm.room.encryption' && e.state_key === '')?.content;
+        data.encryption = 'false';
+        if (typeof encryptionState?.algorithm === 'string') {
+            data.encryption = 'true';
+            data.encryptionAlgorithm = encryptionState?.algorithm;
+        }
         const tombstoneState = state.find(e => e.type === 'm.room.tombstone' && e.state_key === '')?.content;
         if (typeof tombstoneState?.body === 'string') {
             data.tombstoneBody = tombstoneState?.body;
@@ -168,11 +174,22 @@ async function roomMemberStats(identity, roomId, mDirectContent) {
     };
 }
 
+async function optionalAccountData(...params) {
+    try {
+        return await getAccountData(...params);
+    } catch (error) {
+        if (error.message === 'Account data not found') {
+            return {};
+        }
+        throw error;
+    }
+}
+
 async function *stats(identity) {
     const joinedRooms = (await getJoinedRooms(identity)).joined_rooms;
     let rows = joinedRooms.map(roomId => ({roomId}));
     const myMatrixId = (await whoAmI(identity)).user_id;
-    const mDirectContent = await getAccountData(identity, myMatrixId, 'm.direct');
+    const mDirectContent = await optionalAccountData(identity, myMatrixId, 'm.direct');
     yield {
         rows,
     };
@@ -235,6 +252,10 @@ export function RoomListPage({identity}) {
         //     Header: 'Highest PL',
         //     accessor: 'highestCustomPowerLevel',
         // },
+        {
+            Header: 'Encrypted?',
+            accessor: 'encryption',
+        },
         {
             Header: 'My PL',
             accessor: 'myPowerLevel',

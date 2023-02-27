@@ -173,6 +173,22 @@ export async function clientVersions(identity) {
 }
 
 /**
+ * Create a new room.
+ * @param {Object} identity
+ * @param {Object} body
+ * @returns {Promise<Object>}
+ */
+export async function createRoom(identity, body) {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/createRoom`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    }));
+}
+
+/**
  * Create a new room alias.
  * @param {Object} identity
  * @param {string} roomAlias
@@ -387,10 +403,8 @@ export async function resolveAlias(identity, roomAlias) {
  * @returns {Promise<Object>}
  */
 export async function sendEvent(identity, roomId, type, content, transactionId) {
-    let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/send/${encodeURIComponent(type)}`;
-    if (transactionId) {
-        url += `/${transactionId}`;
-    }
+    const url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/send/` +
+        `${encodeURIComponent(type)}/${encodeURIComponent(transactionId ?? Math.random())}`;
     return doRequest(...auth(identity, url, {
         method: 'PUT',
         headers: {
