@@ -13,7 +13,7 @@ import {
 } from './helper.js';
 import { AlertSingleton, confirm } from './components/alert.js';
 import { CustomButton, CustomForm } from './components/custom-forms.js';
-import { BulkActionTracker, BulkActionForm } from '../components/bulk-actions.js';
+import { BulkActionTracker, BulkActionForm } from './components/bulk-actions.js';
 import { AppHeader } from './components/header.js';
 import { HighUpLabelInput } from './components/inputs.js';
 import AboutPage from './pages/about.js';
@@ -220,13 +220,14 @@ function WhoAmI({identity}) {
     `;
 }
 
-function WhatsMyMemberState({identity, roomId}) {
+function WhatsMyMemberState(props) {
+    const key = `${props.identity?.name}|${props.roomId}`;
+    return html`<${WhatsMyMemberStateInner} key=${key} ...${props}/>`;
+}
+
+function WhatsMyMemberStateInner({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState(null);
-
-    useEffect(() => {
-        setInfo(null);
-    }, [roomId]);
 
     const handleSubmit = useCallback(async event => {
         event.preventDefault();
@@ -1190,7 +1191,7 @@ function RoomPage({identity, roomId}) {
             </div>
             <div class="section">
                 <details open>
-                    <summary><h2>Room Upgrade</h2></summary>
+                    <summary><h2>Room Upgrade (experimental)</h2></summary>
                     <${RoomUpgradeActions} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
@@ -1293,13 +1294,14 @@ function AliasActions({ identity, roomId }) {
     `;
 }
 
-function RoomSummaryWrapper({identity, roomId}) {
+function RoomSummaryWrapper(props) {
+    const key = `${props.identity?.name}|${props.roomId}`;
+    return html`<${RoomSummaryWrapperInner} key=${key} ...${props}/>`;
+}
+
+function RoomSummaryWrapperInner({identity, roomId}) {
     const [busy, setBusy] = useState(false);
     const [stateEvents, setStateEvents] = useState();
-
-    useEffect(() => {
-        setStateEvents(undefined);
-    }, [roomId]);
 
     const handleClick = useCallback(async () => {
         setBusy(true);
