@@ -6,6 +6,12 @@
 ### Alpha Features
 * Added: Space Management Page
 
+## Next release
+* Added: The room "Summary" gives you a bit of an insight into a room's state.
+* Added: The box "Room Upgrade" allows for a more fine-tuned upgrade.
+* Fixed: Room table now works if the user has no account data for direct contacts.
+* Fixed: Fix theoretical vulnerabilty in a room's Members list. An unvalidated server response was used as JavaScript object key. This is unlikely to be exploited.
+
 ## v0.11.0 (2023-03-24)
 *#StandWithUkraine*
 
