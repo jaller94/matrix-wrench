@@ -6,7 +6,7 @@
 ### Alpha Features
 * Added: Space Management Page
 
-## Next release
+## v0.12.0 (2023-09-23)
 * Added: The room "Summary" gives you a bit of an insight into a room's state.
 * Added: The box "Room Upgrade" allows for a more fine-tuned upgrade.
 * Fixed: Room table now works if the user has no account data for direct contacts.
