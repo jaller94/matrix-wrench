@@ -5,6 +5,8 @@
 
 ### Alpha Features
 * Added: Space Management Page
+* Added: Register accounts with an AppService token
+* Added: Send messages to a room
 
 ## v0.12.0 (2023-09-23)
 * Added: The room "Summary" gives you a bit of an insight into a room's state.

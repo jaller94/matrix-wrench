@@ -10,6 +10,7 @@ import {
 } from './node_modules/htm/preact/standalone.module.js';
 import {
     classnames,
+    uniqueId,
 } from './helper.js';
 import { AlertSingleton, confirm } from './components/alert.js';
 import { CustomButton, CustomForm } from './components/custom-forms.js';
@@ -775,6 +776,63 @@ function IdentityNav({identity}) {
     `;
 }
 
+function AccountCreator({ identity }) {
+    const [username, setUsername] = useState('');
+    return html`
+        <${HighUpLabelInput}
+            label="Username"
+            required
+            value=${username}
+            oninput=${useCallback(({ target }) => setUsername(target.value), [])}
+        />
+        <${CustomButton}
+            identity=${identity}
+            label="Create account"
+            method="POST"
+            url="/_matrix/client/v3/register"
+            body=${{
+                type: 'm.login.application_service',
+                username,
+            }}
+        />
+    `;
+}
+
+function UnencryptedTextMessage({ identity, roomId }) {
+    const [message, setMessage] = useState('');
+
+    const body = useMemo(() => ({
+        msgtype: 'm.text',
+        body: message,
+    }), [message]);
+
+    const variables = useMemo(() => ({
+        eventType: 'm.room.message',
+        roomId,
+        txnId: uniqueId('msg-'),
+    }), [roomId, message]);
+
+    return html`
+    
+        <${CustomForm}
+            body=${body}
+            identity=${identity}
+            method="PUT"
+            url="/_matrix/client/v3/rooms/!{roomId}/send/!{eventType}/!{txnId}"
+            body=${body}
+            variables=${variables}
+        >
+            <${HighUpLabelInput}
+                label="Message"
+                required
+                value=${message}
+                oninput=${useCallback(({ target }) => setMessage(target.value), [])}
+            />
+            <button>Send message</button>
+        </>
+    `;
+}
+
 function MainPage({identity, roomId}) {
     return html`
         <${AppHeader}
@@ -788,6 +846,9 @@ function MainPage({identity, roomId}) {
                 </div>
                 <div class="card">
                     <${IdentityNav} identity=${identity}/>
+                </div>
+                <div class="card">
+                    <${AccountCreator} identity=${identity}/>
                 </div>
                 <${RoomSelector} identity=${identity} roomId=${roomId}/>
             ` : html`
@@ -1181,6 +1242,12 @@ function RoomPage({identity, roomId}) {
                 <details open>
                     <summary><h2>State</h2></summary>
                     <${StateExplorer} identity=${identity} roomId=${roomId}/>
+                </details>
+            </div>
+            <div class="section">
+                <details open>
+                    <summary><h2>Send message</h2></summary>
+                    <${UnencryptedTextMessage} identity=${identity} roomId=${roomId}/>
                 </details>
             </div>
             <div class="section">

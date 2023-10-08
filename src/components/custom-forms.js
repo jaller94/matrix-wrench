@@ -23,6 +23,9 @@ export function CustomButton({ body, identity, label, method, requiresConfirmati
         try {
             await doRequest(...auth(identity, actualUrl, {
                 method,
+                headers: {
+                    'Content-Type': typeof body === 'string' ? 'text/plain' : 'application/json',
+                },
                 ...(body && {
                     body: typeof body === 'string' ? body : JSON.stringify(body),
                 }),

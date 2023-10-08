@@ -381,6 +381,19 @@ export async function kickUser(identity, roomId, userId, reason) {
     }));
 }
 
+export async function registerAppServiceUser(identity, username) {
+    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/register`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            type: 'm.login.application_service',
+            username,
+        }),
+    }));
+}
+
 /**
  * Resolves a room alias to a room ID.
  * @param {Object} identity
