@@ -13,16 +13,19 @@ import {
     uniqueId,
 } from './helper.js';
 import { AlertSingleton, confirm } from './components/alert.js';
-import { CustomButton, CustomForm } from './components/custom-forms.js';
 import { BulkActionTracker, BulkActionForm } from './components/bulk-actions.js';
+import { CustomButton, CustomForm } from './components/custom-forms.js';
 import { AppHeader } from './components/header.js';
 import { HighUpLabelInput } from './components/inputs.js';
+import { RoomLink } from './components/room-link.js';
 import AboutPage from './pages/about.js';
-import { SpaceManagementPage } from './pages/space-viewer.js';
-import { MassJoinerPage } from './pages/mass-joiner.js';
-import { RoomToYamlPage } from './pages/room-to-yaml.js';
 import { ContactListPage } from './pages/contact-list.js';
+import { MassJoinerPage } from './pages/mass-joiner.js';
+import { PolychatPage } from './pages/polychat/index.js';
+import { OverviewPage } from './pages/overview.js';
+import { RoomToYamlPage } from './pages/room-to-yaml.js';
 import { RoomListPage } from './pages/room-list.js';
+import { SpaceManagementPage } from './pages/space-viewer.js';
 import { SynapseAdminPage } from './pages/synapse-admin.js';
 // import {
 //     ListWithSearch,
@@ -74,7 +77,7 @@ const NetworkRequests = createContext({
     isShortened: false,
     requests: [],
 });
-const Settings = createContext({
+export const Settings = createContext({
     externalMatrixUrl: 'https://matrix.to/#/',
     identities: [],
     showNetworkLog: true,
@@ -900,7 +903,7 @@ function IdentitySelectorPage() {
 }
 
 function RoomList({roomIds, onSelectRoom}) {
-    const {externalMatrixUrl} = useContext(Settings);
+    const { externalMatrixUrl } = useContext(Settings);
     const handleSelectRoom = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
@@ -1383,10 +1386,6 @@ function RoomSummaryWrapperInner({identity, roomId}) {
         <button disabled=${busy} type="button" onclick=${handleClick}>Get state</button>
         ${stateEvents && html`<${RoomSummary} identity=${identity} stateEvents=${stateEvents}/>`}
     `;
-}
-
-function RoomLink({identity, roomId}) {
-    return html`<a href=${`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}>${roomId}</a>`;
 }
 
 function getHighestPowerLevel(powerLevelsContent, defaultUserPowerLevel) {
@@ -1964,6 +1963,14 @@ function App() {
                         } else if (matchRoomPage.groups.roomId === 'contact-list') {
                             return html`<${ContactListPage}
                                 identity=${identity}
+                            />`;
+                        } else if (matchRoomPage.groups.roomId === 'overview') {
+                            return html`<${OverviewPage}
+                            identity=${identity}
+                            />`;
+                        } else if (matchRoomPage.groups.roomId === 'polychat') {
+                            return html`<${PolychatPage}
+                            identity=${identity}
                             />`;
                         } else if (matchRoomPage.groups.roomId === 'room-list') {
                             return html`<${RoomListPage}
