@@ -7,8 +7,9 @@ import {
 } from '../../matrix.js';
 import { HighUpLabelInput } from '../../components/inputs.js';
 import { RoomLink } from '../../components/room-link.js';
+import { PolychatExistingRooms } from './existing-rooms.js';
 
-const PolychatStateEventType = {
+export const PolychatStateEventType = {
     room: 'de.polychat.room',
     participant: 'de.polychat.room.participant',
 };
@@ -33,8 +34,8 @@ export function PolychatPage({ identity }) {
                     {
                         type: PolychatStateEventType.room,
                         content: {
-                            type: 'sub',
-                            network: network,
+                            type: 'main',
+                            network,
                         },
                     },
                 ]
@@ -60,7 +61,7 @@ export function PolychatPage({ identity }) {
                         type: PolychatStateEventType.room,
                         content: {
                             type: 'sub',
-                            network: network,
+                            network,
                         },
                     },
                 ],
@@ -139,6 +140,7 @@ export function PolychatPage({ identity }) {
                     <p>Error: ${error}</p>
                 `}
             </div>
+            <${PolychatExistingRooms} identity=${identity} />
         </main>
         <${NetworkLog} />
     `;

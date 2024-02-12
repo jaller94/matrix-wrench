@@ -773,8 +773,7 @@ function IdentityNav({identity}) {
     return html`
         <h2>Other pages</h2>
         <nav><ul>
-            <li><a href=${`#/${encodeURIComponent(identity.name)}/room-list`}>Your rooms</a></li>
-            <li><a href=${`#/${encodeURIComponent(identity.name)}/contact-list`}>Your direct contacts</a></li>
+            <li><a href=${`#/${encodeURIComponent(identity.name)}/overview`}>Overview</a></li>
         </ul></nav>
     `;
 }
@@ -782,6 +781,7 @@ function IdentityNav({identity}) {
 function AccountCreator({ identity }) {
     const [username, setUsername] = useState('');
     return html`
+        <h2>Register account (AppService API)</h2>
         <${HighUpLabelInput}
             label="Username"
             required

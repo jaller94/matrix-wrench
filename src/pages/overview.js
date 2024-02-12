@@ -1,17 +1,24 @@
-import { html } from '../node_modules/htm/preact/standalone.module.js';
-
-const a = [
-    { url: '', name: 'a' },
-];
+import { html, useMemo } from '../node_modules/htm/preact/standalone.module.js';
+import { AppHeader } from '../components/header.js';
 
 export function OverviewPage({ identity }) {
+    const links = useMemo(() => [
+        { url: `#/${encodeURIComponent(identity.name)}/room-list`, name: 'Your rooms' },
+        { url: `#/${encodeURIComponent(identity.name)}/contact-list`, name: 'Your contacts' },
+        { url: `#/${encodeURIComponent(identity.name)}/polychat`, name: 'Polychat' },
+    ], [identity]);
     return html`
-        <ul>
-            ${a.map(link => html`
-                <li key=${link.url}>
-                    ${a.name}
-                </li>
-            `)}
-        </ul>
+        <${AppHeader}
+            backUrl=${`#/${encodeURIComponent(identity.name)}`}
+        >Overview</>
+        <main>
+            <ul>
+                ${links.map(link => html`
+                    <li key=${link.url}>
+                        <a href=${link.url}>${link.name}</a>
+                    </li>
+                `)}
+            </ul>
+        </main>
     `;
 }
