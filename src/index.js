@@ -402,7 +402,7 @@ function IdentityEditor({error, identity, onSave}) {
                 <${HighUpLabelInput}
                     label="Name"
                     name="name"
-                    pattern="[^/]+"
+                    pattern="[^\/]+"
                     required
                     value=${name}
                     oninput=${useCallback(({target}) => setName(target.value), [])}
