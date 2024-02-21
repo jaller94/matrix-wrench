@@ -2,6 +2,7 @@
 
 ## Future
 * Added: Act as other users when using AppService tokens.
+* Fixed: An invalid room type resulted in `roomVersion` being reported as "!invalid" in the Room List
 
 ### Alpha Features
 * Added: Space Management Page

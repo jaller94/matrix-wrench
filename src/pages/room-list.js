@@ -82,7 +82,7 @@ async function roomToObject(identity, roomId, myUserId) {
         if (typeof roomCreateState === 'object' && ['undefined', 'string'].includes(typeof roomCreateState.type)) {
             data.type = roomCreateState?.type;
         } else {
-            data.roomVersion = '!invalid!';
+            data.type = '!invalid!';
         }
         if (typeof roomCreateState === 'object' && ['undefined', 'string'].includes(typeof roomCreateState.room_version)) {
             data.roomVersion = roomCreateState?.room_version  ?? '1';
