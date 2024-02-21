@@ -2,6 +2,7 @@
 
 ## Future
 * Added: Act as other users when using AppService tokens.
+* Changed: Moved "Register account (AppService API)" to an AppService API page.
 * Fixed: An invalid room type resulted in `roomVersion` being reported as "!invalid" in the Room List
 
 ### Alpha Features

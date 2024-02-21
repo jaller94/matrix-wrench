@@ -19,14 +19,16 @@ import { AppHeader } from './components/header.js';
 import { HighUpLabelInput } from './components/inputs.js';
 import { RoomLink } from './components/room-link.js';
 import AboutPage from './pages/about.js';
+import { AppServicePage } from './pages/appservice.js';
 import { ContactListPage } from './pages/contact-list.js';
 import { MassJoinerPage } from './pages/mass-joiner.js';
-import { PolychatPage } from './pages/polychat/index.js';
 import { OverviewPage } from './pages/overview.js';
+import { PolychatPage } from './pages/polychat/index.js';
 import { RoomToYamlPage } from './pages/room-to-yaml.js';
 import { RoomListPage } from './pages/room-list.js';
 import { SpaceManagementPage } from './pages/space-viewer.js';
 import { SynapseAdminPage } from './pages/synapse-admin.js';
+import { UserInspectorPage } from './pages/user-inspector.js';
 // import {
 //     ListWithSearch,
 //     // RoomList,
@@ -778,29 +780,6 @@ function IdentityNav({identity}) {
     `;
 }
 
-function AccountCreator({ identity }) {
-    const [username, setUsername] = useState('');
-    return html`
-        <h2>Register account (AppService API)</h2>
-        <${HighUpLabelInput}
-            label="Username"
-            required
-            value=${username}
-            oninput=${useCallback(({ target }) => setUsername(target.value), [])}
-        />
-        <${CustomButton}
-            identity=${identity}
-            label="Create account"
-            method="POST"
-            url="/_matrix/client/v3/register"
-            body=${{
-                type: 'm.login.application_service',
-                username,
-            }}
-        />
-    `;
-}
-
 function UnencryptedTextMessage({ identity, roomId }) {
     const [message, setMessage] = useState('');
 
@@ -849,9 +828,6 @@ function MainPage({identity, roomId}) {
                 </div>
                 <div class="card">
                     <${IdentityNav} identity=${identity}/>
-                </div>
-                <div class="card">
-                    <${AccountCreator} identity=${identity}/>
                 </div>
                 <${RoomSelector} identity=${identity} roomId=${roomId}/>
             ` : html`
@@ -957,7 +933,7 @@ function JoinedRoomList({identity, onSelectRoom}) {
     }, [identity]);
 
     return html`
-        <h3>Joined rooms</h3>
+        <h3>Joined rooms${Array.isArray(roomIds) && html` (${roomIds.length} rooms)`}</h3>
         <button disabled=${busy} type="button" onclick=${handleGet}>Query joined rooms</button>
         ${roomIds && html`<${RoomList} roomIds=${roomIds} onSelectRoom=${onSelectRoom}/>`}
     `;
@@ -1956,8 +1932,13 @@ function App() {
                 identityName=${identityName}
                 render=${(identity) => {
                     if (matchRoomPage) {
+                        
                         if (matchRoomPage.groups.roomId === 'synapse-admin') {
                             return html`<${SynapseAdminPage}
+                                identity=${identity}
+                            />`;
+                        } else if (matchRoomPage.groups.roomId === 'appservice') {
+                            return html`<${AppServicePage}
                                 identity=${identity}
                             />`;
                         } else if (matchRoomPage.groups.roomId === 'contact-list') {
@@ -1974,6 +1955,10 @@ function App() {
                             />`;
                         } else if (matchRoomPage.groups.roomId === 'room-list') {
                             return html`<${RoomListPage}
+                                identity=${identity}
+                            />`;
+                        } else if (matchRoomPage.groups.roomId === 'user-inspector') {
+                            return html`<${UserInspectorPage}
                                 identity=${identity}
                             />`;
                         } else if (matchRoomPage.groups.subpage === 'yaml') {
