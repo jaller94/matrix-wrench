@@ -81,7 +81,10 @@ export function RoomToYamlPage({identity, roomId}) {
                 onclick=${handleClick}
             >Load</button>
             ${busy && html`<progress />`}
-            <textarea value=${text} />
+            <label>
+                Data as JSON (read-only)
+                <textarea readonly value=${text} />
+            </label>
         </main>
         <${NetworkLog} />
     `;
