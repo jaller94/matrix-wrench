@@ -148,7 +148,10 @@ export function UserInspectorPage({identity}) {
             >Start fetching</button>
             ${busy && html`<progress value=${progressValue} max=${progressMax} />`}
             <${RoomListFilterer} columns=${columns} data=${data} primaryAccessor="roomId" />
-            <textarea readonly value=${text} />
+            <label>
+                Data as JSON (read-only)
+                <textarea readonly value=${text} />
+            </label>
         </main>
         <${NetworkLog} />
     `;
