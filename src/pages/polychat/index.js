@@ -1,4 +1,4 @@
-import { html, useCallback, useContext, useState } from '../../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useContext, useState } from 'htm/preact/standalone.module.js';
 import { AppHeader } from '../../components/header.js';
 import { NetworkLog, Settings } from '../../index.js';
 

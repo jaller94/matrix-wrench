@@ -1,4 +1,4 @@
-import { html, useState } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useState } from 'htm/preact/standalone.module.js';
 import {
     uniqueId,
 } from '../helper.js';

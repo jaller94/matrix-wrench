@@ -2,7 +2,7 @@ import {
     html,
     useCallback,
     useState,
-} from '../node_modules/htm/preact/standalone.module.js';
+} from 'htm/preact/standalone.module.js';
 
 export function MoreInfoTooltip({children}) {
     const [open, setOpen] = useState(false);

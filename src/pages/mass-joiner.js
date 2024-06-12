@@ -1,4 +1,4 @@
-import { html, useCallback, useEffect, useMemo, useState } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useEffect, useMemo, useState } from 'htm/preact/standalone.module.js';
 import { AppHeader } from '../components/header.js';
 import { BulkActionTracker, BulkActionForm } from '../components/bulk-actions.js';
 import { NetworkLog } from '../index.js';

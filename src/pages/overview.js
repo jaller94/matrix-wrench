@@ -1,4 +1,4 @@
-import { html, useMemo } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useMemo } from 'htm/preact/standalone.module.js';
 import { AppHeader } from '../components/header.js';
 
 export function OverviewPage({ identity }) {

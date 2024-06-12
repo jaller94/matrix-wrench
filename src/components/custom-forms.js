@@ -1,7 +1,7 @@
 import {
     html,
     useCallback,
-} from '../node_modules/htm/preact/standalone.module.js';
+} from 'htm/preact/standalone.module.js';
 import {
     auth,
     doRequest,

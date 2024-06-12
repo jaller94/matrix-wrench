@@ -7,7 +7,7 @@ import {
     useEffect,
     useMemo,
     useState,
-} from './node_modules/htm/preact/standalone.module.js';
+} from 'htm/preact/standalone.module.js';
 import {
     classnames,
     uniqueId,
@@ -377,7 +377,13 @@ function IdentityEditor({error, identity, onSave}) {
     }, []);
 
     const handleAccessTokenInput = useCallback(({target}) => setAccessToken(target.value), []);
-    const handleMasqueradeAsInput = useCallback(({ target }) => setMasqueradeAs(target.value), []);
+    const handleMasqueradeAsInput = useCallback(({target}) => setMasqueradeAs(target.value), []);
+
+    const changedIdentity = useMemo(() => ({
+        serverAddress,
+        accessToken,
+        masqueradeAs,
+    }), [serverAddress, accessToken, masqueradeAs]);
 
     const handleSubmit = useCallback(event => {
         event.preventDefault();
@@ -402,7 +408,7 @@ function IdentityEditor({error, identity, onSave}) {
                 <${HighUpLabelInput}
                     label="Name"
                     name="name"
-                    pattern="[^\/]+"
+                    pattern="[^\\\/]+"
                     required
                     value=${name}
                     oninput=${useCallback(({target}) => setName(target.value), [])}
@@ -480,12 +486,15 @@ function IdentityEditor({error, identity, onSave}) {
                                 type="checkbox"
                                 onChange=${handleRememberLoginClick}
                             />
-                            Remember login
+                            Save to localStorage
                         </label></li>
                     </ul>
                 </div>
             `}
             ${!!error && html`<p>${error}</p>`}
+            <div class="card">
+                <${WhoAmI} identity=${changedIdentity}/>
+            </div>
             <a class="button" href="#">Cancel</a>
             <button type="submit" class="primary">Save</button>
         </form>

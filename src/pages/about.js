@@ -1,4 +1,4 @@
-import { html } from '../node_modules/htm/preact/standalone.module.js';
+import { html } from 'htm/preact/standalone.module.js';
 import { AppHeader } from '../components/header.js';
 
 function ExternalLink(props) {

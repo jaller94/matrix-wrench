@@ -1,4 +1,4 @@
-import { html, useCallback } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback } from 'htm/preact/standalone.module.js';
 
 export function AppHeader({backLabel = 'Back', backUrl, children, onBack}) {
     const handleBack = useCallback(event => {

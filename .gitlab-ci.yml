@@ -1,4 +1,4 @@
-image: node:latest
+image: oven/bun:latest
 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
@@ -6,16 +6,16 @@ cache:
   - node_modules/
 
 before_script:
-- npm ci
+- bun install --frozen-lockfile
 
 test:
   script:
-  - npm run lint
-  - npm run test
+  - bun run lint
+  - bun run test
 
 pages:
   script:
-  - mv src public
+  - bun run build
   artifacts:
     paths:
     - public

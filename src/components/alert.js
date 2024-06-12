@@ -1,4 +1,4 @@
-import { html, useCallback, useEffect, useRef, useState } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useEffect, useRef, useState } from 'htm/preact/standalone.module.js';
 
 export function Alert({open, title, onClose}) {
     const ref = useRef();

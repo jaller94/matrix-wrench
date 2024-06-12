@@ -1,4 +1,4 @@
-import { html, useCallback, useEffect, useState } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useEffect, useState } from 'htm/preact/standalone.module.js';
 import {
     uniqueId,
 } from '../helper.js';

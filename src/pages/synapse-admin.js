@@ -1,4 +1,4 @@
-import { html, useCallback, useMemo, useState } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useMemo, useState } from 'htm/preact/standalone.module.js';
 import { HighUpLabelInput } from '../components/inputs.js';
 import { CustomForm } from '../components/custom-forms.js';
 import { AppHeader } from '../components/header.js';
