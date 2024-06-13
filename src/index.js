@@ -801,7 +801,7 @@ function UnencryptedTextMessage({ identity, roomId }) {
         eventType: 'm.room.message',
         roomId,
         txnId: uniqueId('msg-'),
-    }), [roomId, message]);
+    }), [roomId]);
 
     return html`
     

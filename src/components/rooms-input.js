@@ -15,15 +15,15 @@ export function RoomsInput({identity, onChange}) {
             onChange(joinedRooms);
         }
         fetchJoinedRooms();
-    }, []);
+    }, [identity]);
 
     const handleChange = useCallback(event => {
         const {value} = event.target;
         setValue(value);
         const userIds = [...value.matchAll(/!\S+/g)];
         setValid(userIds.length);
-        onChange(value !== '' ? userIds : joinedRooms);
-    }, [joinedRooms]);
+        onChange(value === '' ? joinedRooms : userIds);
+    }, [joinedRooms, onChange]);
 
     return html`
         <label>
@@ -32,6 +32,24 @@ export function RoomsInput({identity, onChange}) {
                 placeholder="All joined rooms"
                 value=${value}
                 oninput=${handleChange}
+                const roomIdToDmUserId = (mDirectContent, roomId) => {
+                    for (const [userId, roomIds] of Object.entries(mDirectContent)) {
+                        if (roomIds.includes(roomId)) {
+                            return userId;
+                        }
+                    }
+                };
+                
+                async function optionalAccountData(...params) {
+                    try {
+                        return await getAccountData(...params);
+                    } catch (error) {
+                        if (error.message === 'Account data not found') {
+                            return {};
+                        }
+                        throw error;
+                    }
+                }
             />
         </label>
     `;    

@@ -72,6 +72,7 @@ export function PolychatExistingRooms({ identity }) {
                     onclick=${handleFetch}
                 >Load existing rooms</button>
             </div>
+            ${!!error && html`<p>${error}</p>`}
             ${Array.isArray(mainRooms) && html`
                 <h3>Main Rooms</h3>
                 <ul>

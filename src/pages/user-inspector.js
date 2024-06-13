@@ -6,7 +6,6 @@ import { RoomListFilterer } from '../components/table.js';
 import { NetworkLog } from '../index.js';
 
 import {
-    getAccountData,
     getState,
 } from '../matrix.js';
 
@@ -34,31 +33,13 @@ async function roomToObject(identity, roomId, myUserId) {
     return data;
 }
 
-const roomIdToDmUserId = (mDirectContent, roomId) => {
-    for (const [userId, roomIds] of Object.entries(mDirectContent)) {
-        if (roomIds.includes(roomId)) {
-            return userId;
-        }
-    }
-};
-
-async function optionalAccountData(...params) {
-    try {
-        return await getAccountData(...params);
-    } catch (error) {
-        if (error.message === 'Account data not found') {
-            return {};
-        }
-        throw error;
-    }
-}
-
 /**
  * @param {*} identity
  * @param {string[]} roomIds
  * @param {string[]} userIds
  */
 async function *stats(identity, roomIds, userIds) {
+    console.log(userIds);
     let rows = roomIds.map(roomId => ({roomId}));
     yield {
         rows,
