@@ -123,6 +123,7 @@ input[type="text"] */
 textarea {
     background-color: var(--input-bg-color);
     border-color: var(--input-border-color);
+    color: var(--input-text-color);
     display: block;
     width: 100%;
     max-width: calc(100% - 12px);

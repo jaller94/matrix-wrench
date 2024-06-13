@@ -1,4 +1,4 @@
-import { html, useCallback, useMemo, useState } from '../node_modules/htm/preact/standalone.module.js';
+import { html, useCallback, useMemo, useState } from 'htm/preact/standalone.module.js';
 import { AppHeader } from '../components/header.js';
 import { RoomsInput } from '../components/rooms-input.js';
 import { UsersInput } from '../components/users-input.js';
