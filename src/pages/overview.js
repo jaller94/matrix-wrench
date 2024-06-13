@@ -5,9 +5,9 @@ export function OverviewPage({ identity }) {
     const links = useMemo(() => [
         { url: `#/${encodeURIComponent(identity.name)}/room-list`, name: 'Your rooms' },
         { url: `#/${encodeURIComponent(identity.name)}/contact-list`, name: 'Your contacts' },
-        //{ url: `#/${encodeURIComponent(identity.name)}/user-inspector`, name: 'User inspector' },
+        // { url: `#/${encodeURIComponent(identity.name)}/user-inspector`, name: 'User inspector' },
         { url: `#/${encodeURIComponent(identity.name)}/appservice`, name: 'AppService API' },
-        //{ url: `#/${encodeURIComponent(identity.name)}/polychat`, name: 'Polychat' },
+        // { url: `#/${encodeURIComponent(identity.name)}/polychat`, name: 'Polychat' },
     ], [identity]);
     return html`
         <${AppHeader}

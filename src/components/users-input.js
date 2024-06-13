@@ -5,7 +5,7 @@ export function UsersInput({onChange}) {
     const [valid, setValid] = useState(0);
 
     const handleChange = useCallback(event => {
-        const value = event.target.value;
+        const {value} = event.target;
         setValue(value);
         const userIds = [...value.matchAll(/@\S+?:\S+/g)];
         setValid(userIds.length);

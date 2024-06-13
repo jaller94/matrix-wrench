@@ -18,7 +18,7 @@ export function RoomsInput({identity, onChange}) {
     }, []);
 
     const handleChange = useCallback(event => {
-        const value = event.target.value;
+        const {value} = event.target;
         setValue(value);
         const userIds = [...value.matchAll(/!\S+/g)];
         setValid(userIds.length);
