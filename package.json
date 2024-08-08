@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint 'src/**/*.js'",
     "build": "bun build.ts",
-    "start": "python -m http.server --directory src 1234",
+    "start": "python -m http.server --directory public 1234",
     "test": "bun test"
   },
   "author": "Christian Paul",
