@@ -1,5 +1,4 @@
 import copy from 'bun-copy-plugin'
-import lightningcss from 'bun-lightningcss';
 
 await Bun.build({
   entrypoints: ['./src/index.js'],
@@ -12,7 +11,6 @@ await Bun.build({
   outdir: './public',
   plugins: [
     copy('static/', 'public'),
-    lightningcss(),
   ],
 }).catch(err => {
   console.error(err);
