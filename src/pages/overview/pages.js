@@ -1,7 +1,6 @@
 import { html, useMemo } from 'htm/preact/standalone.module.js';
-import { AppHeader } from '../components/header.js';
 
-export function OverviewPage({ identity }) {
+export function OverviewPages({ identity, filterString }) {
     const links = useMemo(() => [
         { url: `#/${encodeURIComponent(identity.name)}/room-list`, name: 'Your rooms' },
         { url: `#/${encodeURIComponent(identity.name)}/contact-list`, name: 'Your contacts' },
@@ -9,18 +8,21 @@ export function OverviewPage({ identity }) {
         { url: `#/${encodeURIComponent(identity.name)}/appservice`, name: 'AppService API' },
         // { url: `#/${encodeURIComponent(identity.name)}/polychat`, name: 'Polychat' },
     ], [identity]);
+
+    const filteredLinks = useMemo(() => {
+        if (!filterString) {
+            return links;
+        }
+        return links.filter(link => link.name.includes(filterString));
+    }, [links, filterString]);
+
     return html`
-        <${AppHeader}
-            backUrl=${`#/${encodeURIComponent(identity.name)}`}
-        >Overview</>
-        <main>
-            <ul>
-                ${links.map(link => html`
-                    <li key=${link.url}>
-                        <a href=${link.url}>${link.name}</a>
-                    </li>
-                `)}
-            </ul>
-        </main>
+        <ul>
+            ${filteredLinks.map(link => html`
+                <li key=${link.url}>
+                    <a href=${link.url}>${link.name}</a>
+                </li>
+            `)}
+        </ul>
     `;
 }

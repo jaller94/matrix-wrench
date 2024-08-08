@@ -22,7 +22,7 @@ import AboutPage from './pages/about.js';
 import { AppServicePage } from './pages/appservice.js';
 import { ContactListPage } from './pages/contact-list.js';
 import { MassJoinerPage } from './pages/mass-joiner.js';
-import { OverviewPage } from './pages/overview.js';
+import { OverviewPage } from './pages/overview/index.js';
 import { PolychatPage } from './pages/polychat/index.js';
 import { RoomToYamlPage } from './pages/room-to-yaml.js';
 import { RoomListPage } from './pages/room-list.js';
@@ -1906,6 +1906,37 @@ function BulkKickPage({identity, roomId}) {
 //     `;
 // }
 
+function Shortcuts({identity}) {
+    const handleClick = () => {
+        window.location = `#/${encodeURIComponent(identity.name)}/overview`;
+    };
+
+    useEffect(() => {
+        const handleKeyDown = event => {
+            if (event.key === 'P') {
+                event.preventDefault();
+                event.stopPropagation();
+                window.location = `#/${encodeURIComponent(identity.name)}/overview`;
+            }
+            console.log('added', event.key);
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [identity]);
+
+    return html`<button type="button" accesskey="p" onClick=${handleClick}>Stress reliever</button>`;
+}
+
+function Route({show, children}) {
+    if (!show) {
+        return undefined;
+    }
+    return children;
+}
+
 function App() {
     const [page, setPage] = useState(location.hash.slice(1));
 
@@ -1939,9 +1970,12 @@ function App() {
         child = html`
             <${IdentityProvider}
                 identityName=${identityName}
+                render=${(identity) => html`<${Shortcuts} identity=${identity} />`}
+            />
+            <${IdentityProvider}
+                identityName=${identityName}
                 render=${(identity) => {
                     if (matchRoomPage) {
-                        
                         if (matchRoomPage.groups.roomId === 'synapse-admin') {
                             return html`<${SynapseAdminPage}
                                 identity=${identity}
