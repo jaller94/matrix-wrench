@@ -24,7 +24,7 @@ export function Alert({open, title, onClose}) {
             <div class="modal_buttons">
                 <button type="button" onClick=${useCallback(() => onClose(false), [onClose])}>Cancel</button>
                 <button
-                    autofocus
+                    autoFocus
                     class="primary"
                     type="button"
                     onClick=${useCallback(() => onClose(true), [onClose])}
