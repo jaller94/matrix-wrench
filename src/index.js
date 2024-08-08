@@ -1927,7 +1927,12 @@ function Shortcuts({identity}) {
         };
     }, [identity]);
 
-    return html`<button type="button" accesskey="p" onClick=${handleClick}>Stress reliever</button>`;
+    return html`<button
+        accesskey="p"
+        style="display: none"
+        type="button"
+        onClick=${handleClick}
+    >Navigate to overview</button>`;
 }
 
 function Route({show, children}) {
