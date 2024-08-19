@@ -18,7 +18,6 @@ export default function AboutPage() {
         <p>
             Furthermore, a few tasks around homeserver administration are supported, like listing media files in unencrypted rooms. The majority of features use the standardized <${ExternalLink} href="https://spec.matrix.org/">Matrix protocol</a>. If a feature makes use of the Synapse Admin API, this is noted.
         </p>
-        <h2>Common tasks</h2>
         <h2>Identities</h2>
         <p>
             You can manage multiple logins to various homeservers. An identity is a combination of a homeserver URL and an access token. The identity name is only used for identification within Matrix Wrench.
