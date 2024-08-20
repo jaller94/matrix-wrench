@@ -41,7 +41,7 @@ export async function doRequest(resource, init) {
     }
     try {
         data = await response.json();
-    } catch (error) {
+    } catch {
         isNotJson = true;
     }
     window.dispatchEvent(new CustomEvent('matrix-response', {
@@ -247,7 +247,7 @@ export async function getAccountData(identity, user, type) {
 export async function getHierachy(identity, roomId, from) {
     let url = `${identity.serverAddress}/_matrix/client/v1/rooms/${encodeURIComponent(roomId)}/hierarchy`;
     if (from) {
-        url += `?from=${encodeURIComponent(from)}`;
+        url += `?from={encodeURIComponent(from)}`;
     }
     return doRequest(...auth(identity, url, {
         method: 'GET',
