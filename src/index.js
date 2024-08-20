@@ -311,7 +311,7 @@ function PasswordInput({serverAddress, onAccessToken}) {
                 />
             </div>
             <button>Get access token</button>
-        </div>
+        </form>
     `;
 }
 
@@ -810,7 +810,6 @@ function UnencryptedTextMessage({ identity, roomId }) {
             identity=${identity}
             method="PUT"
             url="/_matrix/client/v3/rooms/!{roomId}/send/!{eventType}/!{txnId}"
-            body=${body}
             variables=${variables}
         >
             <${HighUpLabelInput}
