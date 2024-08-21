@@ -117,7 +117,7 @@ export function SpaceManagementStatePage({identity, roomId}) {
                 type="button"
                 onClick=${handleQuery}
             >Query</button>
-            ${rooms && html`<${SpaceViewer} idenity=${identity} rooms=${rooms} />`}
+            ${rooms && html`<${SpaceViewer} identity=${identity} rooms=${rooms} />`}
         </main>
         <${NetworkLog} />
     `;
