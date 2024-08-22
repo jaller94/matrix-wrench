@@ -576,13 +576,14 @@ function NetworkLogRequest({request}) {
     );
 }
 
-function NetworkRequestsProvider({children}) {
+const NetworkRequestsProvider: FC<PropsWithChildren> = ({children}) => {
     const [state, setState] = useState<{isShortened: boolean, requests: object[]}>({
         isShortened: false,
         requests: [],
     });
 
     useEffect(() => {
+        console.log(1);
         const handleMatrixRequest = (event) => {
             setState(state => {
                 return {
@@ -638,7 +639,7 @@ function NetworkRequestsProvider({children}) {
             ${children}
         </NetworkRequestsProvider>
     );
-}
+};
 
 export function NetworkLog() {
     const { showNetworkLog } = useContext(Settings);

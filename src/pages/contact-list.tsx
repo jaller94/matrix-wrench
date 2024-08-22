@@ -59,7 +59,7 @@ export const ContactListPage = ({identity}) => {
         setData([]);
         setText('');
         try {
-            for await (let result of stats(identity)) {
+            for await (const result of stats(identity)) {
                 setProgressValue(result.progressValue);
                 setProgressMax(result.progressMax);
                 setData(result.rows);

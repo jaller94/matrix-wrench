@@ -231,7 +231,7 @@ export async function getHierachy(identity: object, roomId: string, from?: strin
 /**
  * Gets a list of joined members of a room.
  */
-export async function getJoinedMembers(identity, roomId: string): Promise<{joined: Record<string, Object>}> {
+export async function getJoinedMembers(identity, roomId: string): Promise<{joined: Record<string, object>}> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/joined_members`, {
         method: 'GET',
     }));
