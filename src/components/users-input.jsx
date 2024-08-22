@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-export function UsersInput({onChange}) {
+export const UsersInput = ({onChange}) => {
     const [value, setValue] = useState('');
     const [valid, setValid] = useState(0);
 

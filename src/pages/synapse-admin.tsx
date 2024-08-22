@@ -1,10 +1,14 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { HighUpLabelInput } from '../components/inputs';
 import { CustomForm } from '../components/custom-forms';
 import { AppHeader } from '../components/header';
 import { NetworkLog } from '../app';
 
-export function SynapseAdminPage({identity}) {
+type SynapseAdminPageProps = {
+    identity: object,
+};
+
+export const SynapseAdminPage: FC<SynapseAdminPageProps> = ({ identity }) => {
     return <>
         <AppHeader
             backLabel="Switch identity"
@@ -18,7 +22,11 @@ export function SynapseAdminPage({identity}) {
     </>;
 }
 
-function MutateUserForm({ identity }) {
+type MutateUserFormProps = {
+    identity: object,
+};
+
+const MutateUserForm: FC<MutateUserFormProps> = ({ identity }) => {
     const [admin, setAdmin] = useState(false);
     const [deactivated, setDeactivated] = useState(false);
     const [logoutDevices, setLogoutDevices] = useState(true);
@@ -100,4 +108,4 @@ function MutateUserForm({ identity }) {
             <button>Create/mutate user</button>
         </CustomForm>
     </>;
-}
+};

@@ -1,12 +1,12 @@
-import React, { useCallback, useState } from 'react';
+import React, { FC, FormEventHandler, useCallback, useState } from 'react';
 import { AppHeader } from '../../components/header';
 import { HighUpLabelInput } from '../../components/inputs';
 import { OverviewPages } from './pages';
 
-export function OverviewPage({ identity }) {
+export const OverviewPage: FC<{identity: any}> = ({ identity }) => {
     const [filterString, setFilterString] = useState('');
 
-    const handleFilterStringInput = useCallback((event) => {
+    const handleFilterStringInput: FormEventHandler<HTMLInputElement> = useCallback((event) => {
         setFilterString(event.target.value);
     }, []);
 

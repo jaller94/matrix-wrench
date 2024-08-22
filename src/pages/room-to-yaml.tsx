@@ -6,8 +6,19 @@ import {
     getState,
 } from '../matrix';
 
-async function roomToYaml(identity, roomId) {
-    const data = {
+async function roomToYaml(identity: object, roomId: string) {
+    const data: {
+        roomId: string,
+        type?: string,
+        roomVersion?: string,
+        canonicalAlias?: string,
+        name?: string,
+        topic?: string,
+        joinRule?: string,
+        guestAccess?: string,
+        historyVisibility?: string,
+        children?: Record<string, unknown>[],
+    } = {
         room_id: roomId,
     };
     try {
@@ -51,7 +62,7 @@ async function roomToYaml(identity, roomId) {
     return data;
 }
 
-export function RoomToYamlPage({identity, roomId}) {
+export const RoomToYamlPage = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
     const [text, setText] = useState('');
 

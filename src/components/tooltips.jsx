@@ -3,7 +3,7 @@ import React, {
     useState,
 } from 'react';
 
-export function MoreInfoTooltip({children}) {
+export const MoreInfoTooltip = ({children}) => {
     const [open, setOpen] = useState(false);
 
     const handleClick = useCallback(() => {

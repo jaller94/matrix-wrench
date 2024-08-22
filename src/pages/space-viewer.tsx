@@ -1,11 +1,11 @@
-import React, { Fragment, useCallback, useState } from 'react';
-import { AppHeader } from '../components/header';
+import React, { FC, Fragment, MouseEventHandler, useCallback, useState } from 'react';
+import { AppHeader } from '../components/header.tsx';
 import { NetworkLog } from '../app.tsx';
 
 import {
     getState,
     yieldHierachy,
-} from '../matrix';
+} from '../matrix.js';
 
 function populateRoomChildren(root, rooms) {
     for (const roomInfo of root.childrenInfo) {
@@ -47,19 +47,24 @@ function SpaceViewer({identity, rooms}) {
     </ul>;
 }
 
-export function SpaceManagementPage({identity, roomId}) {
+type SpaceManagementPageProps = {
+    identity: object,
+    roomId: string,
+};
+
+export const SpaceManagementPage: FC<SpaceManagementPageProps> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
-    const [data, setData] = useState();
+    const [data, setData] = useState<object | undefined>();
     const [text, setText] = useState('');
 
-    const handleClick = useCallback(async(event) => {
+    const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
         setData([]);
         setText('');
         try {
-            for await (let result of yieldHierachy(identity, roomId)) {
+            for await (const result of yieldHierachy(identity, roomId)) {
                 setData(convertRoomsToHierarchyTree(result.rooms));
             }
         } catch(error) {
@@ -80,16 +85,22 @@ export function SpaceManagementPage({identity, roomId}) {
                 type="button"
                 onClick={handleClick}
             >Start fetching</button>
-            {text && <p>${text}</p>}
+            {text && <p>{text}</p>}
             {data && <SpaceViewer identity={identity} rooms={data} />}
         </main>
         <NetworkLog />
     </>;
-}
+};
 
-// Unused alternative to SpaceManagementPage using a room state query.
-export function SpaceManagementStatePage({identity, roomId}) {
-    const [rooms, setRooms] = useState(null);
+type SpaceManagementStatePageProps = {
+    identity: object,
+    roomId: string,
+};
+/*
+ * Unused alternative to SpaceManagementPage using a room state query.
+ */
+export const SpaceManagementStatePage: FC<SpaceManagementStatePageProps> = ({identity, roomId}) => {
+    const [rooms, setRooms] = useState<unknown[] | null>(null);
 
     const handleQuery = useCallback(async() => {
         const state = await getState(identity, roomId);
@@ -117,7 +128,7 @@ export function SpaceManagementStatePage({identity, roomId}) {
                 type="button"
                 onClick={handleQuery}
             >Query</button>
-            ${rooms && <SpaceViewer idenity={identity} rooms={rooms} />}
+            {rooms && <SpaceViewer identity={identity} rooms={rooms} />}
         </main>
         <NetworkLog />
     </>;

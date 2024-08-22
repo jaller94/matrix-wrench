@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { MouseEventHandler, useCallback, useMemo, useState } from 'react';
 import { AppHeader } from '../components/header';
 import { RoomsInput } from '../components/rooms-input';
 import { UsersInput } from '../components/users-input';
@@ -9,7 +9,7 @@ import {
     getState,
 } from '../matrix';
 
-async function roomToObject(identity, roomId, myUserId) {
+async function roomToObject(identity, roomId: string, myUserId: string) {
     const data = {};
     try {
         const state = await getState(identity, roomId);
@@ -35,10 +35,10 @@ async function roomToObject(identity, roomId, myUserId) {
 
 /**
  * @param {*} identity
- * @param {string[]} roomIds
- * @param {string[]} userIds
+ * @param roomIds
+ * @param userIds
  */
-async function *stats(identity, roomIds, userIds) {
+async function *stats(identity, roomIds: string[], userIds: string[]) {
     console.log(userIds);
     let rows = roomIds.map(roomId => ({roomId}));
     yield {
@@ -89,14 +89,14 @@ export function UserInspectorPage({identity}) {
         },
     ], []);
 
-    const handleClick = useCallback(async(event) => {
+    const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
         setData([]);
         setText('');
         try {
-            for await (let result of stats(identity, roomIds)) {
+            for await (const result of stats(identity, roomIds)) {
                 setProgressValue(result.progressValue);
                 setProgressMax(result.progressMax);
                 setData(result.rows);

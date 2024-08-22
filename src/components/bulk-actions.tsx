@@ -6,7 +6,7 @@ import {
 export function BulkActionForm({actionLabel, onSubmit}) {
     const [userIdsString, setUserIdsString] = useState('');
 
-    const handleSubmit = useCallback(async event => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         let userIds = userIdsString.split(/[\s,;]/);
@@ -78,7 +78,7 @@ export function BulkActionTracker({action, items}) {
         <h3>Errors (${errors.length})</h3>
         {errors.length === 0 ? <p>No errors</p> : (
             <ol>
-                {errors.map(error => <li key={error.id}>{`${error.item}`} - ${error.message}</li>)}
+                {errors.map(error => <li key={error.id}>{`${error.item}`} - {error.message}</li>)}
             </ol>
         )}
     </>;

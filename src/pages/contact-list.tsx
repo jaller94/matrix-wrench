@@ -45,7 +45,7 @@ async function *stats(identity) {
     }
 }
 
-export function ContactListPage({identity}) {
+export const ContactListPage = ({identity}) => {
     const [busy, setBusy] = useState(false);
     const [data, setData] = useState([]);
     const [progressValue, setProgressValue] = useState(undefined);

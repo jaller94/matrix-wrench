@@ -51,7 +51,7 @@ export function MassJoinerPage({ identity, roomId }) {
     const [roomIds, setRoomIds] = useState([]);
     const [userIds, setUserIds] = useState([]);
 
-    const handleSubmit = useCallback(({ userIds }) => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(({ userIds }) => {
         setUserIds(userIds);
     }, []);
 

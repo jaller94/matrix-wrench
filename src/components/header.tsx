@@ -1,7 +1,14 @@
-import React, { useCallback } from 'react';
+import React, { FC, MouseEventHandler, useCallback } from 'react';
 
-export function AppHeader({backLabel = 'Back', backUrl, children, onBack}) {
-    const handleBack = useCallback(event => {
+type AppHeaderProps = {
+    backLabel?: string,
+    backUrl?: string,
+    children: string,
+    onBack?: MouseEventHandler<HTMLButtonElement>,
+};
+
+export const AppHeader: FC<AppHeaderProps> = ({backLabel = 'Back', backUrl, children, onBack}) => {
+    const handleBack = useCallback<MouseEventHandler<HTMLButtonElement>>(event => {
         if (backUrl) {
             event.preventDefault();
             event.stopPropagation();
@@ -29,4 +36,4 @@ export function AppHeader({backLabel = 'Back', backUrl, children, onBack}) {
             </nav>
         </header>
     );
-}
+};

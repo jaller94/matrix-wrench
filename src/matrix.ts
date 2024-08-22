@@ -10,7 +10,7 @@ export class MatrixError extends Error {
 
 /* START Helper functions */
 let nextRequestId = 1;
-export async function doRequest(resource, init) {
+export async function doRequest(resource: string | URL, init: RequestInit) {
     const requestId = nextRequestId;
     nextRequestId += 1;
     window.dispatchEvent(new CustomEvent('matrix-request', {
@@ -65,27 +65,21 @@ export async function doRequest(resource, init) {
 /**
  * Escapes a string to be used in Bash.
  * This assumes that the string is to be wrapped with single quotation marks.
- * @param {string} str
- * @returns {string}
  */
-export function escapeBashString(str) {
+export function escapeBashString(str: string): string {
     return str.replace(/\\/g, '\\\\').replace(/'/g, '\\\'');
 }
 
 /**
  * Constructs a curl command. Use it like fetch().
- * @param {string} resource
- * @param {{method?: string, body?: string, headers: Record<string, string>}=} init
- * @param {boolean=} maskAuthorization
- * @returns {string}
  */
-export function toCurlCommand(resource, init = {}, maskAuthorization = false) {
+export function toCurlCommand(resource: string, init: RequestInit = {}, maskAuthorization = false): string {
     let cmd = 'curl ';
     if (init.method !== undefined && init.method !== 'GET') {
         cmd += `-X ${init.method} `;
     }
     if (init.body) {
-        cmd += `--data '${escapeBashString(init.body)}' `;
+        cmd += `--data '${escapeBashString(init.body.toString())}' `;
     }
     for (let [key, value] of Object.entries(init.headers ?? {})) {
         if (maskAuthorization && key.toLocaleLowerCase() === 'authorization') {
@@ -103,10 +97,10 @@ export function toCurlCommand(resource, init = {}, maskAuthorization = false) {
  * @param {{method?: string, body?: string, headers: Record<string, string>}=} init
  * @returns {string}
  */
-export function summarizeFetch(resource, init) {
+export function summarizeFetch(resource: string, init: RequestInit): string {
     const match = resource.match(basePathRegExp);
     let url = resource;
-    if (match && match.groups.command) {
+    if (match && match.groups?.command) {
         url = match.groups.command;
     }
     return `${init.method} ${url}`;
@@ -115,12 +109,12 @@ const basePathRegExp = /\/_matrix\/client\/.+?\/(?<command>.*)$/
 
 /**
  * Apply the authorization headers of an identity to the parameters of `fetch()`.
- * @param {Object} identity
- * @param {string} resource
- * @param {Object=} init
- * @returns {[string, Object]} An array of parameters to hand to `fetch()`
+ * @param identity
+ * @param resource
+ * @param init
+ * @returns An array of parameters to hand to `fetch()`
  */
-export function auth(identity, resource, init = {}) {
+export function auth(identity: object, resource: string, init?: RequestInit): [string, object] {
     const url = new URL(resource);
     if (identity.masqueradeAs) {
         url.searchParams.set('user_id', identity.masqueradeAs);
@@ -144,12 +138,8 @@ export function auth(identity, resource, init = {}) {
 /**
  * Ban a user from a room.
  * @param {Object} identity
- * @param {string} roomId
- * @param {string} userId
- * @param {string=} reason
- * @returns {Promise<Object>}
  */
-export async function banUser(identity, roomId, userId, reason) {
+export async function banUser(identity, roomId: string, userId: string, reason?: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/ban`, {
         method: 'POST',
         headers: {
@@ -164,9 +154,8 @@ export async function banUser(identity, roomId, userId, reason) {
 
 /**
  * Get a list of client features and versions supported by the server.
- * @returns {Promise<Object>}
  */
-export async function clientVersions(identity) {
+export async function clientVersions(identity): Promise<object> {
     return doRequest(`${identity.serverAddress}/_matrix/client/versions`, {
         method: 'GET',
     });
@@ -174,11 +163,8 @@ export async function clientVersions(identity) {
 
 /**
  * Create a new room.
- * @param {Object} identity
- * @param {Object} body
- * @returns {Promise<Object>}
  */
-export async function createRoom(identity, body) {
+export async function createRoom(identity: object, body: object): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/createRoom`, {
         method: 'POST',
         headers: {
@@ -190,12 +176,8 @@ export async function createRoom(identity, body) {
 
 /**
  * Create a new room alias.
- * @param {Object} identity
- * @param {string} roomAlias
- * @param {string} roomId
- * @returns {Promise<Object>}
  */
-export async function createRoomAlias(identity, roomAlias, roomId) {
+export async function createRoomAlias(identity, roomAlias: string, roomId: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'PUT',
         headers: {
@@ -209,11 +191,8 @@ export async function createRoomAlias(identity, roomAlias, roomId) {
 
 /**
  * Delete a room alias.
- * @param {Object} identity
- * @param {string} roomAlias
- * @returns {Promise<Object>}
  */
-export async function deleteRoomAlias(identity, roomAlias) {
+export async function deleteRoomAlias(identity: object, roomAlias: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'DELETE',
         headers: {
@@ -226,12 +205,10 @@ export async function deleteRoomAlias(identity, roomAlias) {
 }
 
 /**
- * @param {Object} identity
- * @param {string=} user The Matrix User ID of the current user, if already known.
- * @param {string} type The type of the account data object
- * @returns {Promise<Object>}
+ * @param user The Matrix User ID of the current user, if already known.
+ * @param type The type of the account data object
  */
-export async function getAccountData(identity, user, type) {
+export async function getAccountData(identity: object, user: string | undefined, type: string): Promise<object> {
     const userId = user ?? (await whoAmI(identity)).user_id;
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/user/${encodeURIComponent(userId)}/account_data/${encodeURIComponent(type)}`, {
         method: 'GET',
@@ -240,11 +217,8 @@ export async function getAccountData(identity, user, type) {
 
 /**
  * Gets a paginated hierachy of a room and its space childs.
- * @param {Object} identity
- * @param {string} roomId
- * @param {string=} from A pagination token from a previous result.
  */
-export async function getHierachy(identity, roomId, from) {
+export async function getHierachy(identity: object, roomId: string, from?: string) {
     let url = `${identity.serverAddress}/_matrix/client/v1/rooms/${encodeURIComponent(roomId)}/hierarchy`;
     if (from) {
         url += `?from={encodeURIComponent(from)}`;
@@ -256,11 +230,8 @@ export async function getHierachy(identity, roomId, from) {
 
 /**
  * Gets a list of joined members of a room.
- * @param {Object} identity
- * @param {string} roomId
- * @returns {Promise<{joined: Record<string, Object>}>}
  */
-export async function getJoinedMembers(identity, roomId) {
+export async function getJoinedMembers(identity, roomId: string): Promise<{joined: Record<string, Object>}> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/joined_members`, {
         method: 'GET',
     }));
@@ -268,10 +239,8 @@ export async function getJoinedMembers(identity, roomId) {
 
 /**
  * Returns a list of the user's current rooms.
- * @param {Object} identity
- * @returns {Promise<{joined_rooms: string[]}>}
  */
-export async function getJoinedRooms(identity) {
+export async function getJoinedRooms(identity: object): Promise<{joined_rooms: string[]}> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/joined_rooms`, {
         method: 'GET',
     }));
@@ -280,11 +249,8 @@ export async function getJoinedRooms(identity) {
 /**
  * Gets a list of known media in a room. However, it only shows media from unencrypted events or rooms.
  * Synapse Admin API
- * @param {Object} identity
- * @param {string} roomId
- * @returns {Promise<Object>}
  */
-export async function getMediaByRoom(identity, roomId) {
+export async function getMediaByRoom(identity: any, roomId: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v1/room/${encodeURIComponent(roomId)}/media`, {
         method: 'GET',
     }));
@@ -296,7 +262,7 @@ export async function getMediaByRoom(identity, roomId) {
  * @param {string} roomId
  * @returns {Promise<Object>}
  */
-export async function getMembers(identity, roomId) {
+export async function getMembers(identity: any, roomId: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/members`, {
         method: 'GET',
     }));
@@ -304,13 +270,10 @@ export async function getMembers(identity, roomId) {
 
 /**
  * Get the state of a room.
- * @param {Object} identity
- * @param {string} roomId
- * @param {string=} type
- * @param {string=} stateKey
- * @returns {Promise<Object>}
  */
-export async function getState(identity, roomId, type, stateKey) {
+export function getState(identity: any, roomId: string): Promise<Record<string, unknown>[]>;
+export function getState(identity: any, roomId: string, type: string, stateKey?: string): Promise<Record<string, unknown>>;
+export async function getState(identity: any, roomId: string, type?: string, stateKey?: string): Promise<Record<string, unknown> | Record<string, unknown>[]> {
     let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/state`;
     if (type) {
         url += `/${encodeURIComponent(type)}`;
@@ -325,12 +288,8 @@ export async function getState(identity, roomId, type, stateKey) {
 
 /**
  * Invite a user to a room.
- * @param {Object} identity
- * @param {string} roomId
- * @param {string} userId
- * @returns {Promise<Object>}
  */
-export async function inviteUser(identity, roomId, userId) {
+export async function inviteUser(identity: object, roomId: string, userId: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/invite`, {
         method: 'POST',
         headers: {
@@ -344,11 +303,8 @@ export async function inviteUser(identity, roomId, userId) {
 
 /**
  * Join a room.
- * @param {Object} identity
- * @param {string} roomId
- * @returns {Promise<Object>}
  */
-export async function joinRoom(identity, roomId) {
+export async function joinRoom(identity: object, roomId: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/join`, {
         method: 'POST',
         headers: {
@@ -362,13 +318,8 @@ export async function joinRoom(identity, roomId) {
 
 /**
  * Kick a user from a room.
- * @param {Object} identity
- * @param {string} roomId
- * @param {string} userId
- * @param {string=} reason
- * @returns {Promise<Object>}
  */
-export async function kickUser(identity, roomId, userId, reason) {
+export async function kickUser(identity: object, roomId: string, userId: string, reason?: string) {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/kick`, {
         method: 'POST',
         headers: {
@@ -381,7 +332,7 @@ export async function kickUser(identity, roomId, userId, reason) {
     }));
 }
 
-export async function registerAppServiceUser(identity, username) {
+export async function registerAppServiceUser(identity: object, username: string) {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/register`, {
         method: 'POST',
         headers: {
@@ -396,11 +347,8 @@ export async function registerAppServiceUser(identity, username) {
 
 /**
  * Resolves a room alias to a room ID.
- * @param {Object} identity
- * @param {string} roomAlias
- * @returns {{room_id: string, servers: string[]}}
  */
-export async function resolveAlias(identity, roomAlias) {
+export async function resolveAlias(identity: object, roomAlias: string): Promise<{room_id: string, servers: string[]}> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'GET',
     }));
@@ -408,14 +356,8 @@ export async function resolveAlias(identity, roomAlias) {
 
 /**
  * Send an event to a room.
- * @param {Object} identity
- * @param {string} roomId
- * @param {string} type
- * @param {Object} content
- * @param {string=} transactionId
- * @returns {Promise<Object>}
  */
-export async function sendEvent(identity, roomId, type, content, transactionId) {
+export async function sendEvent(identity: object, roomId: string, type: string, content: object, transactionId?: string): Promise<object> {
     const url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/send/` +
         `${encodeURIComponent(type)}/${encodeURIComponent(transactionId ?? Math.random())}`;
     return doRequest(...auth(identity, url, {
@@ -429,14 +371,8 @@ export async function sendEvent(identity, roomId, type, content, transactionId) 
 
 /**
  * Set the state of a room.
- * @param {Object} identity
- * @param {string} roomId
- * @param {string} type
- * @param {string=} stateKey
- * @param {Object} content
- * @returns {Promise<Object>}
  */
-export async function setState(identity, roomId, type, stateKey, content) {
+export async function setState(identity: object, roomId: string, type: string, stateKey: string | undefined, content: object): Promise<object> {
     let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/state/${encodeURIComponent(type)}`;
     if (stateKey) {
         url += `/${encodeURIComponent(stateKey)}`;
@@ -452,12 +388,8 @@ export async function setState(identity, roomId, type, stateKey, content) {
 
 /**
  * Unban a user to a room.
- * @param {Object} identity
- * @param {string} roomId
- * @param {string} userId
- * @returns {Promise<Object>}
  */
-export async function unbanUser(identity, roomId, userId) {
+export async function unbanUser(identity: object, roomId: string, userId: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/unban`, {
         method: 'POST',
         headers: {
@@ -471,19 +403,15 @@ export async function unbanUser(identity, roomId, userId) {
 
 /**
  * Gets information about the owner of a given access token.
- * @param {Object} identity
- * @param {string} roomId
- * @param {string} userId
- * @returns {Promise<Object>}
  */
-export async function whoAmI(identity) {
+export async function whoAmI(identity: object): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/account/whoami`, {
         method: 'GET',
     }));
 }
 
-export async function *yieldHierachy(identity, roomId) {
-    let rooms = [];
+export async function *yieldHierachy(identity: object, roomId: string) {
+    let rooms: unknown[] = [];
     let nextBatch;
     do {
         const response = await getHierachy(identity, roomId, nextBatch);

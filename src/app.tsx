@@ -1,5 +1,9 @@
 import React, {
     createContext,
+    FC,
+    FormEventHandler,
+    MouseEventHandler,
+    PropsWithChildren,
     useCallback,
     useContext,
     useEffect,
@@ -10,7 +14,7 @@ import {
     classnames,
     uniqueId,
 } from './helper.ts';
-import { AlertSingleton, confirm } from './components/alert';
+import { AlertSingleton, confirm } from './components/alert.js';
 import { BulkActionTracker, BulkActionForm } from './components/bulk-actions';
 import { CustomButton, CustomForm } from './components/custom-forms';
 import { AppHeader } from './components/header';
@@ -24,7 +28,7 @@ import { OverviewPage } from './pages/overview/index';
 import { PolychatPage } from './pages/polychat/index';
 import { RoomToYamlPage } from './pages/room-to-yaml';
 import { RoomListPage } from './pages/room-list';
-import { SpaceManagementPage } from './pages/space-viewer';
+import { SpaceManagementPage } from './pages/space-viewer.jsx';
 import { SynapseAdminPage } from './pages/synapse-admin';
 import { UserInspectorPage } from './pages/user-inspector';
 // import {
@@ -59,7 +63,11 @@ import {
 
 const NETWORKLOG_MAX_ENTRIES = 500;
 
-let IDENTITIES = [];
+type Identity = {
+    name: string,
+};
+
+let IDENTITIES: Identity[] = [];
 try {
     const identities = JSON.parse(localStorage.getItem('identities'));
     if (!Array.isArray(identities)) {
@@ -97,7 +105,7 @@ export const Settings = createContext({
 
 const knockingBody = {};
 
-function RoomActions({identity, roomId}) {
+const RoomActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
     const variables = useMemo(() => ({
         roomId,
     }), [roomId]);
@@ -147,7 +155,7 @@ function RoomActions({identity, roomId}) {
             <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/yaml`}>JSON export</a></li>
         </ul></nav>
     </>;
-}
+};
 
 function MakeRoomAdminForm({ identity, roomId }) {
     const [userId, setUserId] = useState('');
@@ -186,7 +194,7 @@ function WhoAmI({identity}) {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState(null);
 
-    const handleSubmit = useCallback(async event => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -212,7 +220,7 @@ function WhoAmI({identity}) {
     return <>
         <button
             disabled={busy}
-            style="width: 120px"
+            style={{width: '120px'}}
             type="button"
             onClick={handleSubmit}
         >Who am I?</button>
@@ -231,9 +239,9 @@ function WhatsMyMemberState(props) {
 
 function WhatsMyMemberStateInner({identity, roomId}) {
     const [busy, setBusy] = useState(false);
-    const [info, setInfo] = useState(null);
+    const [info, setInfo] = useState<string | null>(null);
 
-    const handleSubmit = useCallback(async event => {
+    const handleSubmit: MouseEventHandler<HTMLButtonElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -281,7 +289,7 @@ function PasswordInput({serverAddress, onAccessToken}) {
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = useCallback(async (event) => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async (event) => {
         event.preventDefault();
         event.stopPropagation();
         const data = await loginWithPassword(serverAddress, user, password);
@@ -300,7 +308,7 @@ function PasswordInput({serverAddress, onAccessToken}) {
             </div>
             <div>
                 <HighUpLabelInput
-                    autocomplete="current-password"
+                    autoComplete="current-password"
                     label="Password"
                     name="password"
                     value={password}
@@ -385,7 +393,7 @@ function IdentityEditor({error, identity, onSave}) {
         masqueradeAs,
     }), [serverAddress, accessToken, masqueradeAs]);
 
-    const handleSubmit = useCallback(event => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
         onSave({
@@ -453,7 +461,7 @@ function IdentityEditor({error, identity, onSave}) {
             {authType === 'accessToken' ? <>
                 <div>
                     <HighUpLabelInput
-                        autocomplete="current-password"
+                        autoComplete="current-password"
                         label="Access token"
                         name="accessToken"
                         value={accessToken}
@@ -463,7 +471,7 @@ function IdentityEditor({error, identity, onSave}) {
                 </div>
                 <div>
                     <HighUpLabelInput
-                        autocomplete=""
+                        autoComplete=""
                         label="Masquerade As Matrix ID (for AppService tokens)"
                         name="masqueradeAs"
                         pattern="@.+:.+"
@@ -569,7 +577,7 @@ function NetworkLogRequest({request}) {
 }
 
 function NetworkRequestsProvider({children}) {
-    const [state, setState] = useState({
+    const [state, setState] = useState<{isShortened: boolean, requests: object[]}>({
         isShortened: false,
         requests: [],
     });
@@ -644,7 +652,7 @@ export function NetworkLog() {
         {requests.length === 0 ? (
             <p>Requests to Matrix homeservers will be listed here.</p>
         ) : 
-            <ol className="network-log_list">
+            <ol className="nethandleSubmitwork-log_list">
                 {requests.map(request => (
                     <NetworkLogRequest key={request.id} request={request}/>
                 ))}
@@ -653,7 +661,7 @@ export function NetworkLog() {
     </>;
 }
 
-function SettingsProvider({children}) {
+const SettingsProvider: FC<PropsWithChildren> = ({children}) => {
     const [state, setState] = useState({
         externalMatrixUrl: 'https://matrix.to/#/',
         identities: IDENTITIES,
@@ -661,21 +669,21 @@ function SettingsProvider({children}) {
     });
 
     useEffect(() => {
-        const setExternalMatrixUrl = (externalMatrixUrl) => {
+        const setExternalMatrixUrl = (externalMatrixUrl: string) => {
             setState(state => ({
                 ...state,
                 externalMatrixUrl,
             }));
         };
 
-        const setIdentities = (callback) => {
+        const setIdentities = (callback: (identities: Identity[]) => Identity[]) => {
             setState(state => ({
                 ...state,
                 identities: callback(state.identities),
             }));
         };
 
-        const setShowNetworkLog = (showNetworkLog) => {
+        const setShowNetworkLog = (showNetworkLog: boolean) => {
             setState(state => ({
                 ...state,
                 showNetworkLog,
@@ -695,7 +703,7 @@ function SettingsProvider({children}) {
             {children}
         </SettingsProvider>
     );
-}
+};
 
 function IdentitySelectorRow({identity, onDelete}) {
     return <li>
@@ -717,24 +725,24 @@ function IdentitySelectorRow({identity, onDelete}) {
     </li>;
 }
 
-function IdentitySelector({identities, onDelete}) {
+const IdentitySelector: FC<{identities: Identity[], onDelete: (identity: Identity) => void}> = ({identities, onDelete}) => {
     return <>
-        {identities.map(identity => {
-            return <IdentitySelectorRow
+        {identities.map(identity => (
+            <IdentitySelectorRow
                 key={identity.name}
                 identity={identity}
                 onDelete={onDelete}
-            />;
-        })}
+            />
+        ))}
     </>
-}
+};
 
 function AliasResolver({identity}) {
     const [alias, setAlias] = useState('');
     const [busy, setBusy] = useState(false);
     const [roomId, setRoomId] = useState('');
 
-    const handleSubmit = useCallback(async event => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -944,8 +952,8 @@ function JoinedRoomList({identity, onSelectRoom}) {
 
 function RoomSelector({identity, roomId}) {
     const [room, setRoom] = useState('');
-    const [resolvedRoomId, setResolvedRoomId] = useState(null);
-    const [recentRooms, setRecentRooms] = useState([]);
+    const [resolvedRoomId, setResolvedRoomId] = useState<string | null>(null);
+    const [recentRooms, setRecentRooms] = useState<string[]>([]);
     const [busy, setBusy] = useState(false);
 
     const handleSelectRoom = useCallback(roomId => {
@@ -976,7 +984,7 @@ function RoomSelector({identity, roomId}) {
         setResolvedRoomId(roomId);
     }, [identity, room]);
 
-    const handleSubmit = useCallback(async event => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         let roomId = room;
@@ -1047,7 +1055,7 @@ function RoomSelector({identity, roomId}) {
     );
 }
 
-async function getRoomsInASpaceInner(identity, roomId, maxDepth, roomMap) {
+async function getRoomsInASpaceInner(identity, roomId: string, maxDepth: number, roomMap: Map<string, unknown>) {
     if (maxDepth === 0) return;
     const state = await getState(identity, roomId);
     const childEvents = state.filter(event => event.type === 'm.space.child' && Array.isArray(event.content.via));
@@ -1062,13 +1070,13 @@ async function getRoomsInASpaceInner(identity, roomId, maxDepth, roomMap) {
     }
 }
 
-async function getRoomsInASpace(identity, roomId, maxDepth = 1) {
+async function getRoomsInASpace(identity, roomId: string, maxDepth = 1) {
     const roomMap = new Map();
     await getRoomsInASpaceInner(identity, roomId, maxDepth, roomMap);
     return [...roomMap.values()];
 }
 
-async function deleteRoom(identity, roomId, body = {}) {
+async function deleteRoom(identity, roomId: string, body = {}) {
     await doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
         method: 'DELETE',
         body: JSON.stringify(body),
@@ -1084,7 +1092,7 @@ function SynapseAdminDelete({ identity, roomId }) {
     const [purge, setPurge] = useState(true);
     const [forcePurge, setForcePurge] = useState(false);
 
-    const handleSubmit = useCallback((event) => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback((event) => {
         // Just ignore submit. We have two buttons - no submit button.
         event.preventDefault();
         event.stopPropagation();
@@ -1301,7 +1309,7 @@ function AliasActions({ identity, roomId }) {
     const [alias, setAlias] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const handleSubmit = useCallback(async event => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         const action = event.submitter.getAttribute('value');
@@ -1439,7 +1447,7 @@ function RoomUpgradeActions({identity, roomId}) {
     const [replacementRoom, setReplacementRoom] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const handleSubmit = useCallback(event => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
     }, []);
@@ -1467,10 +1475,10 @@ function RoomUpgradeActions({identity, roomId}) {
             }
             console.log(powerLevels);
             console.log(toMigrate);
-            const lastEventId = await sendEvent(identity, roomId, 'm.room.message', {
+            const lastEventId = (await sendEvent(identity, roomId, 'm.room.message', {
                 msgtype: 'm.text',
                 body: 'This room will be replaced.',
-            }).event_id;
+            })).event_id;
             console.log(lastEventId);
             const replacementRoom = (await createRoom(identity, {
                 creation_content: {
@@ -1550,7 +1558,7 @@ function UserActions({identity, roomId}) {
     const [reason, setReason] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const handleSubmit = useCallback(async event => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         const action = event.submitter.getAttribute('value');
@@ -1712,7 +1720,7 @@ function memberEventsToGroups(memberEvents) {
     if (!Array.isArray(memberEvents)) {
         return null;
     }
-    const membersByMembership = new Map(Object.entries({
+    const membersByMembership = new Map<string, string[]>(Object.entries({
         join: [],
         invite: [],
         knock: [],
@@ -1730,7 +1738,7 @@ function memberEventsToGroups(memberEvents) {
 
 function MembersExplorer({identity, roomId}) {
     const [busy, setBusy] = useState(false);
-    const [members, setMembers] = useState(null);
+    const [members, setMembers] = useState<null | Record<string, string>[]>(null);
 
     useEffect(() => {
         setMembers(null);
@@ -1834,7 +1842,7 @@ function IdentityProvider({render, identityName}) {
 function BulkInvitePage({identity, roomId}) {
     const [userIds, setUserIds] = useState(null);
 
-    const handleSubmit = useCallback(({userIds}) => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(({userIds}) => {
         setUserIds(userIds);
     }, []);
 
@@ -1861,11 +1869,11 @@ function BulkInvitePage({identity, roomId}) {
 function BulkKickPage({identity, roomId}) {
     const [userIds, setUserIds] = useState(null);
 
-    const handleSubmit = useCallback(({userIds}) => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(({userIds}) => {
         setUserIds(userIds);
     }, []);
 
-    const action = useCallback(async userId => {
+    const action: (userId: string) => void  = useCallback(async userId => {
         return kickUser(identity, roomId, userId);
     }, [identity, roomId]);
 
@@ -1919,7 +1927,7 @@ function Shortcuts({identity}) {
 
     return <button
         accessKey="p"
-        style="display: none"
+        style={{display: 'none'}}
         type="button"
         onClick={handleClick}
     >Navigate to overview</button>;
@@ -1943,9 +1951,9 @@ export function App() {
     const matchRoomPage = page.match(matchRoomPageRegExp);
 
     const identityName =
-        (matchIdentityEditorPage?.groups.identityName && decodeURIComponent(matchIdentityEditorPage.groups.identityName)) ||
-        (matchRoomPage?.groups.identityName && decodeURIComponent(matchRoomPage.groups.identityName));
-    const roomId = matchRoomPage?.groups.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
+        (matchIdentityEditorPage?.groups?.identityName && decodeURIComponent(matchIdentityEditorPage.groups.identityName)) ||
+        (matchRoomPage?.groups?.identityName && decodeURIComponent(matchRoomPage.groups.identityName));
+    const roomId = matchRoomPage?.groups?.roomId && decodeURIComponent(matchRoomPage.groups.roomId);
 
     let child;
     if (page === 'about') {

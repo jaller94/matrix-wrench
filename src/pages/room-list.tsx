@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { FC, MouseEventHandler, useCallback, useMemo, useState } from 'react';
 import { AppHeader } from '../components/header';
 import { RoomListFilterer } from '../components/table';
 import { NetworkLog } from '../app';
@@ -73,7 +73,7 @@ import {
 //     },
 // ];
 
-async function roomToObject(identity, roomId, myUserId) {
+async function roomToObject(identity, roomId: string, myUserId: string) {
     const data = {};
     try {
         const state = await getState(identity, roomId);
@@ -144,7 +144,7 @@ async function roomToObject(identity, roomId, myUserId) {
     return data;
 }
 
-const roomIdToDmUserId = (mDirectContent, roomId) => {
+const roomIdToDmUserId = (mDirectContent: object, roomId: string) => {
     for (const [userId, roomIds] of Object.entries(mDirectContent)) {
         if (roomIds.includes(roomId)) {
             return userId;
@@ -155,15 +155,15 @@ const roomIdToDmUserId = (mDirectContent, roomId) => {
 /**
  * @param {string[]} userIds
  */
-function getHomeServers(userIds) {
-    const set = new Set();
+function getHomeServers(userIds: string[]): string[] {
+    const set = new Set<string>();
     for (const userId of userIds) {
         set.add(userId.slice(userId.indexOf(':') + 1));
     }
     return [...set];
 }
 
-async function roomMemberStats(identity, roomId, mDirectContent) {
+async function roomMemberStats(identity, roomId: string, mDirectContent: object) {
     const joinedMembers = Object.keys((await getJoinedMembers(identity, roomId)).joined);
     return {
         isDirect: roomIdToDmUserId(mDirectContent, roomId) !== undefined,
@@ -174,11 +174,11 @@ async function roomMemberStats(identity, roomId, mDirectContent) {
     };
 }
 
-async function optionalAccountData(...params) {
+async function optionalAccountData(identity, myMatrixId: string, type: string) {
     try {
-        return await getAccountData(...params);
+        return await getAccountData(identity, myMatrixId, type);
     } catch (error) {
-        if (error.message === 'Account data not found') {
+        if (error instanceof Error && error.message === 'Account data not found') {
             return {};
         }
         throw error;
@@ -232,11 +232,15 @@ async function *stats(identity) {
     }
 }
 
-export function RoomListPage({identity}) {
+type RoomListPageProps = {
+    identity: object,
+};
+
+export const RoomListPage: FC<RoomListPageProps> = ({ identity }) => {
     const [busy, setBusy] = useState(false);
     const [data, setData] = useState([]);
-    const [progressValue, setProgressValue] = useState(undefined);
-    const [progressMax, setProgressMax] = useState(undefined);
+    const [progressValue, setProgressValue] = useState<number | undefined>(undefined);
+    const [progressMax, setProgressMax] = useState<number | undefined>(undefined);
     const [text, setText] = useState('');
 
     const columns = useMemo(() => [
@@ -298,14 +302,14 @@ export function RoomListPage({identity}) {
         // },
     ], []);
 
-    const handleClick = useCallback(async(event) => {
+    const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
         setData([]);
         setText('');
         try {
-            for await (let result of stats(identity)) {
+            for await (const result of stats(identity)) {
                 setProgressValue(result.progressValue);
                 setProgressMax(result.progressMax);
                 setData(result.rows);
@@ -343,4 +347,4 @@ export function RoomListPage({identity}) {
         </main>
         <NetworkLog />
     </>;
-}
+};

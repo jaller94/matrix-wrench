@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { ChangeEventHandler, FC, FormEventHandler, useCallback, useMemo, useState } from 'react';
 
 function RegExpToggleButton({...props}) {
     return (
@@ -15,14 +15,18 @@ function RegExpToggleButton({...props}) {
     );
 }
 
-export function ListWithSearch({items: originalItems = []}) {
-    const [items, setItems] = useState(originalItems);
+type ListWithSearchProps = {
+    items: unknown[],
+};
+
+export const ListWithSearch: FC<ListWithSearchProps> = ({items: originalItems = []}) => {
+    const [items, setItems] = useState<unknown[]>(originalItems);
     const [searchTerm, setSearchTerm] = useState('');
     const [isRegExp, setIsRegExp] = useState(false);
 
     const handleIsRegExpClick = useCallback(() => setIsRegExp(value => !value), []);
 
-    const handleSearchTermInput = useCallback(event => {
+    const handleSearchTermInput: FormEventHandler<HTMLInputElement> = useCallback(event => {
         setSearchTerm(event.target.value);
     }, []);
 
@@ -34,7 +38,7 @@ export function ListWithSearch({items: originalItems = []}) {
         return items.filter(item => item.id.includes(searchTerm));
     }, [isRegExp, items, searchTerm]);
 
-    const handleSelectAllChange = useCallback(event => {
+    const handleSelectAllChange: ChangeEventHandler<HTMLInputElement> = useCallback(event => {
         const targetValue = event.target.checked;
         setItems(items => items.map(item => {
             if (!filteredItems.includes(item)) {
@@ -105,7 +109,7 @@ export function ListWithSearch({items: originalItems = []}) {
             </div>
         </div>
     );
-}
+};
 
 /**
  * A list with selectable items.
@@ -133,7 +137,7 @@ function SelectableList({items, onSelect}) {
     );
 }
 
-export function RoomList({roomIds}) {
+export const RoomList: FC<{roomIds: string[]}> = ({roomIds}) => {
     const rooms = useMemo(() => {
         return roomIds.map((roomId) => ({
             id: roomId,

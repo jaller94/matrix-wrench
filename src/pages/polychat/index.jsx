@@ -14,7 +14,7 @@ export const PolychatStateEventType = {
     participant: 'de.polychat.room.participant',
 };
 
-export function PolychatPage({ identity }) {
+export const PolychatPage = ({ identity }) => {
     const { externalMatrixUrl } = useContext(Settings);
     const [busy, setBusy] = useState(false);
     const [mainRoomId, setMainRoomId] = useState('');

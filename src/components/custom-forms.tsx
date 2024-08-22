@@ -1,4 +1,9 @@
 import React, {
+    FC,
+    FormEventHandler,
+    MouseEventHandler,
+    PropsWithChildren,
+    ReactElement,
     useCallback,
 } from 'react';
 import {
@@ -10,15 +15,25 @@ import {
 } from '../helper';
 import { confirm } from './alert';
 
-export function CustomButton({ body, identity, label, method, requiresConfirmation, url, variables }) {
-    const handlePress = useCallback(async event => {
+type CustomButtonProp = {
+    body?: string | unknown,
+    identity: any,
+    label: string | ReactElement,
+    method: string,
+    requiresConfirmation?: boolean,
+    url: string,
+    variables: Record<string, string>,
+};
+
+export const CustomButton: FC<CustomButtonProp> = ({ body, identity, label, method, requiresConfirmation = false, url, variables }) => {
+    const handlePress: MouseEventHandler<HTMLButtonElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         if (requiresConfirmation) {
             const confirmed = await confirm('This is a high-risk action!\nAre you sure?');
             if (!confirmed) return;
         }
-        let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
+        const actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
         try {
             await doRequest(...auth(identity, actualUrl, {
                 method,
@@ -37,17 +52,25 @@ export function CustomButton({ body, identity, label, method, requiresConfirmati
     return (
         <button type="button" onClick={handlePress}>{label}</button>
     );
-}
+};
 
-export function CustomForm({ body, children, identity, method, requiresConfirmation, url, variables, ...props }) {
-    const handleSubmit = useCallback(async event => {
+type CustomFormProp = PropsWithChildren & {
+    body?: string | unknown,
+    identity: any,
+    method: string,
+    requiresConfirmation: boolean,
+    url: string,
+    variables: Record<string, string>,
+};
+export const CustomForm: FC<CustomFormProp> = ({ body, children, identity, method, requiresConfirmation, url, variables, ...props }) => {
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         if (requiresConfirmation) {
             const confirmed = await confirm('This is a high-risk action!\nAre you sure?');
             if (!confirmed) return;
         }
-        let actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
+        const actualUrl = `${identity.serverAddress}${fillInVariables(url, variables)}`;
         try {
             await doRequest(...auth(identity, actualUrl, {
                 method,
@@ -63,4 +86,4 @@ export function CustomForm({ body, children, identity, method, requiresConfirmat
     return (
         <form onSubmit={handleSubmit} {...props}>${children}</form>
     );
-}
+};

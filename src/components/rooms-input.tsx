@@ -1,12 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { ChangeEventHandler, FC, useCallback, useEffect, useState } from 'react';
 import {
     getJoinedRooms,
 } from '../matrix';
 
-export function RoomsInput({identity, onChange}) {
+type RoomsInputProps = {
+    identity: string,
+    onChange: (rooms: string[]) => void,
+};
+
+export const RoomsInput: FC<RoomsInputProps> = ({identity, onChange}) => {
     const [value, setValue] = useState('');
     const [valid, setValid] = useState(0);
-    const [joinedRooms, setJoinedRooms] = useState([]);
+    const [joinedRooms, setJoinedRooms] = useState<string[]>([]);
 
     useEffect(() => {
         const fetchJoinedRooms = async () => {
@@ -17,7 +22,7 @@ export function RoomsInput({identity, onChange}) {
         fetchJoinedRooms();
     }, [identity]);
 
-    const handleChange = useCallback(event => {
+    const handleChange: ChangeEventHandler<HTMLTextAreaElement> = useCallback(event => {
         const {value} = event.target;
         setValue(value);
         const userIds = [...value.matchAll(/!\S+/g)];
@@ -35,4 +40,4 @@ export function RoomsInput({identity, onChange}) {
             />
         </label>
     );
-}
+};

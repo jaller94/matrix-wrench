@@ -1,6 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { FC, ReactElement, useCallback, useMemo, useState } from 'react';
 
-export function sortSymbol(direction) {
+type Direction = 'ascending' | 'descending';
+
+type SortBys = [key: string, direction: Direction][];
+
+export function sortSymbol(direction: Direction | undefined): string {
     if (direction === 'ascending') {
         return ' 🔼';
     } else if (direction === 'descending') {
@@ -9,7 +13,7 @@ export function sortSymbol(direction) {
     return '';
 }
 
-function printValue(accessor, row) {
+function printValue(accessor: string, row): unknown | undefined {
     if (accessor.endsWith('.length')) {
         return row[accessor.slice(0, -7)]?.length;
     } else if (accessor.endsWith('[,]')) {
@@ -18,7 +22,14 @@ function printValue(accessor, row) {
     return row[accessor];
 }
 
-export function TableHead({ propertyName, label, sortBys, onSortBys }) {
+type TableHeadProps = {
+    propertyName: string,
+    label: ReactElement,
+    sortBys: SortBys,
+    onSortBys: (sortBys: SortBys) => void,
+};
+
+export const TableHead: FC<TableHeadProps> = ({ propertyName, label, sortBys, onSortBys }) => {
     const handleClick = useCallback(() => {
         const currentDirection = sortBys.find(([key]) => key === propertyName)?.[1];
         const flippedDirection = currentDirection === 'ascending' ? 'descending' : 'ascending';
@@ -27,7 +38,18 @@ export function TableHead({ propertyName, label, sortBys, onSortBys }) {
     return <th onClick={handleClick}>{label}{sortSymbol(sortBys.find(([key]) => key === propertyName)?.[1])}</th>;
 }
 
-export function RoomListTable({ columns, data, primaryAccessor, sortBys, onSortBys }) {
+type RoomListTableProps = {
+    columns: {
+        accessor: string,
+        Header: ReactElement,
+    }[],
+    data: Record<string, unknown>[],
+    primaryAccessor: string,
+    sortBys: SortBys,
+    onSortBys: (sortBys: SortBys) => void,
+};
+
+export const RoomListTable: FC<RoomListTableProps> = ({ columns, data, primaryAccessor, sortBys, onSortBys }) => {
     return (
         <div className="room-list">
             <table>
@@ -58,10 +80,12 @@ export function RoomListTable({ columns, data, primaryAccessor, sortBys, onSortB
     );
 }
 
-export function RoomListSorter({ data, ...props }) {
-    const [sortBys, setSortBys] = useState([]);
+type RoomListSorterProps = RoomListTableProps;
+
+export const RoomListSorter: FC<RoomListSorterProps> = ({ data, ...props }) => {
+    const [sortBys, setSortBys] = useState<SortBys>([]);
     const processedData = useMemo(() => {
-        let array = [...data];
+        const array = [...data];
         for (const [key, direction] of sortBys) {
             const directionFactor = direction === 'ascending' ? 1 : -1;
             if (key.endsWith('Count') || key.endsWith('PowerLevel')) {
@@ -86,7 +110,7 @@ export function RoomListSorter({ data, ...props }) {
     />;
 }
 
-export function RoomListFilterer({ data, ...props }) {
+export const RoomListFilterer = ({ data, ...props }) => {
     const [filters, setFilters] = useState([]);
     const processedData = useMemo(() => {
         return data.filter((row) => filters.every(filter => row[filter[0]].includes(filter[1])));

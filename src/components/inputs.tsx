@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 import {
     uniqueId,
 } from '../helper.ts';
 
-export const FloatingLabelInput = ({ label, ...props }) => {
+type FloatingLabelInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
+    label: string,
+};
+
+export const FloatingLabelInput: FC<FloatingLabelInputProps> = ({ label, ...props }) => {
     const [id] = useState(uniqueId);
     return (
         <div className="floating-label-input">
@@ -15,14 +19,18 @@ export const FloatingLabelInput = ({ label, ...props }) => {
     );
 }
 
-export const HighUpLabelInput = ({ label, ...props }) => {
+type HighUpLabelInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
+    label: string,
+};
+
+export const HighUpLabelInput: FC<HighUpLabelInputProps> = ({ label, ...props }) => {
     const [id] = useState(uniqueId);
     return (
         <div className="high-up-label-input">
             <input id={id} {...props}/>
             <label
                 htmlFor={props.id ?? id}
-            >${label}${props.required && <span className="high-up-label-input_required" aria-label="required"> *</span>}</label>
+            >{label}{props.required && <span className="high-up-label-input_required" aria-label="required"> *</span>}</label>
         </div>
     );
 }
