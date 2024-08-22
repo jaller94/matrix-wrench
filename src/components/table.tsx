@@ -55,7 +55,7 @@ export const RoomListTable: FC<RoomListTableProps> = ({ columns, data, primaryAc
             <table>
                 <thead>
                     <tr>
-                        ${columns.map(column => (
+                        {columns.map(column => (
                             <TableHead
                                 key={column.accessor}
                                 propertyName={column.accessor}

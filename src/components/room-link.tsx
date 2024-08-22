@@ -1,7 +1,8 @@
 import React, { FC } from 'react';
+import { Identity } from '../app';
 
 type RoomsLinkProps = {
-    identity: string,
+    identity: Identity,
     roomId: string,
 };
 

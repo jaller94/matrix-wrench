@@ -14,7 +14,7 @@ export const FloatingLabelInput: FC<FloatingLabelInputProps> = ({ label, ...prop
             <input id={id} {...props} placeholder="Text"/>
             <label
                 htmlFor={props.id ?? id}
-            >${label}${props.required && <span className="floating-label-input_required" aria-label="required"> *</span>}</label>
+            >{label}${props.required && <span className="floating-label-input_required" aria-label="required"> *</span>}</label>
         </div>
     );
 }

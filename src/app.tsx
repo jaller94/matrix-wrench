@@ -63,8 +63,12 @@ import {
 
 const NETWORKLOG_MAX_ENTRIES = 500;
 
-type Identity = {
+export type Identity = {
+    accessToken: string,
+    masqueradeAs?: string,
     name: string,
+    rememberLogin: boolean,
+    serverAddress: string,
 };
 
 let IDENTITIES: Identity[] = [];
@@ -84,8 +88,13 @@ try {
 const NetworkRequests = createContext({
     isShortened: false,
     requests: [],
+    rememberLogin: false,
 });
-export const Settings = createContext({
+export const Settings = createContext<{
+    externalMatrixUrl: string,
+    identities: Identity[],
+    showNetworkLog: boolean,
+}>({
     externalMatrixUrl: 'https://matrix.to/#/',
     identities: [],
     showNetworkLog: true,
@@ -157,7 +166,7 @@ const RoomActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId
     </>;
 };
 
-function MakeRoomAdminForm({ identity, roomId }) {
+const MakeRoomAdminForm: FC<{identity: Identity, roomId: string}> = ({ identity, roomId }) => {
     const [userId, setUserId] = useState('');
 
     const body = useMemo(() => ({
@@ -190,7 +199,7 @@ function MakeRoomAdminForm({ identity, roomId }) {
     );
 }
 
-function WhoAmI({identity}) {
+const WhoAmI: FC<{identity: Identity}> = ({identity}) => {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState(null);
 
@@ -232,12 +241,12 @@ function WhoAmI({identity}) {
     </>;
 }
 
-function WhatsMyMemberState(props) {
+const WhatsMyMemberState: FC<{identity: Identity, roomId: string}> = (props) => {
     const key = `${props.identity?.name}|${props.roomId}`;
     return <WhatsMyMemberStateInner key={key} {...props}/>;
-}
+};
 
-function WhatsMyMemberStateInner({identity, roomId}) {
+const WhatsMyMemberStateInner: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState<string | null>(null);
 
@@ -285,7 +294,7 @@ function WhatsMyMemberStateInner({identity, roomId}) {
     </>;
 }
 
-function PasswordInput({serverAddress, onAccessToken}) {
+const PasswordInput: FC<{serverAddress: string, onAccessToken: (token: string) => void}> = ({serverAddress, onAccessToken}) => {
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
 
@@ -321,7 +330,7 @@ function PasswordInput({serverAddress, onAccessToken}) {
     );
 }
 
-function IdentityEditorPage({identityName}) {
+const IdentityEditorPage: FC<{identityName: string}> = ({identityName}) => {
     const {identities, setIdentities} = useContext(Settings);
     const [editingError, setEditingError] = useState(null);
 
@@ -371,7 +380,7 @@ function IdentityEditorPage({identityName}) {
     />;
 }
 
-function IdentityEditor({error, identity, onSave}) {
+const IdentityEditor: FC<{error: string, identity: Identity, onSave: (identity: Identity) => void}> = ({error, identity, onSave}) => {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
@@ -635,9 +644,9 @@ const NetworkRequestsProvider: FC<PropsWithChildren> = ({children}) => {
     }, []);
 
     return (
-        <NetworkRequestsProvider value={state}>
-            ${children}
-        </NetworkRequestsProvider>
+        <NetworkRequests.Provider value={state}>
+            {children}
+        </NetworkRequests.Provider>
     );
 };
 
@@ -667,42 +676,30 @@ const SettingsProvider: FC<PropsWithChildren> = ({children}) => {
         externalMatrixUrl: 'https://matrix.to/#/',
         identities: IDENTITIES,
         showNetworkLog: true,
-    });
-
-    useEffect(() => {
-        const setExternalMatrixUrl = (externalMatrixUrl: string) => {
+        setExternalUrl: (externalMatrixUrl: string) => {
             setState(state => ({
                 ...state,
                 externalMatrixUrl,
             }));
-        };
-
-        const setIdentities = (callback: (identities: Identity[]) => Identity[]) => {
+        },
+        setIdentities: (callback: (identities: Identity[]) => Identity[]) => {
             setState(state => ({
                 ...state,
                 identities: callback(state.identities),
             }));
-        };
-
-        const setShowNetworkLog = (showNetworkLog: boolean) => {
+        },
+        setShowNetworkLog: (showNetworkLog: boolean) => {
             setState(state => ({
                 ...state,
                 showNetworkLog,
             }));
-        };
-
-        setState(state => ({
-            ...state,
-            setExternalMatrixUrl,
-            setIdentities,
-            setShowNetworkLog,
-        }));
-    }, []);
+        },
+    });
 
     return (
-        <SettingsProvider value={state}>
+        <Settings.Provider value={state}>
             {children}
-        </SettingsProvider>
+        </Settings.Provider>
     );
 };
 
@@ -738,7 +735,7 @@ const IdentitySelector: FC<{identities: Identity[], onDelete: (identity: Identit
     </>
 };
 
-function AliasResolver({identity}) {
+const AliasResolver: FC<{identity: Identity}> = ({identity}) => {
     const [alias, setAlias] = useState('');
     const [busy, setBusy] = useState(false);
     const [roomId, setRoomId] = useState('');
@@ -771,12 +768,16 @@ function AliasResolver({identity}) {
         </fieldset></form>
         <div>
             <strong>Room id:</strong>
-            <code style="border: 2px black dotted; user-select:all; margin-left: .5em">{roomId || 'N/A'}</code>
+            <code style={{
+                border: '2px, black dotted',
+                userSelect: 'all',
+                marginLeft: '.5em',
+            }}>{roomId || 'N/A'}</code>
         </div>
     </>;
 }
 
-function saveIdentitiesToLocalStorage(identities) {
+function saveIdentitiesToLocalStorage(identities: Identity[]) {
     if (!localStorage) return;
     // Filter out identities where the user said to not remember them.
     const identitiesToStore = identities.filter(identity => identity.rememberLogin).map(identity => {
@@ -787,7 +788,7 @@ function saveIdentitiesToLocalStorage(identities) {
     localStorage.setItem('identities', JSON.stringify(identitiesToStore));
 }
 
-function IdentityNav({identity}) {
+const IdentityNav: FC<{identity: Identity}> = ({identity}) => {
     return <>
         <h2>Other pages</h2>
         <nav><ul>
@@ -796,7 +797,7 @@ function IdentityNav({identity}) {
     </>;
 }
 
-function UnencryptedTextMessage({ identity, roomId }) {
+const UnencryptedTextMessage: FC<{identity: Identity, roomId: string}> = ({ identity, roomId }) => {
     const [message, setMessage] = useState('');
 
     const body = useMemo(() => ({
@@ -829,13 +830,13 @@ function UnencryptedTextMessage({ identity, roomId }) {
     );
 }
 
-function MainPage({identity, roomId}) {
+const MainPage: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
     return <>
         <AppHeader
             backLabel="Switch identity"
             backUrl="#"
         >{identity.name ?? 'No authentication'}</AppHeader>
-        <div style="display: flex; flex-direction: column">
+        <div style={{display: 'flex', flexDirection: 'column'}}>
             {identity.accessToken ? (<>
                 <div className="card">
                     <WhoAmI identity={identity}/>
@@ -875,7 +876,7 @@ function IdentitySelectorPage() {
     return <>
         <AppHeader>Matrix Wrench</AppHeader>
         <main>
-        {identities.length === 0 ? (
+            {identities.length === 0 ? (
                 <p>
                     Hi there! Need to tweak some Matrix rooms?<br/>
                     First, you need to add an identity. An identity is a combination of a homeserver URL and an access token.<br/>
@@ -892,9 +893,9 @@ function IdentitySelectorPage() {
     </>;
 }
 
-function RoomList({roomIds, onSelectRoom}) {
+const RoomList: FC<{roomIds: string[], onSelectRoom?: (roomId: string) => void}> = ({roomIds, onSelectRoom}) => {
     const { externalMatrixUrl } = useContext(Settings);
-    const handleSelectRoom = useCallback(event => {
+    const handleSelectRoom: FormEventHandler = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
         onSelectRoom(event.target.dataset.roomId);
@@ -904,7 +905,7 @@ function RoomList({roomIds, onSelectRoom}) {
         return <p>There's no room in this list.</p>;
     }
     return (
-        <ul style="overflow-x: auto">
+        <ul style={{overflowX: 'auto'}}>
             {roomIds.map(roomId => 
                 <li key={roomId}>
                     {onSelectRoom ? (
@@ -929,7 +930,7 @@ function RoomList({roomIds, onSelectRoom}) {
 }
 
 function JoinedRoomList({identity, onSelectRoom}) {
-    const [roomIds, setRoomIds] = useState(null);
+    const [roomIds, setRoomIds] = useState<string[] | null>(null);
     const [busy, setBusy] = useState(false);
 
     const handleGet = useCallback(async() => {
@@ -945,19 +946,19 @@ function JoinedRoomList({identity, onSelectRoom}) {
     }, [identity]);
 
     return <>
-        <h3>Joined rooms{Array.isArray(roomIds) && <>({roomIds.length} rooms)</>}</h3>
+        <h3>Joined rooms{Array.isArray(roomIds) && <> ({roomIds.length} rooms)</>}</h3>
         <button disabled={busy} type="button" onClick={handleGet}>Query joined rooms</button>
         {roomIds && <RoomList roomIds={roomIds} onSelectRoom={onSelectRoom}/>}
     </>;
 }
 
-function RoomSelector({identity, roomId}) {
+const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
     const [room, setRoom] = useState('');
     const [resolvedRoomId, setResolvedRoomId] = useState<string | null>(null);
     const [recentRooms, setRecentRooms] = useState<string[]>([]);
     const [busy, setBusy] = useState(false);
 
-    const handleSelectRoom = useCallback(roomId => {
+    const handleSelectRoom = useCallback((roomId: string) => {
         window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setRecentRooms(recentRooms => ([
             roomId,
@@ -965,7 +966,7 @@ function RoomSelector({identity, roomId}) {
         ]).slice(0, 4));
     }, [identity.name]);
 
-    const handleResolveAlias = useCallback(async event => {
+    const handleResolveAlias: MouseEventHandler = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         let roomId = room;
@@ -1043,7 +1044,7 @@ function RoomSelector({identity, roomId}) {
             </fieldset></form>
             <div>
                 <strong>Room id:</strong>
-                <code style="border: 2px black dotted; user-select:all; margin-left: .5em">{resolvedRoomId || 'N/A'}</code>
+                <code style={{border: '2px black dotted', userSelect: 'all', marginLeft: '.5em'}}>{resolvedRoomId || 'N/A'}</code>
             </div>
             <aside>
                 {recentRooms.length > 0 && <>
@@ -1056,7 +1057,7 @@ function RoomSelector({identity, roomId}) {
     );
 }
 
-async function getRoomsInASpaceInner(identity, roomId: string, maxDepth: number, roomMap: Map<string, unknown>) {
+async function getRoomsInASpaceInner(identity: Identity, roomId: string, maxDepth: number, roomMap: Map<string, unknown>) {
     if (maxDepth === 0) return;
     const state = await getState(identity, roomId);
     const childEvents = state.filter(event => event.type === 'm.space.child' && Array.isArray(event.content.via));
@@ -1071,20 +1072,20 @@ async function getRoomsInASpaceInner(identity, roomId: string, maxDepth: number,
     }
 }
 
-async function getRoomsInASpace(identity, roomId: string, maxDepth = 1) {
+async function getRoomsInASpace(identity: Identity, roomId: string, maxDepth = 1) {
     const roomMap = new Map();
     await getRoomsInASpaceInner(identity, roomId, maxDepth, roomMap);
     return [...roomMap.values()];
 }
 
-async function deleteRoom(identity, roomId: string, body = {}) {
+async function deleteRoom(identity: Identity, roomId: string, body = {}) {
     await doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
         method: 'DELETE',
         body: JSON.stringify(body),
     }));
 }
 
-function SynapseAdminDelete({ identity, roomId }) {
+const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity, roomId }) => {
     const [busy, setBusy] = useState(false);
     const [progress, setProgress] = useState(undefined);
     const [total, setTotal] = useState(undefined);
@@ -1150,7 +1151,7 @@ function SynapseAdminDelete({ identity, roomId }) {
             </ul>
             {busy && 
                 <div>
-                    <progress max={total} value={progress}>Deleted ${progress} of ${total} rooms.</progress>
+                    <progress max={total} value={progress}>Deleted {progress} of {total} rooms.</progress>
                 </div>
             }
             <CustomButton
@@ -1209,7 +1210,7 @@ function DeleteSpaceRecursivelyButton({ body, identity, roomId, onBusy, onProgre
 
 function RoomPage({identity, roomId}) {
     return <>
-        <h2>${roomId}</h2>
+        <h2>{roomId}</h2>
         <div className="page">
             <div className="section">
                 <details open>
@@ -1411,7 +1412,7 @@ function RoomSummary({identity, stateEvents}) {
     const unchangableEventTypes = getUnchangeableEventTypes(powerLevelsContent, highestPowerLevel);
     return (
         <ul>
-            <li>This room does ${doesFederate === false && <strong>NOT</strong>}federate.</li>
+            <li>This room does {doesFederate === false && <strong>NOT</strong>}federate.</li>
             {roomVersion && <li>The room version is {roomVersion}.</li>}
             {predecessorRoom && <li>This room replaced <RoomLink identity={identity} roomId={predecessorRoom}/>.</li>}
             {replacementRoom && <li>⚠️ This room was replaced by <RoomLink identity={identity} roomId={replacementRoom}/>.</li>}
@@ -1425,7 +1426,7 @@ function RoomSummary({identity, stateEvents}) {
     );
 }
 
-function assertTombstone(myMatrixId, stateEvents) {
+function assertTombstone(myMatrixId: string, stateEvents: object[]) {
     const isTombstoned = stateEvents.some(e => e.type === 'm.room.tombstone' && e.state_key === '');
     if (isTombstoned) {
         throw Error('Room already has a tombstone.');
@@ -1444,7 +1445,7 @@ function assertTombstone(myMatrixId, stateEvents) {
     }
 }
 
-function RoomUpgradeActions({identity, roomId}) {
+const RoomUpgradeActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
     const [replacementRoom, setReplacementRoom] = useState('');
     const [busy, setBusy] = useState(false);
 
@@ -1554,7 +1555,7 @@ function RoomUpgradeActions({identity, roomId}) {
     );
 }
 
-function UserActions({identity, roomId}) {
+const UserActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
     const [userId, setUserId] = useState('');
     const [reason, setReason] = useState('');
     const [busy, setBusy] = useState(false);
@@ -1605,7 +1606,7 @@ function UserActions({identity, roomId}) {
             <button type="submit" value="unban">Unban</button>
         </fieldset></form>
     );
-}
+};
 
 function StateExplorer({identity, roomId}) {
     const [type, setType] = useState('');
@@ -1698,7 +1699,7 @@ function MemberList({members}) {
     return (
         <ul>
             {members.map(memberEvent => {
-                return <li key={memberEvent.state_key}>${memberEvent.state_key}</li>;
+                return <li key={memberEvent.state_key}>{memberEvent.state_key}</li>;
             })}
         </ul>
     );
@@ -1711,7 +1712,7 @@ function MediaList({list}) {
     return (
         <ul>
             {list.map(mediaUrl => {
-                return <li key={mediaUrl}>${mediaUrl}</li>;
+                return <li key={mediaUrl}>{mediaUrl}</li>;
             })}
         </ul>
     );
@@ -1768,23 +1769,23 @@ function MembersExplorer({identity, roomId}) {
         </fieldset></form>
         {groups && <>
             <details open>
-                <summary><h3>Joined (${groups.get('join').length})</h3></summary>
+                <summary><h3>Joined ({groups.get('join').length})</h3></summary>
                 <MemberList members={groups.get('join')} />
             </details>
             <details open>
-                <summary><h3>Invited (${groups.get('invite').length})</h3></summary>
+                <summary><h3>Invited ({groups.get('invite').length})</h3></summary>
                 <MemberList members={groups.get('invite')} />
             </details>
             <details>
-                <summary><h3>Knocking (${groups.get('knock').length})</h3></summary>
+                <summary><h3>Knocking ({groups.get('knock').length})</h3></summary>
                 <MemberList members={groups.get('knock')} />
             </details>
             <details>
-                <summary><h3>Left (${groups.get('leave').length})</h3></summary>
+                <summary><h3>Left ({groups.get('leave').length})</h3></summary>
                 <MemberList members={groups.get('leave')} />
             </details>
             <details>
-                <summary><h3>Banned (${groups.get('ban').length})</h3></summary>
+                <summary><h3>Banned ({groups.get('ban').length})</h3></summary>
                 <MemberList members={groups.get('ban')} />
             </details>
         </>}
@@ -1815,11 +1816,11 @@ function MediaExplorer({identity, roomId}) {
         </fieldset></form>
         {media && (<>
             <details open>
-                <summary><h3>Local (${media.local.length})</h3></summary>
+                <summary><h3>Local ({media.local.length})</h3></summary>
                 <MediaList list={media.local} />
             </details>
             <details open>
-                <summary><h3>Remote (${media.remote.length})</h3></summary>
+                <summary><h3>Remote ({media.remote.length})</h3></summary>
                 <MediaList list={media.remote} />
             </details>
         </>)}
@@ -1834,7 +1835,7 @@ function IdentityProvider({render, identityName}) {
             <AppHeader
                 backUrl="#"
             >Invalid identity</AppHeader>
-            <p>No such identity. Please go back and add an identity with the name ${identityName}.</p>
+            <p>No such identity. Please go back and add an identity with the name {identityName}.</p>
         </>;
     }
     return render(identity);
@@ -1856,7 +1857,7 @@ function BulkInvitePage({identity, roomId}) {
             backUrl={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
         >Bulk Invite</AppHeader>
         <main>
-            <h2>${roomId}</h2>
+            <h2>{roomId}</h2>
             {userIds === null ? 
                 <BulkActionForm actionLabel="Invite" onSubmit={handleSubmit} />
             : 
@@ -1883,7 +1884,7 @@ function BulkKickPage({identity, roomId}) {
             backUrl={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
         >Bulk Kick</AppHeader>
         <main>
-            <h2>${roomId}</h2>
+            <h2>{roomId}</h2>
             {userIds === null ? 
                 <BulkActionForm actionLabel="Kick" onSubmit={handleSubmit} />
              : 

@@ -6,7 +6,7 @@ import {
     getState,
 } from '../matrix';
 
-async function roomToYaml(identity: object, roomId: string) {
+async function roomToYaml(identity: Identity, roomId: string) {
     const data: {
         roomId: string,
         type?: string,
@@ -85,7 +85,7 @@ export const RoomToYamlPage = ({identity, roomId}) => {
             backUrl={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
         >Room to JSON</AppHeader>
         <main>
-            <h2>${roomId}</h2>
+            <h2>{roomId}</h2>
             <button
                 disabled={busy}
                 type="button"

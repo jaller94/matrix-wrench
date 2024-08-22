@@ -14,10 +14,11 @@ import {
     fillInVariables,
 } from '../helper';
 import { confirm } from './alert';
+import { Identity } from '../app';
 
 type CustomButtonProp = {
     body?: string | unknown,
-    identity: any,
+    identity: Identity,
     label: string | ReactElement,
     method: string,
     requiresConfirmation?: boolean,
@@ -56,9 +57,9 @@ export const CustomButton: FC<CustomButtonProp> = ({ body, identity, label, meth
 
 type CustomFormProp = PropsWithChildren & {
     body?: string | unknown,
-    identity: any,
+    identity: Identity,
     method: string,
-    requiresConfirmation: boolean,
+    requiresConfirmation?: boolean,
     url: string,
     variables: Record<string, string>,
 };
@@ -84,6 +85,6 @@ export const CustomForm: FC<CustomFormProp> = ({ body, children, identity, metho
     }, [body, identity, method, requiresConfirmation, url, variables]);
 
     return (
-        <form onSubmit={handleSubmit} {...props}>${children}</form>
+        <form onSubmit={handleSubmit} {...props}>{children}</form>
     );
 };

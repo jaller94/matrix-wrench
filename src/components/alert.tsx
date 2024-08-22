@@ -20,7 +20,7 @@ export function Alert({open, title, onClose}) {
             ref={ref}
             onClose={useCallback(() => onClose(false), [onClose])}
         >
-            <p className="modal_title">${title}</p>
+            <p className="modal_title">{title}</p>
             <div className="modal_buttons">
                 <button type="button" onClick={useCallback(() => onClose(false), [onClose])}>Cancel</button>
                 <button

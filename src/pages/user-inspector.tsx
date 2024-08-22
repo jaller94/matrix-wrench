@@ -1,15 +1,15 @@
-import React, { MouseEventHandler, useCallback, useMemo, useState } from 'react';
+import React, { FC, MouseEventHandler, useCallback, useMemo, useState } from 'react';
 import { AppHeader } from '../components/header';
 import { RoomsInput } from '../components/rooms-input';
 import { UsersInput } from '../components/users-input';
 import { RoomListFilterer } from '../components/table';
-import { NetworkLog } from '../app';
+import { Identity, NetworkLog } from '../app';
 
 import {
     getState,
 } from '../matrix';
 
-async function roomToObject(identity, roomId: string, myUserId: string) {
+async function roomToObject(identity: Identity, roomId: string, myUserId: string) {
     const data = {};
     try {
         const state = await getState(identity, roomId);
@@ -38,7 +38,7 @@ async function roomToObject(identity, roomId: string, myUserId: string) {
  * @param roomIds
  * @param userIds
  */
-async function *stats(identity, roomIds: string[], userIds: string[]) {
+async function *stats(identity: Identity, roomIds: string[], userIds: string[]) {
     console.log(userIds);
     let rows = roomIds.map(roomId => ({roomId}));
     yield {
@@ -69,13 +69,13 @@ async function *stats(identity, roomIds: string[], userIds: string[]) {
     }
 }
 
-export function UserInspectorPage({identity}) {
+export const UserInspectorPage: FC<{identity: Identity}> = ({identity}) => {
     const [busy, setBusy] = useState(false);
-    const [data, setData] = useState([]);
-    const [progressValue, setProgressValue] = useState(undefined);
-    const [progressMax, setProgressMax] = useState(undefined);
-    const [roomIds, setRoomIds] = useState([]);
-    const [userIds, setUserIds] = useState([]);
+    const [data, setData] = useState<unknown[]>([]);
+    const [progressValue, setProgressValue] = useState<number | undefined>(undefined);
+    const [progressMax, setProgressMax] = useState<number | undefined>(undefined);
+    const [roomIds, setRoomIds] = useState<string[]>([]);
+    const [userIds, setUserIds] = useState<string[]>([]);
     const [text, setText] = useState('');
 
     const columns = useMemo(() => [
@@ -103,7 +103,7 @@ export function UserInspectorPage({identity}) {
                 setText(JSON.stringify(result.rows, null, 2));
             }
         } catch(error) {
-            setText(error);
+            setText(String(error));
         } finally {
             setBusy(false);
             setProgressValue(undefined);

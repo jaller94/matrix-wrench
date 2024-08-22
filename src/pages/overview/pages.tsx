@@ -18,9 +18,9 @@ export function OverviewPages({ identity, filterString }) {
 
     return (
         <ul>
-            ${filteredLinks.map(link => (
+            {filteredLinks.map(link => (
                 <li key={link.url}>
-                    <a href={link.url}>${link.name}</a>
+                    <a href={link.url}>{link.name}</a>
                 </li>
             ))}
         </ul>

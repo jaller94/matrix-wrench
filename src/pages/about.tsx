@@ -27,7 +27,7 @@ export default function AboutPage() {
             No information about your homeserver or actions is sent to the developer or host of this web application. Identities are optionally stored in your browser&apos;s <ExternalLink href="https://developer.mozilla.org//docs/Web/API/Window/localStorage">localStorage</ExternalLink>. To eliminate the risk of a malicious release which could compromise your Matrix access tokens, download the application&apos;s source code and host it on a static HTTP(S) server.
         </p>
         <p>
-            Matrix Wrench is my hobby project without a security audit or peer review. I use it at work and try to apply some best practices from my professional work to the development, however, Matrix Wrench is neither backed nor endorsed by my employer. There are a few unit tests that are automatically run on every commit. The project&apos;s dependencies are currently limited to <ExternalLink href="https://www.npmjs.com/package/htm">htm</ExternalLink> for rendering the interface.
+            Matrix Wrench is my hobby project without a security audit or peer review. It is neither backed nor endorsed by my employer. There are a few unit tests that are automatically run on every commit. The project&apos;s dependencies include the relatively complex React framework.
         </p>
         <h2>Development</h2>
         <p>Found a bug? Want a feature? Please use the <ExternalLink href="https://gitlab.com/jaller94/matrix-wrench/-/issues">issue tracker on Gitlab.com</ExternalLink>.</p>

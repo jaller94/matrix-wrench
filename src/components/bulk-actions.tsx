@@ -27,7 +27,7 @@ export function BulkActionForm({actionLabel, onSubmit}) {
                     onInput={useCallback(({target}) => setUserIdsString(target.value), [])}
                 />
             </label>
-            <button className="primary">${actionLabel}</button>
+            <button className="primary">{actionLabel}</button>
         </form>
     );
 }
@@ -73,9 +73,9 @@ export function BulkActionTracker({action, items}) {
     // FIXME: error.item can be an object. Cannot use JSON.stringify()
     return <>
         <h3>Progress</h3>
-        <progress value={progress} max={allItems.length}>Processed ${progress} of ${allItems.length} items.</progress>
+        <progress value={progress} max={allItems.length}>Processed {progress} of {allItems.length} items.</progress>
         {currentItem ? `Processing ${currentItem}…` : `${progress} / ${allItems.length}`}
-        <h3>Errors (${errors.length})</h3>
+        <h3>Errors ({errors.length})</h3>
         {errors.length === 0 ? <p>No errors</p> : (
             <ol>
                 {errors.map(error => <li key={error.id}>{`${error.item}`} - {error.message}</li>)}

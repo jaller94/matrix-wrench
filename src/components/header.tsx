@@ -30,7 +30,7 @@ export const AppHeader: FC<AppHeaderProps> = ({backLabel = 'Back', backUrl, chil
                     onClick={handleBack}
                 >{'<'}</button>
             )}
-            <h1 className="app-header_label">${children}</h1>
+            <h1 className="app-header_label">{children}</h1>
             <nav className="app-header_nav">
                 <a href="#about">About</a>
             </nav>

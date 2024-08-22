@@ -1,9 +1,11 @@
 import React, {
+    FC,
+    PropsWithChildren,
     useCallback,
     useState,
 } from 'react';
 
-export const MoreInfoTooltip = ({children}) => {
+export const MoreInfoTooltip: FC<PropsWithChildren> = ({children}) => {
     const [open, setOpen] = useState(false);
 
     const handleClick = useCallback(() => {

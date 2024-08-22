@@ -78,7 +78,7 @@ export function PolychatExistingRooms({ identity }) {
                 <ul>
                     {mainRooms.map(room => (
                         <li key={room.mainRoomId}>
-                            ${room.name}
+                            {room.name}
                             <RoomLink identity={identity} roomId={room.mainRoomId}/>
                         </li>
                     ))}
@@ -89,7 +89,7 @@ export function PolychatExistingRooms({ identity }) {
                 <ul>
                     {unclaimedSubRooms.map(room => (
                         <li key={room.roomId}>
-                            ${room.name}
+                            {room.name}
                             <RoomLink identity={identity} roomId={room.roomId}/>
                         </li>
                     ))}

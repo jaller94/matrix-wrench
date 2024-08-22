@@ -122,7 +122,7 @@ function SelectableList({items, onSelect}) {
 
     return (
         <ul className="selectable-list">
-            ${items.map(item => (
+            {items.map(item => (
                 <li key={item.id}>
                     <input
                         checked={item.selected}

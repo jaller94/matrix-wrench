@@ -14,7 +14,6 @@ Maturity: Alpha
 * Static web app (cacheable and no need for PHP, a database or whatever)
 * [Keep it small and simple](https://en.wikipedia.org/wiki/KISS_principle)
   * Minimal dependencies
-  * 300 kb zip bundle limit
 
 ## Roadmap
 * Hire someone for UI/Layout design (idea)

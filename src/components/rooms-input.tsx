@@ -2,9 +2,10 @@ import React, { ChangeEventHandler, FC, useCallback, useEffect, useState } from 
 import {
     getJoinedRooms,
 } from '../matrix';
+import { Identity } from '../app';
 
 type RoomsInputProps = {
-    identity: string,
+    identity: Identity,
     onChange: (rooms: string[]) => void,
 };
 
@@ -25,7 +26,7 @@ export const RoomsInput: FC<RoomsInputProps> = ({identity, onChange}) => {
     const handleChange: ChangeEventHandler<HTMLTextAreaElement> = useCallback(event => {
         const {value} = event.target;
         setValue(value);
-        const userIds = [...value.matchAll(/!\S+/g)];
+        const userIds = [...value.matchAll(/!\S+/g)].map(userId => userId[0]);
         setValid(userIds.length);
         onChange(value === '' ? joinedRooms : userIds);
     }, [joinedRooms, onChange]);

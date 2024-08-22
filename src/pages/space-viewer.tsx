@@ -1,6 +1,6 @@
 import React, { FC, Fragment, MouseEventHandler, useCallback, useState } from 'react';
 import { AppHeader } from '../components/header.tsx';
-import { NetworkLog } from '../app.tsx';
+import { Identity, NetworkLog } from '../app.tsx';
 
 import {
     getState,
@@ -18,7 +18,7 @@ function populateRoomChildren(root, rooms) {
     }
 }
 
-function convertRoomsToHierarchyTree(rawRooms) {
+function convertRoomsToHierarchyTree(rawRooms: object[]) {
     if (rawRooms.length === 0) {
         return [];
     }
@@ -36,11 +36,11 @@ function convertRoomsToHierarchyTree(rawRooms) {
     return [root];
 }
 
-function SpaceViewer({identity, rooms}) {
+const SpaceViewer: FC<{ identity: Identity, rooms: object[] }> = ({identity, rooms}) => {
     return <ul>
         {rooms.map(room => <Fragment key={room.id}>
             <li>
-                <a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(room.id)}}`}>${room.name ?? room.id}</a>
+                <a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(room.id)}}`}>{room.name ?? room.id}</a>
             </li>
             {room.children && <SpaceViewer key={room.id} identity={identity} rooms={room.children} />}
         </Fragment>)}
@@ -48,13 +48,13 @@ function SpaceViewer({identity, rooms}) {
 }
 
 type SpaceManagementPageProps = {
-    identity: object,
+    identity: Identity,
     roomId: string,
 };
 
 export const SpaceManagementPage: FC<SpaceManagementPageProps> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
-    const [data, setData] = useState<object | undefined>();
+    const [data, setData] = useState<object[] | undefined>();
     const [text, setText] = useState('');
 
     const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(async(event) => {
@@ -93,7 +93,7 @@ export const SpaceManagementPage: FC<SpaceManagementPageProps> = ({identity, roo
 };
 
 type SpaceManagementStatePageProps = {
-    identity: object,
+    identity: Identity,
     roomId: string,
 };
 /*

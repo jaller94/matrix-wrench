@@ -2,10 +2,10 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { HighUpLabelInput } from '../components/inputs';
 import { CustomForm } from '../components/custom-forms';
 import { AppHeader } from '../components/header';
-import { NetworkLog } from '../app';
+import { Identity, NetworkLog } from '../app';
 
 type SynapseAdminPageProps = {
-    identity: object,
+    identity: Identity,
 };
 
 export const SynapseAdminPage: FC<SynapseAdminPageProps> = ({ identity }) => {
@@ -22,11 +22,7 @@ export const SynapseAdminPage: FC<SynapseAdminPageProps> = ({ identity }) => {
     </>;
 }
 
-type MutateUserFormProps = {
-    identity: object,
-};
-
-const MutateUserForm: FC<MutateUserFormProps> = ({ identity }) => {
+const MutateUserForm: FC<{ identity: Identity }> = ({ identity }) => {
     const [admin, setAdmin] = useState(false);
     const [deactivated, setDeactivated] = useState(false);
     const [logoutDevices, setLogoutDevices] = useState(true);

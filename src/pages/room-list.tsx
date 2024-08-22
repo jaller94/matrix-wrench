@@ -1,7 +1,7 @@
 import React, { FC, MouseEventHandler, useCallback, useMemo, useState } from 'react';
 import { AppHeader } from '../components/header';
 import { RoomListFilterer } from '../components/table';
-import { NetworkLog } from '../app';
+import { Identity, NetworkLog } from '../app';
 
 import {
     getAccountData,
@@ -73,7 +73,7 @@ import {
 //     },
 // ];
 
-async function roomToObject(identity, roomId: string, myUserId: string) {
+async function roomToObject(identity: Identity, roomId: string, myUserId: string) {
     const data = {};
     try {
         const state = await getState(identity, roomId);
@@ -163,7 +163,7 @@ function getHomeServers(userIds: string[]): string[] {
     return [...set];
 }
 
-async function roomMemberStats(identity, roomId: string, mDirectContent: object) {
+async function roomMemberStats(identity: Identity, roomId: string, mDirectContent: object) {
     const joinedMembers = Object.keys((await getJoinedMembers(identity, roomId)).joined);
     return {
         isDirect: roomIdToDmUserId(mDirectContent, roomId) !== undefined,
@@ -174,7 +174,7 @@ async function roomMemberStats(identity, roomId: string, mDirectContent: object)
     };
 }
 
-async function optionalAccountData(identity, myMatrixId: string, type: string) {
+async function optionalAccountData(identity: Identity, myMatrixId: string, type: string) {
     try {
         return await getAccountData(identity, myMatrixId, type);
     } catch (error) {
@@ -233,7 +233,7 @@ async function *stats(identity) {
 }
 
 type RoomListPageProps = {
-    identity: object,
+    identity: Identity,
 };
 
 export const RoomListPage: FC<RoomListPageProps> = ({ identity }) => {
