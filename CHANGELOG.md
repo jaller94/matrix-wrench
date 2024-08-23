@@ -10,12 +10,20 @@
 * Added: Register accounts with an AppService token
 * Added: Send messages to a room
 
+## Upcoming v0.14.0
+*Workation Nation*
+
+* Added: Settings to change the prefix of external Matrix links, hide the network log and choose a theme.
+* Added: Persist settings to localStorage
+* For developers: Migrated from htm to React
+* For developers: Migrated all components from *.js to *.tsx
+
 ## v0.13.0 (2024-06-13)
 *Happy birthday, April and Matrix Wrench!*
 
 * Added: Green dark mode (based on browser preference)
 * Changed: Moved "AppService API" to the Overview
-* Changed: It now uses Bun to bundle and minify the JavaScript
+* For developers: Use Bun.sh to bundle and minify the JavaScript
 
 ## v0.12.0 (2023-09-23)
 * Added: The room "Summary" gives you a bit of an insight into a room's state.

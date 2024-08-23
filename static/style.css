@@ -10,8 +10,9 @@
     --main-text-color: #121212;
     --header-bg-color: #eee;
     --primary-btn-bg-color: #6716ec;
-    --primary-btn-border-color: #6716ec;
     --primary-btn-bg-hover-color: #915ae8;
+    --primary-btn-border-color: #6716ec;
+    --primary-btn-text-color: #fff;
     --input-bg-color: #fff;
     --input-label-color: darkblue;
     --input-border-color: #000;
@@ -21,29 +22,28 @@
     --link-color: #66b3ff;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --btn-bg-color: #e9e9ed;
-        --btn-bg-hover-color: #c9c9cb;
-        --btn-text-color: #000;
-        --btn-border-color: #000;
-        --main-bg-color: #141A13;
-        --main-bg-hover-color: #1c261b;
-        --main-bg-hover-hover-color: #273525;
-        --main-border-color: grey;
-        --main-text-color: #cdc;
-        --header-bg-color: #1c261b;
-        --primary-btn-bg-color: #642eba;
-        --primary-btn-border-color: #854be0;
-        --primary-btn-bg-hover-color: #311067;
-        --input-bg-color: #000;
-        --input-label-color: lightblue;
-        --input-border-color: #888;
-        --input-text-color: #fff;
-        --input-required-color: darkred;
-        --input-error-color: #000;
-        --link-color: #66b3ff;
-    }
+[data-theme="dark"] {
+    --btn-bg-color: #e9e9ed;
+    --btn-bg-hover-color: #c9c9cb;
+    --btn-text-color: #000;
+    --btn-border-color: #000;
+    --main-bg-color: #141A13;
+    --main-bg-hover-color: #1c261b;
+    --main-bg-hover-hover-color: #273525;
+    --main-border-color: grey;
+    --main-text-color: #cdc;
+    --header-bg-color: #1c261b;
+    --primary-btn-bg-color: #642eba;
+    --primary-btn-bg-hover-color: #311067;
+    --primary-btn-border-color: #854be0;
+    --primary-btn-text-color: #fff;
+    --input-bg-color: #000;
+    --input-label-color: lightblue;
+    --input-border-color: #888;
+    --input-text-color: #fff;
+    --input-required-color: darkred;
+    --input-error-color: #000;
+    --link-color: #66b3ff;
 }
 
 /* :root body.black {
@@ -225,6 +225,8 @@ a.button:hover {
 }
 
 .app-header_nav {
+    display: flex;
+    flex-direction: column;
     height: 50px;
 }
 

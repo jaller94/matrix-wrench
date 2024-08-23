@@ -2,6 +2,7 @@ import React, {
     createContext,
     FC,
     FormEventHandler,
+    KeyboardEventHandler,
     MouseEventHandler,
     PropsWithChildren,
     useCallback,
@@ -94,10 +95,12 @@ export const Settings = createContext<{
     externalMatrixUrl: string,
     identities: Identity[],
     showNetworkLog: boolean,
+    theme: string,
 }>({
     externalMatrixUrl: 'https://matrix.to/#/',
     identities: [],
     showNetworkLog: true,
+    theme: 'auto',
 });
 
 // function Header() {
@@ -694,6 +697,12 @@ const SettingsProvider: FC<PropsWithChildren> = ({children}) => {
                 showNetworkLog,
             }));
         },
+        setTheme: (theme: string) => {
+            setState(state => ({
+                ...state,
+                theme,
+            }));
+        },
     });
 
     return (
@@ -838,11 +847,13 @@ const MainPage: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) 
         >{identity.name ?? 'No authentication'}</AppHeader>
         <div style={{display: 'flex', flexDirection: 'column'}}>
             {identity.accessToken ? (<>
-                <div className="card">
-                    <WhoAmI identity={identity}/>
-                </div>
-                <div className="card">
-                    <IdentityNav identity={identity}/>
+                <div  style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>
+                    <div className="card">
+                        <WhoAmI identity={identity}/>
+                    </div>
+                    <div className="card">
+                        <IdentityNav identity={identity}/>
+                    </div>
                 </div>
                 <RoomSelector identity={identity} roomId={roomId}/>
             </>) : (
@@ -1277,29 +1288,50 @@ function SettingsPage() {
     const {
         externalMatrixUrl, setExternalMatrixUrl,
         showNetworkLog, setShowNetworkLog,
+        theme, setTheme,
     } = useContext(Settings);
+
+    const ignoreSubmit: FormEventHandler<HTMLFormElement> = useCallback((event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    }, []);
 
     return <>
         <AppHeader
             backUrl="#"
         >Settings</AppHeader>
         <main>
-            <form>
+            <form onSubmit={ignoreSubmit}>
                 <HighUpLabelInput
+                    label="Prefix for external Matrix links"
                     name="external_matrix_links"
-                    label="External Matrix links"
                     value={externalMatrixUrl}
                     onInput={useCallback(({target}) => setExternalMatrixUrl(target.value), [setExternalMatrixUrl])}
                 />
                 <ul className="checkbox-list">
                     <li><label>
                         <input
+                            name="show_network_log"
                             checked={showNetworkLog}
                             type="checkbox"
                             onChange={useCallback(({target}) => setShowNetworkLog(target.checked), [setShowNetworkLog])}
                         />
                         Show network log
                     </label></li>
+                </ul>
+                <h3>Theme</h3>
+                <ul className="checkbox-list">
+                    {['auto', 'light', 'dark'].map(themeKey => (
+                        <li key={themeKey}><label>
+                            <input
+                                checked={themeKey === theme}
+                                name="theme"
+                                type="radio"
+                                onChange={useCallback(() => setTheme(themeKey), [setTheme])}
+                            />
+                            {themeKey}
+                        </label></li>
+                    ))}
                 </ul>
             </form>
         </main>
@@ -1397,7 +1429,9 @@ function getUnchangeableEventTypes(powerLevelsContent, powerLevel) {
     return unchangableEventTypes.length === 0 ? undefined : unchangableEventTypes;
 }
 
-function RoomSummary({identity, stateEvents}) {
+const RoomSummary: FC<{ identity: Identity, stateEvents: object[] }> = ({identity, stateEvents}) => {
+    const name = stateEvents.find(e => e.type === 'm.room.name' && e.state_key === '')?.content?.['name'];
+    const avatar = stateEvents.find(e => e.type === 'm.room.avatar' && e.state_key === '')?.content?.['url'];
     const doesFederate = stateEvents.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.['m.federate'] ?? true;
     const powerLevelsContent = stateEvents.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
     const encryptionAlgorithm = stateEvents.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content?.algorithm;
@@ -1412,6 +1446,8 @@ function RoomSummary({identity, stateEvents}) {
     const unchangableEventTypes = getUnchangeableEventTypes(powerLevelsContent, highestPowerLevel);
     return (
         <ul>
+            {name ? <li>This room is called <q>{name}</q>.</li> : <li>This room has no name.</li>}
+            {avatar ? <li>This room&apos;s avatar is <q>{avatar}</q>.</li> : <li>This room has no avatar.</li>}
             <li>This room does {doesFederate === false && <strong>NOT</strong>}federate.</li>
             {roomVersion && <li>The room version is {roomVersion}.</li>}
             {predecessorRoom && <li>This room replaced <RoomLink identity={identity} roomId={predecessorRoom}/>.</li>}
@@ -1912,7 +1948,7 @@ function Shortcuts({identity}) {
     };
 
     useEffect(() => {
-        const handleKeyDown = event => {
+        const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'P') {
                 event.preventDefault();
                 event.stopPropagation();
@@ -1933,6 +1969,34 @@ function Shortcuts({identity}) {
         type="button"
         onClick={handleClick}
     >Navigate to overview</button>;
+}
+
+function ThemeSetter() {
+    const { theme } = useContext(Settings);
+
+    useEffect(() => {
+        const html = document.querySelector('html');
+        if (!html) {
+            return;
+        }
+        if (theme === 'light') {
+            html.setAttribute('data-theme', 'light');
+        } else if (theme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+        } else {
+            const systemSettingDark = window.matchMedia('(prefers-color-scheme: dark)');
+            html.setAttribute('data-theme', systemSettingDark.matches ? 'dark' : 'light');
+
+            // Listen to changes of the browser setting
+            const autoChange = (event: MediaQueryListEvent) => {
+                html.setAttribute('data-theme', event.matches ? 'dark' : 'light');
+            }
+            systemSettingDark.addEventListener('change', autoChange);
+            return () => {
+                systemSettingDark.removeEventListener('change', autoChange);
+            }
+        }
+    }, [theme]);
 }
 
 export function App() {
@@ -2045,6 +2109,7 @@ export function App() {
 
     return <>
         <SettingsProvider>
+            <ThemeSetter />
             <NetworkRequestsProvider>
                 {child}
             </NetworkRequestsProvider>
