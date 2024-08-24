@@ -15,12 +15,10 @@ function RegExpToggleButton({...props}) {
     );
 }
 
-type ListWithSearchProps = {
-    items: unknown[],
-};
-
-export const ListWithSearch: FC<ListWithSearchProps> = ({items: originalItems = []}) => {
-    const [items, setItems] = useState<unknown[]>(originalItems);
+export const ListWithSearch: FC<{
+    items: object[],
+}> = ({items: originalItems = []}) => {
+    const [items, setItems] = useState<object[]>(originalItems);
     const [searchTerm, setSearchTerm] = useState('');
     const [isRegExp, setIsRegExp] = useState(false);
 

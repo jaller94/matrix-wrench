@@ -33,6 +33,7 @@ export const AppHeader: FC<AppHeaderProps> = ({backLabel = 'Back', backUrl, chil
             <h1 className="app-header_label">{children}</h1>
             <nav className="app-header_nav">
                 <a href="#about">About</a>
+                <a href="#settings">Settings</a>
             </nav>
         </header>
     );

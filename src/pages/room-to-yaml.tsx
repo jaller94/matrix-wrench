@@ -19,7 +19,7 @@ async function roomToYaml(identity: Identity, roomId: string) {
         historyVisibility?: string,
         children?: Record<string, unknown>[],
     } = {
-        room_id: roomId,
+        roomId,
     };
     try {
         const state = await getState(identity, roomId);

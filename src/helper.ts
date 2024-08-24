@@ -24,7 +24,7 @@ export function classnames(...arr: (string | Record<string, boolean>)[]): string
  * Takes a string and fills placeholders with variables values.
  * e.g. "I like !{softwareProject}." could become "I like Matrix."
  */
-export function fillInVariables(template: string, variables: Record<string, string>): string {
+export function fillInVariables(template: string, variables: Record<string, string> = {}): string {
     let result = template;
     let match;
     while ((match = result.match(variablePattern))) {

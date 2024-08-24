@@ -23,7 +23,7 @@ type CustomButtonProp = {
     method: string,
     requiresConfirmation?: boolean,
     url: string,
-    variables: Record<string, string>,
+    variables?: Record<string, string>,
 };
 
 export const CustomButton: FC<CustomButtonProp> = ({ body, identity, label, method, requiresConfirmation = false, url, variables }) => {
@@ -61,7 +61,7 @@ type CustomFormProp = PropsWithChildren & {
     method: string,
     requiresConfirmation?: boolean,
     url: string,
-    variables: Record<string, string>,
+    variables?: Record<string, string>,
 };
 export const CustomForm: FC<CustomFormProp> = ({ body, children, identity, method, requiresConfirmation, url, variables, ...props }) => {
     const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {

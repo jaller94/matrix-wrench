@@ -1,4 +1,9 @@
 import {
+    describe,
+    expect,
+    test,
+} from 'bun:test';
+import {
     classnames,
     fillInVariables,
     uniqueId,
@@ -26,6 +31,9 @@ describe('classnames', () => {
 });
 
 describe('fillInVariables', () => {
+    test('returns a string when there are no variables', () => {
+        expect(fillInVariables('test')).toBe('test');
+    });
     test('returns a string without placeholders unchanged', () => {
         expect(fillInVariables('test', {})).toBe('test');
     });

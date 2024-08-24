@@ -6,6 +6,7 @@ export function OverviewPages({ identity, filterString }) {
         { url: `#/${encodeURIComponent(identity.name)}/contact-list`, name: 'Your contacts' },
         // { url: `#/${encodeURIComponent(identity.name)}/user-inspector`, name: 'User inspector' },
         { url: `#/${encodeURIComponent(identity.name)}/appservice`, name: 'AppService API' },
+        { url: `#/${encodeURIComponent(identity.name)}/mass-joiner`, name: 'Mass Joiner (AppService API)' },
         // { url: `#/${encodeURIComponent(identity.name)}/polychat`, name: 'Polychat' },
     ], [identity]);
 

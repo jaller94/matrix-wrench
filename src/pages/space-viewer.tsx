@@ -7,7 +7,7 @@ import {
     yieldHierachy,
 } from '../matrix.js';
 
-function populateRoomChildren(root, rooms) {
+function populateRoomChildren(root: object, rooms: object[]) {
     for (const roomInfo of root.childrenInfo) {
         const room = rooms.find(r => r.id === roomInfo.id) ?? roomInfo;
         root.children = root.children ?? [];
@@ -100,7 +100,7 @@ type SpaceManagementStatePageProps = {
  * Unused alternative to SpaceManagementPage using a room state query.
  */
 export const SpaceManagementStatePage: FC<SpaceManagementStatePageProps> = ({identity, roomId}) => {
-    const [rooms, setRooms] = useState<unknown[] | null>(null);
+    const [rooms, setRooms] = useState<object[] | null>(null);
 
     const handleQuery = useCallback(async() => {
         const state = await getState(identity, roomId);

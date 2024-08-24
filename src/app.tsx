@@ -86,10 +86,24 @@ try {
     console.warn('No identities loaded from localStorage.', error);
 }
 
+try {
+    const settings = JSON.parse(localStorage.getItem('settings'));
+    if (!Array.isArray(identities)) {
+        throw Error(`Expected an array, got ${typeof identities}`);
+    }
+    IDENTITIES = identities.map(identity => ({
+        ...identity,
+        rememberLogin: true,
+    }));
+} catch (error) {
+    console.warn('No settings loaded from localStorage.', error);
+}
+
 const NetworkRequests = createContext({
     isShortened: false,
     requests: [],
     rememberLogin: false,
+    theme: 'auto',
 });
 export const Settings = createContext<{
     externalMatrixUrl: string,
@@ -1728,7 +1742,7 @@ function StateExplorer({identity, roomId}) {
     </>;
 }
 
-function MemberList({members}) {
+const MemberList: FC<{ members: object[] }> = ({members}) => {
     if (members.length === 0) {
         return <p>There's no one in this list.</p>;
     }
@@ -1741,7 +1755,7 @@ function MemberList({members}) {
     );
 }
 
-function MediaList({list}) {
+const MediaList: FC<{ list: string[] }> = ({list}) => {
     if (list.length === 0) {
         return <p>There's no media in this list.</p>;
     }
@@ -1754,7 +1768,7 @@ function MediaList({list}) {
     );
 }
 
-function memberEventsToGroups(memberEvents) {
+function memberEventsToGroups(memberEvents: object[]) {
     if (!Array.isArray(memberEvents)) {
         return null;
     }
@@ -1774,7 +1788,7 @@ function memberEventsToGroups(memberEvents) {
     return membersByMembership;
 }
 
-function MembersExplorer({identity, roomId}) {
+const MembersExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
     const [members, setMembers] = useState<null | Record<string, string>[]>(null);
 
@@ -1782,7 +1796,7 @@ function MembersExplorer({identity, roomId}) {
         setMembers(null);
     }, [roomId]);
 
-    const handleGet = useCallback(async event => {
+    const handleGet: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -1828,11 +1842,11 @@ function MembersExplorer({identity, roomId}) {
     </>;
 }
 
-function MediaExplorer({identity, roomId}) {
+const MediaExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
     const [media, setMedia] = useState(null);
 
-    const handleGet = useCallback(async event => {
+    const handleGet: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -1863,7 +1877,7 @@ function MediaExplorer({identity, roomId}) {
     </>;
 }
 
-function IdentityProvider({render, identityName}) {
+const IdentityProvider: FC = ({render, identityName}) => {
     const { identities } = useContext(Settings);
     const identity = identities.find(ident => ident.name === identityName);
     if (!identity) {
@@ -1877,14 +1891,14 @@ function IdentityProvider({render, identityName}) {
     return render(identity);
 }
 
-function BulkInvitePage({identity, roomId}) {
-    const [userIds, setUserIds] = useState(null);
+const BulkInvitePage: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
+    const [userIds, setUserIds] = useState<string[] | null>(null);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(({userIds}) => {
+    const handleSubmit = useCallback(({userIds}: {userIds: string[]}) => {
         setUserIds(userIds);
     }, []);
 
-    const action = useCallback(async userId => {
+    const action = useCallback(async (userId: string) => {
         return inviteUser(identity, roomId, userId);
     }, [identity, roomId])
 
@@ -1904,10 +1918,10 @@ function BulkInvitePage({identity, roomId}) {
     </>;
 }
 
-function BulkKickPage({identity, roomId}) {
-    const [userIds, setUserIds] = useState(null);
+const BulkKickPage: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
+    const [userIds, setUserIds] = useState<string[] | null>(null);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(({userIds}) => {
+    const handleSubmit = useCallback(({userIds}: {userIds: string[]}) => {
         setUserIds(userIds);
     }, []);
 
@@ -2048,6 +2062,10 @@ export function App() {
                             />;
                         } else if (matchRoomPage.groups.roomId === 'contact-list') {
                             return <ContactListPage
+                                identity={identity}
+                            />;
+                        } else if (matchRoomPage.groups.roomId === 'mass-joiner') {
+                            return <MassJoinerPage
                                 identity={identity}
                             />;
                         } else if (matchRoomPage.groups.roomId === 'overview') {
