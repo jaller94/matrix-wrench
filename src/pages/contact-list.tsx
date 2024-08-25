@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { FC, MouseEventHandler, useCallback, useMemo, useState } from 'react';
 import { AppHeader } from '../components/header';
 import { RoomListFilterer } from '../components/table';
-import { NetworkLog } from '../app';
+import { Identity, NetworkLog } from '../app';
 
 import {
     getAccountData,
@@ -9,7 +9,7 @@ import {
     getJoinedRooms,
 } from '../matrix';
 
-async function *stats(identity) {
+async function *stats(identity: Identity) {
     const mDirectContent = await getAccountData(identity, null, 'm.direct');
     const contactUserIds = Object.keys(mDirectContent);
     let rows = contactUserIds.map(userId => ({userId}));
@@ -45,14 +45,14 @@ async function *stats(identity) {
     }
 }
 
-export const ContactListPage = ({identity}) => {
+export const ContactListPage: FC<{ identity: Identity }> = ({identity}) => {
     const [busy, setBusy] = useState(false);
-    const [data, setData] = useState([]);
-    const [progressValue, setProgressValue] = useState(undefined);
-    const [progressMax, setProgressMax] = useState(undefined);
+    const [data, setData] = useState<object[]>([]);
+    const [progressValue, setProgressValue] = useState<number | undefined>(undefined);
+    const [progressMax, setProgressMax] = useState<number | undefined>(undefined);
     const [text, setText] = useState('');
 
-    const handleClick = useCallback(async(event) => {
+    const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);

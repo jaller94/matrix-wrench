@@ -20,7 +20,7 @@ export default function AboutPage() {
         </p>
         <h2>Identities</h2>
         <p>
-            You can manage multiple logins to various homeservers. An identity is a combination of a homeserver URL and an access token. The identity name is only used for identification within Matrix Wrench.
+            You can manage multiple logins to various homeservers. An identity is a combination of a homeserver URL and an access token. The identity is only used for identification within Matrix Wrench.
         </p>
         <h2>Privacy and Security</h2>
         <p>

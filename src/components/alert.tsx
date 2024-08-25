@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-export function Alert({open, title, onClose}) {
-    const ref = useRef();
+export const Alert: FC<{ open: boolean, title: string, onClose: (open: boolean) => void }> = ({open, title, onClose}) => {
+    const ref = useRef<HTMLDialogElement | null>(null);
 
     useEffect(() => {
         if (open) {
@@ -39,7 +39,7 @@ export function AlertSingleton() {
     const [title, setTitle] = useState('');
 
     useEffect(() => {
-        const handleConfirmDialog = event => {
+        const handleConfirmDialog = (event: Event) => {
             setTitle(event.detail.title);
             setOpen(true);
         }
@@ -49,7 +49,7 @@ export function AlertSingleton() {
         };
     }, []);
     
-    const handleClose = (response) => {
+    const handleClose = (response: boolean) => {
         setOpen(false);
         window.dispatchEvent(new CustomEvent('confirmed', {
             detail: {
@@ -67,13 +67,13 @@ export function AlertSingleton() {
     );
 }
 
-export const confirm = (title) => new Promise((resolve) => {
+export const confirm = (title: string) => new Promise((resolve) => {
     window.dispatchEvent(new CustomEvent('confirm', {
         detail: {
             title,
         },
     }));
-    const handleClose = async (event) => {
+    const handleClose = async (event: Event) => {
         resolve(event.detail.response);
     }
      

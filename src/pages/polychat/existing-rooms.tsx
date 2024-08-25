@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { MouseEventHandler, useCallback, useState } from 'react';
 
 import {
     getJoinedRooms, getState,
@@ -12,11 +12,11 @@ const PolychatStateEventType = {
 
 export function PolychatExistingRooms({ identity }) {
     const [busy, setBusy] = useState(false);
-    const [error, setError] = useState();
-    const [mainRooms, setMainRooms] = useState();
-    const [unclaimedSubRooms, setUnclaimedSubRooms] = useState();
+    const [error, setError] = useState<string | undefined>();
+    const [mainRooms, setMainRooms] = useState<object[] | undefined>();
+    const [unclaimedSubRooms, setUnclaimedSubRooms] = useState<object[] | undefined>();
 
-    const handleFetch = useCallback(async (event) => {
+    const handleFetch: MouseEventHandler<HTMLButtonElement> = useCallback(async (event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);

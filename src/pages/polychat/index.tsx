@@ -1,6 +1,6 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { ChangeEventHandler, FC, MouseEventHandler, useCallback, useContext, useState } from 'react';
 import { AppHeader } from '../../components/header';
-import { NetworkLog, Settings } from '../../app';
+import { Identity, NetworkLog } from '../../app';
 
 import {
     createRoom,
@@ -8,21 +8,22 @@ import {
 import { HighUpLabelInput } from '../../components/inputs';
 import { RoomLink } from '../../components/room-link';
 import { PolychatExistingRooms } from './existing-rooms';
+import { Settings } from '../settings';
 
 export const PolychatStateEventType = {
     room: 'de.polychat.room',
     participant: 'de.polychat.room.participant',
 };
 
-export const PolychatPage = ({ identity }) => {
+export const PolychatPage: FC<{ identity: Identity }> = ({ identity }) => {
     const { externalMatrixUrl } = useContext(Settings);
     const [busy, setBusy] = useState(false);
     const [mainRoomId, setMainRoomId] = useState('');
     const [subRoomId, setSubRoomId] = useState('');
     const [network, setNetwork] = useState('');
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleCreateMainRoom = useCallback(async (event) => {
+    const handleCreateMainRoom: MouseEventHandler<HTMLButtonElement> = useCallback(async (event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -48,7 +49,7 @@ export const PolychatPage = ({ identity }) => {
         }
     }, [identity, network]);
 
-    const handleCreateSubRoom = useCallback(async (event) => {
+    const handleCreateSubRoom: MouseEventHandler<HTMLButtonElement> = useCallback(async (event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -75,7 +76,7 @@ export const PolychatPage = ({ identity }) => {
     }, [identity, network]);
 
 
-    const handleNetworkChange = useCallback(async (event) => {
+    const handleNetworkChange: ChangeEventHandler<HTMLInputElement> = useCallback(async (event) => {
         setNetwork(event.target.value);
     }, []);
 

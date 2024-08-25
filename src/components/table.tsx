@@ -1,7 +1,7 @@
 import React, { FC, ReactElement, useCallback, useMemo, useState } from 'react';
 
 type Direction = 'ascending' | 'descending';
-
+type Filter = [string, string];
 type SortBys = [key: string, direction: Direction][];
 
 export function sortSymbol(direction: Direction | undefined): string {
@@ -13,7 +13,7 @@ export function sortSymbol(direction: Direction | undefined): string {
     return '';
 }
 
-function printValue(accessor: string, row): unknown | undefined {
+function printValue(accessor: string, row: unknown): unknown | undefined {
     if (accessor.endsWith('.length')) {
         return row[accessor.slice(0, -7)]?.length;
     } else if (accessor.endsWith('[,]')) {
@@ -21,6 +21,7 @@ function printValue(accessor: string, row): unknown | undefined {
     }
     return row[accessor];
 }
+
 
 type TableHeadProps = {
     propertyName: string,
@@ -46,6 +47,7 @@ type RoomListTableProps = {
     data: Record<string, unknown>[],
     primaryAccessor: string,
     sortBys: SortBys,
+    onFilters: (filters: Filter[]) => void,
     onSortBys: (sortBys: SortBys) => void,
 };
 
@@ -111,7 +113,7 @@ export const RoomListSorter: FC<RoomListSorterProps> = ({ data, ...props }) => {
 }
 
 export const RoomListFilterer = ({ data, ...props }) => {
-    const [filters, setFilters] = useState([]);
+    const [filters, setFilters] = useState<Filter[]>([]);
     const processedData = useMemo(() => {
         return data.filter((row) => filters.every(filter => row[filter[0]].includes(filter[1])));
     }, [data, filters]);

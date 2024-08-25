@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import {
     uniqueId,
 } from '../helper.ts';
@@ -32,10 +32,14 @@ export function BulkActionForm({actionLabel, onSubmit}) {
     );
 }
 
-export function BulkActionTracker({action, items}) {
-    const [currentItem, setCurrentItem] = useState(null);
+export const BulkActionTracker: FC<{ action: (item: unknown) => Promise<void>, items: unknown[] }> = ({action, items}) => {
+    const [currentItem, setCurrentItem] = useState<unknown | null>(null);
     const [progress, setProgress] = useState(0);
-    const [errors, setErrors] = useState([]);
+    const [errors, setErrors] = useState<{
+        id: string,
+        item: unknown,
+        message: string,
+    }[]>([]);
     // const [pendingItems, setPendingItems] = useState(items);
     const [allItems, setAllItems] = useState(items);
 

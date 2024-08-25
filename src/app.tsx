@@ -2,9 +2,9 @@ import React, {
     createContext,
     FC,
     FormEventHandler,
-    KeyboardEventHandler,
     MouseEventHandler,
     PropsWithChildren,
+    ReactNode,
     useCallback,
     useContext,
     useEffect,
@@ -61,6 +61,7 @@ import {
 import {
     loginWithPassword,
 } from './matrix-auth';
+import { Settings, SettingsPage, SettingsProvider, ThemeSetter } from './pages/settings.tsx';
 
 const NETWORKLOG_MAX_ENTRIES = 500;
 
@@ -72,62 +73,10 @@ export type Identity = {
     serverAddress: string,
 };
 
-let IDENTITIES: Identity[] = [];
-try {
-    const identities = JSON.parse(localStorage.getItem('identities'));
-    if (!Array.isArray(identities)) {
-        throw Error(`Expected an array, got ${typeof identities}`);
-    }
-    IDENTITIES = identities.map(identity => ({
-        ...identity,
-        rememberLogin: true,
-    }));
-} catch (error) {
-    console.warn('No identities loaded from localStorage.', error);
-}
-
-try {
-    const settings = JSON.parse(localStorage.getItem('settings'));
-    if (!Array.isArray(identities)) {
-        throw Error(`Expected an array, got ${typeof identities}`);
-    }
-    IDENTITIES = identities.map(identity => ({
-        ...identity,
-        rememberLogin: true,
-    }));
-} catch (error) {
-    console.warn('No settings loaded from localStorage.', error);
-}
-
 const NetworkRequests = createContext({
     isShortened: false,
     requests: [],
-    rememberLogin: false,
-    theme: 'auto',
 });
-export const Settings = createContext<{
-    externalMatrixUrl: string,
-    identities: Identity[],
-    showNetworkLog: boolean,
-    theme: string,
-}>({
-    externalMatrixUrl: 'https://matrix.to/#/',
-    identities: [],
-    showNetworkLog: true,
-    theme: 'auto',
-});
-
-// function Header() {
-//     return (
-//         <header>
-//             <nav>
-//                 <button type="button">Network Log</button>
-//                 <button type="button">Settings</button>
-//                 <button type="button">About</button>
-//             </nav>
-//         </header>
-//     );
-// }
 
 const knockingBody = {};
 
@@ -218,7 +167,7 @@ const MakeRoomAdminForm: FC<{identity: Identity, roomId: string}> = ({ identity,
 
 const WhoAmI: FC<{identity: Identity}> = ({identity}) => {
     const [busy, setBusy] = useState(false);
-    const [info, setInfo] = useState(null);
+    const [info, setInfo] = useState<{ device_id: string, user_id: string } | null>(null);
 
     const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
@@ -349,14 +298,14 @@ const PasswordInput: FC<{serverAddress: string, onAccessToken: (token: string) =
 
 const IdentityEditorPage: FC<{identityName: string}> = ({identityName}) => {
     const {identities, setIdentities} = useContext(Settings);
-    const [editingError, setEditingError] = useState(null);
+    const [editingError, setEditingError] = useState<string | undefined>();
 
     const editedIdentity = useMemo(() => {
         return identities.find(ident => ident.name === identityName) ?? {}
     }, [identities, identityName]);
 
-    const handleSave = useCallback((identity) => {
-        setEditingError(null);
+    const handleSave = useCallback((identity: Identity) => {
+        setEditingError(undefined);
         setIdentities(identities => {
             const newIdentities = [...identities];
             if (!identity.name) {
@@ -384,7 +333,7 @@ const IdentityEditorPage: FC<{identityName: string}> = ({identityName}) => {
                     console.warn('Failed to store identities in localStorage', error);
                 }
             }
-            setEditingError(null);
+            setEditingError(undefined);
             window.location = '#';
             return newIdentities;
         });
@@ -397,7 +346,7 @@ const IdentityEditorPage: FC<{identityName: string}> = ({identityName}) => {
     />;
 }
 
-const IdentityEditor: FC<{error: string, identity: Identity, onSave: (identity: Identity) => void}> = ({error, identity, onSave}) => {
+const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity: Identity) => void}> = ({error, identity, onSave}) => {
     const [name, setName] = useState(identity.name ?? '');
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
@@ -405,7 +354,7 @@ const IdentityEditor: FC<{error: string, identity: Identity, onSave: (identity: 
     const [authType, setAuthType] = useState('accessToken');
     const [rememberLogin, setRememberLogin] = useState(identity.rememberLogin ?? false);
 
-    const handleReceivedAccessToken = useCallback((accessToken) => {
+    const handleReceivedAccessToken = useCallback((accessToken: string) => {
         setAccessToken(accessToken);
         setAuthType('accessToken');
     }, []);
@@ -448,7 +397,7 @@ const IdentityEditor: FC<{error: string, identity: Identity, onSave: (identity: 
                     onInput={useCallback(({target}) => setName(target.value), [])}
                 />
             </div>
-            {name.includes('/') && <p>The identity name must not include a slash character (/).</p>}
+            {name.includes('/') && <p>The name must not include a slash character (/).</p>}
             <div>
                 <HighUpLabelInput
                     label="Server address (e.g. https://matrix-client.matrix.org)"
@@ -535,14 +484,14 @@ const IdentityEditor: FC<{error: string, identity: Identity, onSave: (identity: 
     </>;
 }
 
-function ResponseStatus({invalid, status}) {
+const ResponseStatus: FC<{ invalid: boolean, status: number }> = ({invalid, status}) => {
     let label = '...';
     let title = 'Fetching data…';
     if (status === null) {
         label = 'NET';
         title = 'Network error';
     } else if (status) {
-        label = status;
+        label = status.toString();
         title = `HTTP ${status}`;
     }
     if (invalid) {
@@ -566,7 +515,7 @@ function ResponseStatus({invalid, status}) {
     );
 }
 
-function NetworkLogRequest({request}) {
+const NetworkLogRequest: FC<{ request: object }> = ({request}) => {
     return (
         <li value={request.id}><details>
             <summary>
@@ -609,8 +558,7 @@ const NetworkRequestsProvider: FC<PropsWithChildren> = ({children}) => {
     });
 
     useEffect(() => {
-        console.log(1);
-        const handleMatrixRequest = (event) => {
+        const handleMatrixRequest = (event: Event) => {
             setState(state => {
                 return {
                     ...state,
@@ -628,7 +576,7 @@ const NetworkRequestsProvider: FC<PropsWithChildren> = ({children}) => {
             });
         };
 
-        const handleMatrixResponse = (event) => {
+        const handleMatrixResponse = (event: Event) => {
             setState(state => {
                 const index = state.requests.findIndex(r => r.id === event.detail.requestId);
                 if (index === -1) {
@@ -667,7 +615,7 @@ const NetworkRequestsProvider: FC<PropsWithChildren> = ({children}) => {
     );
 };
 
-export function NetworkLog() {
+export const NetworkLog: FC = () => {
     const { showNetworkLog } = useContext(Settings);
     const {isShortened, requests} = useContext(NetworkRequests);
     if (!showNetworkLog) {
@@ -688,45 +636,7 @@ export function NetworkLog() {
     </>;
 }
 
-const SettingsProvider: FC<PropsWithChildren> = ({children}) => {
-    const [state, setState] = useState({
-        externalMatrixUrl: 'https://matrix.to/#/',
-        identities: IDENTITIES,
-        showNetworkLog: true,
-        setExternalUrl: (externalMatrixUrl: string) => {
-            setState(state => ({
-                ...state,
-                externalMatrixUrl,
-            }));
-        },
-        setIdentities: (callback: (identities: Identity[]) => Identity[]) => {
-            setState(state => ({
-                ...state,
-                identities: callback(state.identities),
-            }));
-        },
-        setShowNetworkLog: (showNetworkLog: boolean) => {
-            setState(state => ({
-                ...state,
-                showNetworkLog,
-            }));
-        },
-        setTheme: (theme: string) => {
-            setState(state => ({
-                ...state,
-                theme,
-            }));
-        },
-    });
-
-    return (
-        <Settings.Provider value={state}>
-            {children}
-        </Settings.Provider>
-    );
-};
-
-function IdentitySelectorRow({identity, onDelete}) {
+const IdentitySelectorRow: FC<{ identity: Identity, onDelete: (identity: Identity) => void }> = ({identity, onDelete}) => {
     return <li>
         <a
             className="identity-page_name"
@@ -798,17 +708,6 @@ const AliasResolver: FC<{identity: Identity}> = ({identity}) => {
             }}>{roomId || 'N/A'}</code>
         </div>
     </>;
-}
-
-function saveIdentitiesToLocalStorage(identities: Identity[]) {
-    if (!localStorage) return;
-    // Filter out identities where the user said to not remember them.
-    const identitiesToStore = identities.filter(identity => identity.rememberLogin).map(identity => {
-        const copyOfIdentity = {...identity};
-        delete copyOfIdentity.rememberLogin;
-        return copyOfIdentity;
-    });
-    localStorage.setItem('identities', JSON.stringify(identitiesToStore));
 }
 
 const IdentityNav: FC<{identity: Identity}> = ({identity}) => {
@@ -904,7 +803,7 @@ function IdentitySelectorPage() {
             {identities.length === 0 ? (
                 <p>
                     Hi there! Need to tweak some Matrix rooms?<br/>
-                    First, you need to add an identity. An identity is a combination of a homeserver URL and an access token.<br/>
+                    First, add an identity. An identity is a combination of a homeserver URL and an access token.<br/>
                     Wrench can handle multiple identities. It assumes that identities are sensitive, so they aren't stored by default.
                 </p>
             ) : (<>
@@ -923,7 +822,7 @@ const RoomList: FC<{roomIds: string[], onSelectRoom?: (roomId: string) => void}>
     const handleSelectRoom: FormEventHandler = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
-        onSelectRoom(event.target.dataset.roomId);
+        onSelectRoom?.(event.target.dataset.roomId);
     }, [onSelectRoom]);
 
     if (roomIds.length === 0) {
@@ -954,7 +853,7 @@ const RoomList: FC<{roomIds: string[], onSelectRoom?: (roomId: string) => void}>
     );
 }
 
-function JoinedRoomList({identity, onSelectRoom}) {
+const JoinedRoomList: FC<{identity: Identity, onSelectRoom?: (roomId: string) => void}> = ({identity, onSelectRoom}) => {
     const [roomIds, setRoomIds] = useState<string[] | null>(null);
     const [busy, setBusy] = useState(false);
 
@@ -1040,6 +939,8 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
         window.location = `#/${encodeURIComponent(identity.name)}`;
     }, [identity.name]);
 
+    const handleRoomInput = useCallback(({target}) => setRoom(target.value), []);
+
     if (roomId) {
         return <>
             <hr/>
@@ -1058,7 +959,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
                     pattern="[!#].+:.+"
                     required
                     value={room}
-                    onInput={({target}) => setRoom(target.value)}
+                    onInput={handleRoomInput}
                 />
                 <button
                     disabled={!room.startsWith('#')}
@@ -1112,8 +1013,8 @@ async function deleteRoom(identity: Identity, roomId: string, body = {}) {
 
 const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity, roomId }) => {
     const [busy, setBusy] = useState(false);
-    const [progress, setProgress] = useState(undefined);
-    const [total, setTotal] = useState(undefined);
+    const [progress, setProgress] = useState<number | undefined>(undefined);
+    const [total, setTotal] = useState<number | undefined>(undefined);
 
     const [block, setBlock] = useState(false);
     const [purge, setPurge] = useState(true);
@@ -1125,7 +1026,7 @@ const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity
         event.stopPropagation();
     }, []);
 
-    const handleBusy = useCallback(newBusy => {
+    const handleBusy = useCallback((newBusy: boolean) => {
         if (!newBusy) {
             setProgress(undefined);
         }
@@ -1200,7 +1101,14 @@ const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity
     </>;
 }
 
-function DeleteSpaceRecursivelyButton({ body, identity, roomId, onBusy, onProgress, onTotal }) {
+const DeleteSpaceRecursivelyButton: FC<{
+    body?: object,
+    identity: Identity,
+    roomId: string,
+    onBusy: (busy: boolean) => void,
+    onProgress: (value: number) => void,
+    onTotal: (value: number) => void,
+}> = ({ body, identity, roomId, onBusy, onProgress, onTotal }) => {
     const handlePress = useCallback(async() => {
         onBusy(true);
         try {
@@ -1233,7 +1141,7 @@ function DeleteSpaceRecursivelyButton({ body, identity, roomId, onBusy, onProgre
     );
 }
 
-function RoomPage({identity, roomId}) {
+const RoomPage: FC<{ identity: Identity, roomId: string}> = ({identity, roomId}) => {
     return <>
         <h2>{roomId}</h2>
         <div className="page">
@@ -1298,62 +1206,7 @@ function RoomPage({identity, roomId}) {
     </>;
 }
 
-function SettingsPage() {
-    const {
-        externalMatrixUrl, setExternalMatrixUrl,
-        showNetworkLog, setShowNetworkLog,
-        theme, setTheme,
-    } = useContext(Settings);
-
-    const ignoreSubmit: FormEventHandler<HTMLFormElement> = useCallback((event) => {
-        event.preventDefault();
-        event.stopPropagation();
-    }, []);
-
-    return <>
-        <AppHeader
-            backUrl="#"
-        >Settings</AppHeader>
-        <main>
-            <form onSubmit={ignoreSubmit}>
-                <HighUpLabelInput
-                    label="Prefix for external Matrix links"
-                    name="external_matrix_links"
-                    value={externalMatrixUrl}
-                    onInput={useCallback(({target}) => setExternalMatrixUrl(target.value), [setExternalMatrixUrl])}
-                />
-                <ul className="checkbox-list">
-                    <li><label>
-                        <input
-                            name="show_network_log"
-                            checked={showNetworkLog}
-                            type="checkbox"
-                            onChange={useCallback(({target}) => setShowNetworkLog(target.checked), [setShowNetworkLog])}
-                        />
-                        Show network log
-                    </label></li>
-                </ul>
-                <h3>Theme</h3>
-                <ul className="checkbox-list">
-                    {['auto', 'light', 'dark'].map(themeKey => (
-                        <li key={themeKey}><label>
-                            <input
-                                checked={themeKey === theme}
-                                name="theme"
-                                type="radio"
-                                onChange={useCallback(() => setTheme(themeKey), [setTheme])}
-                            />
-                            {themeKey}
-                        </label></li>
-                    ))}
-                </ul>
-            </form>
-        </main>
-        <NetworkLog />
-    </>;
-}
-
-function AliasActions({ identity, roomId }) {
+const AliasActions: FC<{ identity: Identity, roomId: string }> = ({ identity, roomId }) => {
     const [alias, setAlias] = useState('');
     const [busy, setBusy] = useState(false);
 
@@ -1399,14 +1252,14 @@ function AliasActions({ identity, roomId }) {
     );
 }
 
-function RoomSummaryWrapper(props) {
+const RoomSummaryWrapper: FC<{ identity: Identity, roomId: string }> = (props) => {
     const key = `${props.identity?.name}|${props.roomId}`;
     return <RoomSummaryWrapperInner key={key} {...props}/>;
 }
 
-function RoomSummaryWrapperInner({identity, roomId}) {
+const RoomSummaryWrapperInner: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
-    const [stateEvents, setStateEvents] = useState();
+    const [stateEvents, setStateEvents] = useState<object[] | undefined>();
 
     const handleClick = useCallback(async () => {
         setBusy(true);
@@ -1423,7 +1276,7 @@ function RoomSummaryWrapperInner({identity, roomId}) {
     </>;
 }
 
-function getHighestPowerLevel(powerLevelsContent, defaultUserPowerLevel) {
+const getHighestPowerLevel: FC<{ powerLevelsContent: unknown, defaultUserPowerLevel: number }> = (powerLevelsContent, defaultUserPowerLevel) => {
     let highest = defaultUserPowerLevel;
     for (const powerLevel of Object.values(powerLevelsContent?.users ?? {})) {
         if (highest < powerLevel) {
@@ -1433,7 +1286,7 @@ function getHighestPowerLevel(powerLevelsContent, defaultUserPowerLevel) {
     return highest;
 }
 
-function getUnchangeableEventTypes(powerLevelsContent, powerLevel) {
+const getUnchangeableEventTypes: FC<{ powerLevelsContent: object, powerLevel: number }> = (powerLevelsContent, powerLevel) => {
     const unchangableEventTypes = [];
     for (const [type, requiredPowerLevel] of Object.entries(powerLevelsContent?.events ?? {})) {
         if (powerLevel < requiredPowerLevel) {
@@ -1658,13 +1511,13 @@ const UserActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId
     );
 };
 
-function StateExplorer({identity, roomId}) {
+const StateExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
     const [type, setType] = useState('');
     const [stateKey, setStateKey] = useState('');
     const [busy, setBusy] = useState(false);
     const [data, setData] = useState('');
 
-    const handleGet = useCallback(async event => {
+    const handleGet: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         if (!type) {
@@ -1683,7 +1536,7 @@ function StateExplorer({identity, roomId}) {
         }
     }, [identity, roomId, stateKey, type]);
 
-    const handlePut = useCallback(async event => {
+    const handlePut: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -1733,6 +1586,10 @@ function StateExplorer({identity, roomId}) {
         <form onSubmit={handlePut}><fieldset disabled={busy}>
             <label>State
                 <textarea
+                    autoCapitalize="off"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={data}
                     onInput={useCallback(({target}) => setData(target.value), [])}
                 />
@@ -1844,7 +1701,7 @@ const MembersExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, 
 
 const MediaExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
-    const [media, setMedia] = useState(null);
+    const [media, setMedia] = useState<object | null>(null);
 
     const handleGet: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
@@ -1877,7 +1734,7 @@ const MediaExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
     </>;
 }
 
-const IdentityProvider: FC = ({render, identityName}) => {
+const IdentityProvider: FC<{ render: (Identity: Identity) => ReactNode, identityName: string }> = ({render, identityName}) => {
     const { identities } = useContext(Settings);
     const identity = identities.find(ident => ident.name === identityName);
     if (!identity) {
@@ -1899,7 +1756,7 @@ const BulkInvitePage: FC<{ identity: Identity, roomId: string }> = ({identity, r
     }, []);
 
     const action = useCallback(async (userId: string) => {
-        return inviteUser(identity, roomId, userId);
+        await inviteUser(identity, roomId, userId);
     }, [identity, roomId])
 
     return <>
@@ -1956,24 +1813,34 @@ const BulkKickPage: FC<{ identity: Identity, roomId: string }> = ({identity, roo
 //     `;
 // }
 
-function Shortcuts({identity}) {
+const Shortcuts: FC<{ identity: Identity }> = ({ identity }) => {
     const handleClick = () => {
         window.location = `#/${encodeURIComponent(identity.name)}/overview`;
     };
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            const { target } = event;
+            if (target.tagName.toLowerCase() === 'input' || 
+                target.tagName.toLowerCase() === 'textarea' || 
+                target.tagName.toLowerCase() === 'select'
+            ) {
+                return;
+            }
             if (event.key === 'P') {
                 event.preventDefault();
                 event.stopPropagation();
                 window.location = `#/${encodeURIComponent(identity.name)}/overview`;
+            } else if (event.key === 'p') {
+                event.preventDefault();
+                event.stopPropagation();
+                window.location = `#/${encodeURIComponent(identity.name)}/room-selector`;
             }
-            console.log('added', event.key);
         };
 
-        document.addEventListener('keydown', handleKeyDown);
+        document.body.addEventListener('keydown', handleKeyDown);
         return () => {
-            document.removeEventListener('keydown', handleKeyDown);
+            document.body.removeEventListener('keydown', handleKeyDown);
         };
     }, [identity]);
 
@@ -1983,34 +1850,6 @@ function Shortcuts({identity}) {
         type="button"
         onClick={handleClick}
     >Navigate to overview</button>;
-}
-
-function ThemeSetter() {
-    const { theme } = useContext(Settings);
-
-    useEffect(() => {
-        const html = document.querySelector('html');
-        if (!html) {
-            return;
-        }
-        if (theme === 'light') {
-            html.setAttribute('data-theme', 'light');
-        } else if (theme === 'dark') {
-            html.setAttribute('data-theme', 'dark');
-        } else {
-            const systemSettingDark = window.matchMedia('(prefers-color-scheme: dark)');
-            html.setAttribute('data-theme', systemSettingDark.matches ? 'dark' : 'light');
-
-            // Listen to changes of the browser setting
-            const autoChange = (event: MediaQueryListEvent) => {
-                html.setAttribute('data-theme', event.matches ? 'dark' : 'light');
-            }
-            systemSettingDark.addEventListener('change', autoChange);
-            return () => {
-                systemSettingDark.removeEventListener('change', autoChange);
-            }
-        }
-    }, [theme]);
 }
 
 export function App() {
