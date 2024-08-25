@@ -61,7 +61,7 @@ import {
 import {
     loginWithPassword,
 } from './matrix-auth';
-import { Settings, SettingsPage, SettingsProvider, ThemeSetter } from './pages/settings.tsx';
+import { saveIdentitiesToLocalStorage, Settings, SettingsPage, SettingsProvider, ThemeSetter } from './pages/settings.tsx';
 
 const NETWORKLOG_MAX_ENTRIES = 500;
 
@@ -783,7 +783,7 @@ const MainPage: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) 
 function IdentitySelectorPage() {
     const {identities, setIdentities} = useContext(Settings);
 
-    const handleDelete = useCallback(async(identity) => {
+    const handleDelete = useCallback(async(identity: Identity) => {
         const confirmed = await confirm(`Do you want to remove ${identity.name}?\nThis doesn't invalidate the access token.`);
         if (!confirmed) return;
         setIdentities((identities) => {
