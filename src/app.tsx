@@ -334,7 +334,7 @@ const IdentityEditorPage: FC<{identityName: string}> = ({identityName}) => {
                 }
             }
             setEditingError(undefined);
-            window.location = '#';
+            window.location.href = '#';
             return newIdentities;
         });
     }, [identityName, setIdentities]);
@@ -883,7 +883,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
     const [busy, setBusy] = useState(false);
 
     const handleSelectRoom = useCallback((roomId: string) => {
-        window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
+        window.location.href = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setRecentRooms(recentRooms => ([
             roomId,
             ...recentRooms.filter(r => r !== roomId),
@@ -927,7 +927,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
                 setBusy(false);
             }
         }
-        window.location = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
+        window.location.href = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setResolvedRoomId(roomId);
         setRecentRooms(recentRooms => ([
             roomId,
@@ -936,7 +936,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
     }, [identity, room]);
 
     const handleResetRoomId = useCallback(() => {
-        window.location = `#/${encodeURIComponent(identity.name)}`;
+        window.location.href = `#/${encodeURIComponent(identity.name)}`;
     }, [identity.name]);
 
     const handleRoomInput = useCallback(({target}) => setRoom(target.value), []);
@@ -1815,7 +1815,7 @@ const BulkKickPage: FC<{ identity: Identity, roomId: string }> = ({identity, roo
 
 const Shortcuts: FC<{ identity: Identity }> = ({ identity }) => {
     const handleClick = () => {
-        window.location = `#/${encodeURIComponent(identity.name)}/overview`;
+        window.location.href = `#/${encodeURIComponent(identity.name)}/overview`;
     };
 
     useEffect(() => {
@@ -1830,11 +1830,11 @@ const Shortcuts: FC<{ identity: Identity }> = ({ identity }) => {
             if (event.key === 'P') {
                 event.preventDefault();
                 event.stopPropagation();
-                window.location = `#/${encodeURIComponent(identity.name)}/overview`;
+                window.location.href = `#/${encodeURIComponent(identity.name)}/overview`;
             } else if (event.key === 'p') {
                 event.preventDefault();
                 event.stopPropagation();
-                window.location = `#/${encodeURIComponent(identity.name)}/room-selector`;
+                window.location.href = `#/${encodeURIComponent(identity.name)}/room-selector`;
             }
         };
 

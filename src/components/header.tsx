@@ -12,7 +12,7 @@ export const AppHeader: FC<AppHeaderProps> = ({backLabel = 'Back', backUrl, chil
         if (backUrl) {
             event.preventDefault();
             event.stopPropagation();
-            window.location = backUrl;
+            window.location.href = backUrl;
         }
         if (onBack) {
             onBack(event);
