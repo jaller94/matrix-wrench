@@ -10,11 +10,13 @@
 * Added: Register accounts with an AppService token
 * Added: Send messages to a room
 
-## Upcoming v0.14.0
+## Upcoming v0.14.0 (2024-09-01)
 *Workation Nation*
 
 * Added: Settings to change the prefix of external Matrix links, hide the network log and choose a theme.
+* Added: Customise theme colours
 * Added: Persist settings to localStorage
+* Added: Shortcut Shift + P for accessing an Overview page of account actions
 * For developers: Migrated from htm to React
 * For developers: Migrated all components from *.js to *.tsx
 
