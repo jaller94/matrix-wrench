@@ -140,7 +140,9 @@ async function roomToObject(identity: Identity, roomId: string, myUserId: string
         }
         const spaceChildren = state.filter(e => e.type === 'm.space.child').map(e => e.state_key);
         data.spaceChildren = spaceChildren.length;
-    } catch {}
+    } catch (err) {
+        console.warn('Error in roomToObject', err, roomId);
+    }
     return data;
 }
 
@@ -152,9 +154,6 @@ const roomIdToDmUserId = (mDirectContent: object, roomId: string) => {
     }
 };
 
-/**
- * @param {string[]} userIds
- */
 function getHomeServers(userIds: string[]): string[] {
     const set = new Set<string>();
     for (const userId of userIds) {

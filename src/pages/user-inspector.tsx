@@ -9,7 +9,7 @@ import {
     getState,
 } from '../matrix';
 
-async function roomToObject(identity: Identity, roomId: string, myUserId: string) {
+async function roomToObject(identity: Identity, roomId: string, userId: string) {
     const data = {};
     try {
         const state = await getState(identity, roomId);
@@ -17,29 +17,25 @@ async function roomToObject(identity: Identity, roomId: string, myUserId: string
         const roomPowerLevelState = state.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
         if (typeof roomPowerLevelState.users === 'object') {
             data.highestCustomPowerLevel = Math.max(...Object.values(roomPowerLevelState.users));
-            data.myPowerLevel = roomPowerLevelState.users[myUserId] ?? roomPowerLevelState.users_default;
+            data.userPowerLevel = roomPowerLevelState.users[userId] ?? roomPowerLevelState.users_default;
             data.defaultPowerLevel = roomPowerLevelState.users_default;
-            data.canIBan = data.myPowerLevel >= roomPowerLevelState.ban;
-            data.canIKick = data.myPowerLevel >= roomPowerLevelState.kick;
-            data.canIInvite = data.myPowerLevel >= roomPowerLevelState.invite;
-            data.canIRedact = data.myPowerLevel >= roomPowerLevelState.redact;
+            data.canBan = data.defaultPowerLevel >= roomPowerLevelState.ban;
+            data.canKick = data.defaultPowerLevel >= roomPowerLevelState.kick;
+            data.canInvite = data.defaultPowerLevel >= roomPowerLevelState.invite;
+            data.canRedact = data.defaultPowerLevel >= roomPowerLevelState.redact;
         }
 
         const name = state.find(e => e.type === 'm.room.name' && e.state_key === '')?.content?.name;
         if (typeof name === 'string') {
             data.name = name;
         }
-    } catch {}
+    } catch (err) {
+        console.warn('Error in roomToObject', err, roomId);
+    }
     return data;
 }
 
-/**
- * @param {*} identity
- * @param roomIds
- * @param userIds
- */
 async function *stats(identity: Identity, roomIds: string[], userIds: string[]) {
-    console.log(userIds);
     let rows = roomIds.map(roomId => ({roomId}));
     yield {
         rows,
@@ -47,7 +43,8 @@ async function *stats(identity: Identity, roomIds: string[], userIds: string[]) 
     let progressValue = 0;
     for (const roomId of roomIds) {
         try {
-            const roomInfo = await roomToObject(identity, roomId);
+            // TODO Support more than one user
+            const roomInfo = await roomToObject(identity, roomId, userIds[0] ?? '');
             rows = rows.map(room => {
                 if (room.roomId !== roomId) {
                     return room;

@@ -52,9 +52,8 @@ const SpaceRoomPicker: FC<{
 }
 
 const RoomPicker: FC<{
-    identity: Identity,
     onChange: (roomIds: string[]) => void,
-}> = ({ identity, onChange }) => {
+}> = ({ onChange }) => {
     const [roomIdsString, setRoomIdsString] = useState('');
 
     useEffect(() => {
@@ -117,7 +116,7 @@ export const MassJoinerPage: FC<{
             { roomId ? (
                 <SpaceRoomPicker identity={identity} roomId={roomId} onChange={setRoomIds} />
             ) : (
-                <RoomPicker identity={identity} onChange={setRoomIds} />
+                <RoomPicker onChange={setRoomIds} />
             )}
             <BulkActionForm actionLabel="Make users join" onSubmit={handleSubmit} />
             <BulkActionTracker action={action} items={items} />

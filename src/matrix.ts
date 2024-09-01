@@ -83,11 +83,12 @@ export function toCurlCommand(resource: string, init: RequestInit = {}, maskAuth
     if (init.body) {
         cmd += `--data '${escapeBashString(init.body.toString())}' `;
     }
-    for (let [key, value] of Object.entries(init.headers ?? {})) {
+    for (const [key, value] of Object.entries(init.headers ?? {})) {
+        let finalValue = value;
         if (maskAuthorization && key.toLocaleLowerCase() === 'authorization') {
-            value = 'Bearer your_access_token';
+            finalValue = 'Bearer your_access_token';
         }
-        cmd += `-H '${escapeBashString(key)}: ${escapeBashString(value)}' `;
+        cmd += `-H '${escapeBashString(key)}: ${escapeBashString(finalValue)}' `;
     }
     cmd += `'${escapeBashString(resource)}'`;
     return cmd;
@@ -95,9 +96,6 @@ export function toCurlCommand(resource: string, init: RequestInit = {}, maskAuth
 
 /**
  * Summarizes a network request. Use it like fetch().
- * @param {string} resource
- * @param {{method?: string, body?: string, headers: Record<string, string>}=} init
- * @returns {string}
  */
 export function summarizeFetch(resource: string, init: RequestInit): string {
     const match = resource.match(basePathRegExp);
@@ -111,9 +109,6 @@ const basePathRegExp = /\/_matrix\/client\/.+?\/(?<command>.*)$/
 
 /**
  * Apply the authorization headers of an identity to the parameters of `fetch()`.
- * @param identity
- * @param resource
- * @param init
  * @returns An array of parameters to hand to `fetch()`
  */
 export function auth(identity: Identity, resource: string, init?: RequestInit): [string, object] {
@@ -139,7 +134,6 @@ export function auth(identity: Identity, resource: string, init?: RequestInit): 
 
 /**
  * Ban a user from a room.
- * @param {Object} identity
  */
 export async function banUser(identity: Identity, roomId: string, userId: string, reason?: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/ban`, {
@@ -260,9 +254,6 @@ export async function getMediaByRoom(identity: Identity, roomId: string): Promis
 
 /**
  * Get the members of a room.
- * @param {Object} identity
- * @param {string} roomId
- * @returns {Promise<Object>}
  */
 export async function getMembers(identity: Identity, roomId: string): Promise<object> {
     return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/members`, {

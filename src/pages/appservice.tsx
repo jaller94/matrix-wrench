@@ -1,10 +1,12 @@
-import React, { useCallback, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { CustomButton } from '../components/custom-forms';
 import { AppHeader } from '../components/header';
 import { HighUpLabelInput } from '../components/inputs';
-import { NetworkLog } from '../app';
+import { Identity, NetworkLog } from '../app';
 
-function AccountCreator({ identity }) {
+const AccountCreator: FC<{
+    identity: Identity,
+}> = ({ identity }) {
     const [username, setUsername] = useState('');
     return <>
         <h2>Register account</h2>
@@ -27,7 +29,9 @@ function AccountCreator({ identity }) {
     </>;
 }
 
-export function AppServicePage({ identity }) {
+export const AppServicePage: FC<{
+    identity: Identity,
+}> = ({ identity }) {
     return <>
         <AppHeader
             backUrl={`#/${encodeURIComponent(identity.name)}`}

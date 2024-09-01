@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { FC, MouseEventHandler, useCallback, useState } from 'react';
 import { AppHeader } from '../components/header';
-import { NetworkLog } from '../app';
+import { Identity, NetworkLog } from '../app';
 
 import {
     getState,
@@ -58,22 +58,27 @@ async function roomToYaml(identity: Identity, roomId: string) {
         if (spaceChildren.length > 0) {
             data.children = await Promise.all(spaceChildren.map(roomId => roomToYaml(identity, roomId)));
         }
-    } catch {}
+    } catch (err) {
+        console.warn('Error in roomToObject', err, roomId);
+    }
     return data;
 }
 
-export const RoomToYamlPage = ({identity, roomId}) => {
+export const RoomToYamlPage: FC<{
+    identity: Identity,
+    roomId: string,
+}> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
     const [text, setText] = useState('');
 
-    const handleClick = useCallback(async(event) => {
+    const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
         try {
             const data = await roomToYaml(identity, roomId);
             setText(JSON.stringify(data, null, 2));
-        } catch(error) {
+        } catch (error) {
             setText(error);
         } finally {
             setBusy(false);

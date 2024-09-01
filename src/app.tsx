@@ -804,7 +804,7 @@ function IdentitySelectorPage() {
                 <p>
                     Hi there! Need to tweak some Matrix rooms?<br/>
                     First, add an identity. An identity is a combination of a homeserver URL and an access token.<br/>
-                    Wrench can handle multiple identities. It assumes that identities are sensitive, so they aren't stored by default.
+                    Wrench can handle multiple identities. It assumes that identities are sensitive, so they aren&apos;t stored by default.
                 </p>
             ) : (<>
                 <p>Choose an identity. An identity is a combination of a homeserver URL and an access token.</p>
@@ -826,7 +826,7 @@ const RoomList: FC<{roomIds: string[], onSelectRoom?: (roomId: string) => void}>
     }, [onSelectRoom]);
 
     if (roomIds.length === 0) {
-        return <p>There's no room in this list.</p>;
+        return <p>There&apos;s no room in this list.</p>;
     }
     return (
         <ul style={{overflowX: 'auto'}}>
@@ -1601,7 +1601,7 @@ const StateExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
 
 const MemberList: FC<{ members: object[] }> = ({members}) => {
     if (members.length === 0) {
-        return <p>There's no one in this list.</p>;
+        return <p>There&apos;s no one in this list.</p>;
     }
     return (
         <ul>
@@ -1614,7 +1614,7 @@ const MemberList: FC<{ members: object[] }> = ({members}) => {
 
 const MediaList: FC<{ list: string[] }> = ({list}) => {
     if (list.length === 0) {
-        return <p>There's no media in this list.</p>;
+        return <p>There&apos;s no media in this list.</p>;
     }
     return (
         <ul>
@@ -1671,7 +1671,7 @@ const MembersExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, 
 
     return <>
         <form onSubmit={handleGet}><fieldset disabled={busy}>
-            <p>Doesn't support pagination yet. Up to 60.000 users seems safe.</p>
+            <p>Doesn&apos;t support pagination yet. Up to 60.000 users seems safe.</p>
             <button type="submit">Get members</button>
         </fieldset></form>
         {groups && <>

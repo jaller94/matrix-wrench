@@ -1,6 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { FC, useMemo } from 'react';
+import { Identity } from '../../app';
 
-export function OverviewPages({ identity, filterString }) {
+export const OverviewPages: FC<{
+    identity: Identity,
+    filterString: string,
+}> = ({ identity, filterString }) => {
     const links = useMemo(() => [
         { url: `#/${encodeURIComponent(identity.name)}/room-list`, name: 'Your rooms' },
         { url: `#/${encodeURIComponent(identity.name)}/contact-list`, name: 'Your contacts' },
@@ -26,4 +30,4 @@ export function OverviewPages({ identity, filterString }) {
             ))}
         </ul>
     );
-}
+};

@@ -1,16 +1,19 @@
-import React, { MouseEventHandler, useCallback, useState } from 'react';
+import React, { FC, MouseEventHandler, useCallback, useState } from 'react';
 
 import {
     getJoinedRooms, getState,
 } from '../../matrix';
 import { RoomLink } from '../../components/room-link';
+import { Identity } from '../../app';
 
 const PolychatStateEventType = {
     room: 'de.polychat.room',
     participant: 'de.polychat.room.participant',
 };
 
-export function PolychatExistingRooms({ identity }) {
+export const PolychatExistingRooms: FC<{
+    identity: Identity,
+}> = ({ identity }) => {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | undefined>();
     const [mainRooms, setMainRooms] = useState<object[] | undefined>();
@@ -97,4 +100,4 @@ export function PolychatExistingRooms({ identity }) {
             </>}
         </div>
     );
-}
+};

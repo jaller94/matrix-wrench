@@ -1,9 +1,12 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, FormEventHandler, useCallback, useEffect, useState } from 'react';
 import {
     uniqueId,
 } from '../helper.ts';
 
-export function BulkActionForm({actionLabel, onSubmit}) {
+export const BulkActionForm: FC<{
+    actionLabel: string,
+    onSubmit: (res: {userIds: string[]}) => void,
+}> = ({actionLabel, onSubmit}) => {
     const [userIdsString, setUserIdsString] = useState('');
 
     const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
@@ -30,7 +33,7 @@ export function BulkActionForm({actionLabel, onSubmit}) {
             <button className="primary">{actionLabel}</button>
         </form>
     );
-}
+};
 
 export const BulkActionTracker: FC<{ action: (item: unknown) => Promise<void>, items: unknown[] }> = ({action, items}) => {
     const [currentItem, setCurrentItem] = useState<unknown | null>(null);

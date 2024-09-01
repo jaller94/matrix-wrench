@@ -1,6 +1,6 @@
 import React, { ChangeEventHandler, FC, FormEventHandler, useCallback, useMemo, useState } from 'react';
 
-function RegExpToggleButton({...props}) {
+const RegExpToggleButton = ({...props}) => {
     return (
         <label
             className="reg-exp-toggle-button"
@@ -96,7 +96,8 @@ export const ListWithSearch: FC<{
             <div>
                 <input
                     checked={filteredItemsSelected === filteredItems.length}
-                    indeterminate={filteredItemsSelected !== 0 && filteredItemsSelected !== filteredItems.length}
+                    // TODO indeterminate is only changeable through JavaScript
+                    // indeterminate={filteredItemsSelected !== 0 && filteredItemsSelected !== filteredItems.length}
                     type="checkbox"
                     onChange={handleSelectAllChange}
                 />
@@ -112,8 +113,11 @@ export const ListWithSearch: FC<{
 /**
  * A list with selectable items.
  */
-function SelectableList({items, onSelect}) {
-    const handleChecked = useCallback(event => {
+const SelectableList: FC<{
+    items: {id: string, selected: boolean}[],
+    onSelect: (id: string, selected: boolean) => void,
+}> = ({items, onSelect}) => {
+    const handleChecked: ChangeEventHandler<HTMLInputElement> = useCallback(event => {
         const { id } = event.target.dataset;
         onSelect(id, !items.find(item => item.id === id).selected);
     }, [items, onSelect]);
@@ -133,7 +137,7 @@ function SelectableList({items, onSelect}) {
             ))}
         </ul>
     );
-}
+};
 
 export const RoomList: FC<{roomIds: string[]}> = ({roomIds}) => {
     const rooms = useMemo(() => {
