@@ -6,7 +6,7 @@ import { Identity, NetworkLog } from '../app';
 
 const AccountCreator: FC<{
     identity: Identity,
-}> = ({ identity }) {
+}> = ({ identity }) => {
     const [username, setUsername] = useState('');
     return <>
         <h2>Register account</h2>
@@ -27,11 +27,11 @@ const AccountCreator: FC<{
             }}
         />
     </>;
-}
+};
 
 export const AppServicePage: FC<{
     identity: Identity,
-}> = ({ identity }) {
+}> = ({ identity }) => {
     return <>
         <AppHeader
             backUrl={`#/${encodeURIComponent(identity.name)}`}
@@ -43,4 +43,4 @@ export const AppServicePage: FC<{
         </main>
         <NetworkLog />
     </>;
-}
+};

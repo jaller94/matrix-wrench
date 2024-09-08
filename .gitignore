@@ -1,5 +1,5 @@
 node_modules
 /public
 
-/upload.sh
+/deploy.sh
 /tsconfig.tsbuildinfo
