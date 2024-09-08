@@ -10,7 +10,10 @@
 * Added: Register accounts with an AppService token
 * Added: Send messages to a room
 
-## Upcoming v0.14.0 (2024-09-01)
+## v0.14.1 (2024-09-08)
+* Fixed: Syntax error prevented builds
+
+## v0.14.0 (2024-09-01)
 *Workation Nation*
 
 * Added: Settings to change the prefix of external Matrix links, hide the network log and choose a theme.
