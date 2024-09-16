@@ -1,14 +1,15 @@
-import React, { FC, FormEventHandler, useCallback, useEffect, useRef, useState } from 'react';
-import { AppHeader } from '../components/header';
-import { Identity, NetworkLog } from '../app';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { AppHeader } from '../../components/header';
+import { Identity, NetworkLog } from '../../app';
 
 import {
-    getState,
     sendEvent,
     setState,
     whoAmI,
-} from '../matrix';
-import { HighUpLabelInput } from '../components/inputs';
+} from '../../matrix';
+import { GeolocationTextInput } from './geolocation-text-input';
+import { GeolocationApiWatcher } from './geolocation-api-watcher';
+import { GeolocationGpxReplayer } from './geolocation-gpx-replayer';
 
 /**
  * @returns resolves to the event ID that represents the event
@@ -57,105 +58,48 @@ async function postBeaconData(
     return sendEvent(identity, roomId, 'org.matrix.msc3672.beacon', content);
 }
 
-export const LocationInputFields: FC<{
-    onChange: (uri: string, ts: number) => void,
-}> = ({ onChange }) => {
-    const lat = '22.615';
-    const lng = '120.2975';
-    const [geoUri, setGeoUri] = useState(`geo:${lat},${lng};u=20`);
-    
-    useEffect(() => {
-        onChange(geoUri, Date.now());
-    }, []);
-
-    const handleSubmit: FormEventHandler = useCallback((event) => {
-        event.preventDefault();
-        if (!/^geo:-?\d{1,3}(\.\d+)?,-?\d{1,3}(\.\d+)?(;u=\d+(\.)?)?$/.test(geoUri)) {
-            alert('Invalid geo uri');
-            return;
-        }
-        onChange(geoUri, Date.now());
-    }, [geoUri, onChange]);
-    
-    return <form
-        onSubmit={handleSubmit}
-    >
-        <HighUpLabelInput
-            label="geo"
-            pattern="^geo:-?\d{1,3}(\.\d+)?,-?\d{1,3}(\.\d+)?(;u=\\d+(\\.\\d+)?)?$"
-            required
-            value={geoUri}
-            onChange={useCallback(event => setGeoUri(event.target.value), [])}
-        />
-        <button type="button">
-            Update
-        </button>
-    </form>;
-};
-
-export const GeoLoctionApi: FC<{
-    onChange: (uri: string, ts: number) => void,
-}> = ({ onChange }) => {
-    const [watching, setWatching] = useState(false);
-
-    useEffect(() => {
-        console.log('Guten Tag!');
-        if (!('geolocation' in navigator) || !watching) {
-            return;
-        }
-        const watchID = navigator.geolocation.watchPosition((position) => {
-            const uri = `geo:${position.coords.latitude},${position.coords.longitude};u=${position.coords.accuracy}`;
-            onChange(uri, position.timestamp);
-        });
-        return () => {
-            navigator.geolocation.clearWatch(watchID);
-        };
-    }, [watching]);
-    
-    return <>
-        <div>
-            <button
-                disabled={!('geolocation' in navigator) || watching}
-                type="button"
-                onClick={() => setWatching(true)}
-            >Start</button>
-            <button
-                disabled={!watching}
-                type="button"
-                onClick={() => setWatching(false)}
-            >Stop</button>
-        </div>
-    </>;
-};
-
 export const LocationInput: FC<{
-    onChange: (uri: string, ts: number) => void,
+    onChange: (location?: {geoUri: string, ts: number}) => void,
 }> = ({ onChange }) => {
     const [inputMethod, setInputMethod] = useState('text');
     const [geoUri, setGeoUri] = useState('');
 
-    const handleChange = (uri: string, ts: number) => {
+    const handleChange = useCallback((uri: string, ts: number) => {
         setGeoUri(uri);
-        onChange(geoUri, ts);
-    };
+        onChange({geoUri, ts});
+    }, [onChange]);
+
+    const handleMethodChange = useCallback((method: string) => {
+        setInputMethod(method);
+        // Reset location when switching the input method
+        setGeoUri('');
+        onChange();
+    }, [onChange]);
     
     return <>
         <span>Current location: {geoUri}</span>
         <h2>Input method</h2>
-        <div>
+        <div role="tablist">
             <button
+                role="tab"
                 type="button"
-                onClick={useCallback(() => setInputMethod('text'), [])}
-                >Text field</button>
+                onClick={useCallback(() => handleMethodChange('text'), [])}
+            >Static location</button>
             <button
-                disabled={!('geolocation' in navigator)}
+                role="tab"
                 type="button"
-                onClick={useCallback(() => setInputMethod('geolocation'), [])}
-                >Geolocation API</button>
+                onClick={useCallback(() => handleMethodChange('geolocation'), [])}
+            >Browser's Geolocation API</button>
+            <button
+                role="tab"
+                type="button"
+                onClick={useCallback(() => handleMethodChange('gpx'), [])}
+            >GPX file</button>
         </div>
         <div className="card">
-            {inputMethod === 'text' && <LocationInputFields onChange={handleChange} />}
-            {inputMethod === 'geolocation' && <GeoLoctionApi onChange={handleChange} />}
+            {inputMethod === 'text' && <GeolocationTextInput onChange={handleChange} />}
+            {inputMethod === 'geolocation' && <GeolocationApiWatcher onChange={handleChange} />}
+            {inputMethod === 'gpx' && <GeolocationGpxReplayer onChange={handleChange} />}
         </div>
     </>;
 };
@@ -184,7 +128,6 @@ export const LiveLocationSharingPage: FC<{
             console.log('start');
             async function func() {
                 const res = await updateBeaconState(identity, roomId, matrixUserId, true);
-                console.log('eventId', res.event_id);
                 setBeaconEventId(res.event_id);
             }
             func();
@@ -217,12 +160,9 @@ export const LiveLocationSharingPage: FC<{
         };
     }, [beaconEventId]);
 
-    const handleLocationChange = (geoUri: string, ts: number) => {
-        location.current = {
-            geoUri,
-            ts,
-        };
-    }
+    const handleLocationChange = useCallback((loc?: {geoUri: string, ts: number}) => {
+        location.current = loc ?? null;
+    }, []);
 
     return <>
         <AppHeader
