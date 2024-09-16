@@ -5,22 +5,21 @@ function humanDuration(duration: number): string {
         return `${duration} ms`;
     }
     if (duration < 100 * 1000) {
-        return `${Math.floor(duration / 1000)} s`;
+        return `${Math.floor(duration / 1000)} seconds`;
     }
-    if (duration < 100 * 60 * 1000) {
-        return `${Math.floor(duration / (60 * 1000))} m`;
+    if (duration < 300 * 60 * 1000) {
+        return `${Math.floor(duration / (60 * 1000))} minutes`;
     }
     if (duration < 100 * 60 * 60 * 1000) {
-        return `${Math.floor(duration / (60 * 60 * 1000))} h`;
+        return `${Math.floor(duration / (60 * 60 * 1000))} hours`;
     }
-    return `${Math.floor(duration / (24 * 60 * 60 * 1000))} d`;
+    return `${Math.floor(duration / (24 * 60 * 60 * 1000))} days`;
 }
 
 export const GeolocationGpxReplayer: FC<{
     onChange: (uri: string, ts: number) => void,
 }> = ({ onChange }) => {
     // State to store the uploaded GPX file
-    const [gpxFile, setGpxFile] = useState<File | null>(null);
     const [gpxFileText, setGpxFileText] = useState('');
 
     // Function to handle file input change
@@ -29,7 +28,6 @@ export const GeolocationGpxReplayer: FC<{
         if (file) {
             // Ensure the file is a GPX file based on file type or extension
             if (file.type === 'application/gpx+xml' || file.name.endsWith('.gpx')) {
-                setGpxFile(file);
                 file.text().then(text => setGpxFileText(text));
             } else {
                 alert('Please upload a valid GPX file');
@@ -37,7 +35,7 @@ export const GeolocationGpxReplayer: FC<{
         }
     };
 
-    const a = useMemo(() => {
+    const parsedTrack = useMemo(() => {
         if (!gpxFileText) {
             return;
         }
@@ -77,13 +75,13 @@ export const GeolocationGpxReplayer: FC<{
     const [currentTime, setCurrentTime] = useState(0);
 
     useEffect(() => {
-        if (!playing || !a) {
+        if (!playing || !parsedTrack) {
             return;
         }
         const interval = setInterval(() => {
             setCurrentTime(time => {
                 const newTime = time + 1000;
-                const currentLocation = [...a.map.entries()].findLast(([key]) => key <= newTime);
+                const currentLocation = [...parsedTrack.map.entries()].findLast(([key]) => key <= newTime);
                 if (currentLocation) {
                     setTimeout(() => onChange(currentLocation[1], Date.now()), 0);
                 }
@@ -91,7 +89,7 @@ export const GeolocationGpxReplayer: FC<{
             });
         }, 1000);
         return () => clearInterval(interval);
-    }, [playing, a, onChange]);
+    }, [parsedTrack, playing, onChange]);
 
     const handleChange: ChangeEventHandler = useCallback((event) => {
         setCurrentTime(Number.parseInt(event.target.value));
@@ -104,13 +102,13 @@ export const GeolocationGpxReplayer: FC<{
                 accept=".gpx"
                 onChange={handleFileChange}
             />
-            {a && (<>
-                <p>Points: {a.map.size}</p>
-                <p>Duration: {humanDuration(a.endTime - a.startTime)}</p>
+            {parsedTrack && (<>
+                <p>Points: {parsedTrack.map.size}</p>
+                <p>Duration: {humanDuration(parsedTrack.endTime - parsedTrack.startTime)}</p>
                 <input
                     type="range"
                     min="0"
-                    max={a.endTime - a.startTime}
+                    max={parsedTrack.endTime - parsedTrack.startTime}
                     readOnly
                     style={{ width: '100%' }}
                     value={currentTime}

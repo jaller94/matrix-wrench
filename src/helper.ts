@@ -43,3 +43,11 @@ export function uniqueId(prefix = 'id-'): string {
     return `${prefix}${lastId}`;
 }
 let lastId = 0;
+
+export function getServerNameFromMXID(mxid: string) {
+    const index = mxid.indexOf(':');
+    if (!mxid.startsWith('@') || index === -1) {
+        throw Error('MXID format is invalid');
+    }
+    return mxid.slice(mxid.indexOf(':') + 1);
+}

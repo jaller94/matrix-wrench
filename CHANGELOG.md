@@ -10,8 +10,10 @@
 * Added: Register accounts with an AppService token
 * Added: Send messages to a room
 
-## Upcoming release
+## v0.14.2 (2024-09-16)
 * Added: Live Location Sharing
+* Fixed: The buttons to edit identity were broken
+* Fixed: Logging in with a password was broken
 
 ## v0.14.1 (2024-09-08)
 * Fixed: Syntax error prevented builds

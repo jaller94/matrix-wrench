@@ -347,6 +347,22 @@ export async function resolveAlias(identity: Identity, roomAlias: string): Promi
     }));
 }
 
+export async function resolveServerUrl(serverName: string): Promise<string> {
+    const url = /^https?:\/\//.test(serverName) ? serverName : `https://${serverName}`;
+    const res = await fetch(`${url}/.well-known/matrix/client`);
+    if (res.status === 404) {
+        // Ignore the result
+        return url;
+    }
+    if (!res.ok) {
+        throw Error(`Failed to fetch ${url}: HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const baseUrl = data['m.homeserver']['base_url'];
+    // Remove trailing slashes
+    return baseUrl.replace(/\/+$/, '');
+}
+
 /**
  * Send an event to a room.
  */

@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 import {
     classnames,
+    getServerNameFromMXID,
     uniqueId,
 } from './helper.ts';
 import { AlertSingleton, confirm } from './components/alert.js';
@@ -24,7 +25,7 @@ import { RoomLink } from './components/room-link';
 import AboutPage from './pages/about';
 import { AppServicePage } from './pages/appservice';
 import { ContactListPage } from './pages/contact-list';
-import { LiveLocationSharingPage } from './pages/live-location-sharing';
+import { LiveLocationSharingPage } from './pages/live-location-sharing/index';
 import { MassJoinerPage } from './pages/mass-joiner';
 import { OverviewPage } from './pages/overview/index';
 import { PolychatPage } from './pages/polychat/index';
@@ -33,10 +34,6 @@ import { RoomListPage } from './pages/room-list';
 import { SpaceManagementPage } from './pages/space-viewer';
 import { SynapseAdminPage } from './pages/synapse-admin';
 import { UserInspectorPage } from './pages/user-inspector';
-// import {
-//     ListWithSearch,
-//     // RoomList,
-// } from './components/list';
 import {
     auth,
     MatrixError,
@@ -58,9 +55,10 @@ import {
     toCurlCommand,
     unbanUser,
     whoAmI,
+    resolveServerUrl,
 } from './matrix';
 import {
-    loginWithPassword,
+    logInWithPassword,
 } from './matrix-auth';
 import { saveIdentitiesToLocalStorage, Settings, SettingsPage, SettingsProvider, ThemeSetter } from './pages/settings.tsx';
 
@@ -170,7 +168,7 @@ const WhoAmI: FC<{identity: Identity}> = ({identity}) => {
     const [busy, setBusy] = useState(false);
     const [info, setInfo] = useState<{ device_id: string, user_id: string } | null>(null);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleSubmit: MouseEventHandler<HTMLButtonElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -261,40 +259,127 @@ const WhatsMyMemberStateInner: FC<{identity: Identity, roomId: string}> = ({iden
     </>;
 }
 
-const PasswordInput: FC<{serverAddress: string, onAccessToken: (token: string) => void}> = ({serverAddress, onAccessToken}) => {
+const PasswordLoginPage: FC = () => {
+    const {setIdentities} = useContext(Settings);
+    const [error, setError] = useState<string | undefined>(undefined);
+    const [name, setName] = useState('');
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberLogin, setRememberLogin] = useState(false);
+    const [busy, setBusy] = useState(false);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async (event) => {
+    const handleRememberLoginClick = useCallback(({target}) => setRememberLogin(target.checked), []);
+
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
-        const data = await loginWithPassword(serverAddress, user, password);
-        onAccessToken(data.access_token);
-    }, [password, serverAddress, user, onAccessToken]);
+        setBusy(true);
+        try {
+            const serverName = getServerNameFromMXID(user);
+            const serverAddress = await resolveServerUrl(serverName);
+            const data = await logInWithPassword(serverAddress, user, password);
+            if (typeof data.access_token !== 'string') {
+                setError('Server seems to have created a device, but did not respond with an access token.');
+                return;
+            }
+            const accessToken = data.access_token;
+            const identity: Identity = {
+                accessToken,
+                name,
+                rememberLogin,
+                serverAddress,
+            };
+            setIdentities(identities => {
+                const newIdentities = [...identities];
+                if (!identity.name) {
+                    setError('Identity must have a name!');
+                    return identities;
+                }
+                const conflicts = newIdentities.some(ident => ident.name === identity.name);
+                // The name may only conflict if this is the name we're editing.
+                if (conflicts) {
+                    setError('Identity name taken!');
+                    return identities;
+                }
+                newIdentities.push(identity);
+                if (identity.rememberLogin) {
+                    try {
+                        saveIdentitiesToLocalStorage(newIdentities);
+                    } catch (error) {
+                        console.warn('Failed to store identities in localStorage', error);
+                    }
+                }
+                setError(undefined);
+                window.location.href = '#';
+                return newIdentities;
+            });
+        } catch (err) {
+            console.warn(err);
+            setBusy(false);
+            if (err instanceof Error) {
+                setError(err.message);
+                return;
+            }
+            setError(String(err));
+        }
+    }, [password, user]);
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <HighUpLabelInput
-                    label="Matrix ID or user name"
-                    name="user"
-                    value={user}
-                    onInput={useCallback(({target}) => setUser(target.value), [])}
-                />
-            </div>
-            <div>
-                <HighUpLabelInput
-                    autoComplete="current-password"
-                    label="Password"
-                    name="password"
-                    value={password}
-                    type="password"
-                    onInput={useCallback(({target}) => setPassword(target.value), [])}
-                />
-            </div>
-            <button>Get access token</button>
-        </form>
-    );
+    return (<>
+        <AppHeader
+            backUrl="#"
+        >Log in with a password</AppHeader>
+        <main>
+            <p>Note, Matrix Wrench does not support verifications. This will create an unverified session.</p>
+            <form onSubmit={handleSubmit}><fieldset className="identity-editor-form" disabled={busy}>
+                <div>
+                    <HighUpLabelInput
+                        label="Internal name"
+                        name="name"
+                        pattern="[^\\\/]+"
+                        required
+                        value={name}
+                        onInput={useCallback(({target}) => setName(target.value), [])}
+                    />
+                </div>
+                {name.includes('/') && <p>The name must not include a slash character (/).</p>}
+                <div>
+                    <HighUpLabelInput
+                        label="Matrix ID"
+                        name="user"
+                        value={user}
+                        onInput={useCallback(({target}) => setUser(target.value), [])}
+                    />
+                </div>
+                <div>
+                    <HighUpLabelInput
+                        autoComplete="current-password"
+                        label="Password"
+                        name="password"
+                        value={password}
+                        type="password"
+                        onInput={useCallback(({target}) => setPassword(target.value), [])}
+                    />
+                </div>
+                {!!localStorage && 
+                    <div>
+                        <ul className="checkbox-list">
+                            <li><label>
+                                <input
+                                    checked={rememberLogin}
+                                    type="checkbox"
+                                    onChange={handleRememberLoginClick}
+                                />
+                                Save to localStorage
+                            </label></li>
+                        </ul>
+                    </div>
+                }
+                {busy && <p>Logging you in...</p>}
+                {error !== undefined && <p>{error}</p>}
+                <button type="submit" className="primary">Log in</button>
+            </fieldset></form>
+        </main>
+    </>);
 }
 
 const IdentityEditorPage: FC<{identityName: string}> = ({identityName}) => {
@@ -302,7 +387,7 @@ const IdentityEditorPage: FC<{identityName: string}> = ({identityName}) => {
     const [editingError, setEditingError] = useState<string | undefined>();
 
     const editedIdentity = useMemo(() => {
-        return identities.find(ident => ident.name === identityName) ?? {}
+        return identities.find(ident => ident.name === identityName) ?? {};
     }, [identities, identityName]);
 
     const handleSave = useCallback((identity: Identity) => {
@@ -352,13 +437,7 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
     const [serverAddress, setServerAddress] = useState(identity.serverAddress ?? '');
     const [accessToken, setAccessToken] = useState(identity.accessToken ?? '');
     const [masqueradeAs, setMasqueradeAs] = useState(identity.masqueradeAs ?? '');
-    const [authType, setAuthType] = useState('accessToken');
     const [rememberLogin, setRememberLogin] = useState(identity.rememberLogin ?? false);
-
-    const handleReceivedAccessToken = useCallback((accessToken: string) => {
-        setAccessToken(accessToken);
-        setAuthType('accessToken');
-    }, []);
 
     const handleAccessTokenInput = useCallback(({target}) => setAccessToken(target.value), []);
     const handleMasqueradeAsInput = useCallback(({target}) => setMasqueradeAs(target.value), []);
@@ -387,54 +466,29 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
         <AppHeader
             backUrl="#"
         >Identity Editor</AppHeader>
-        <form className="identity-editor-form" onSubmit={handleSubmit}>
-            <div>
-                <HighUpLabelInput
-                    label="Name"
-                    name="name"
-                    pattern="[^\\\/]+"
-                    required
-                    value={name}
-                    onInput={useCallback(({target}) => setName(target.value), [])}
-                />
-            </div>
-            {name.includes('/') && <p>The name must not include a slash character (/).</p>}
-            <div>
-                <HighUpLabelInput
-                    label="Server address (e.g. https://matrix-client.matrix.org)"
-                    name="url"
-                    type="url"
-                    required
-                    value={serverAddress}
-                    onInput={useCallback(({target}) => setServerAddress(target.value), [])}
-                />
-            </div>
-            <div>
-                <fieldset>
-                    <legend>Authorization method</legend>
-
-                    <label>
-                        <input
-                            type="radio"
-                            name="authType"
-                            checked={authType === 'accessToken'}
-                            onClick={useCallback(() => setAuthType('accessToken'), [])}
-                        />
-                        Access Token
-                    </label>
-
-                    <label>
-                        <input
-                            type="radio"
-                            name="authType"
-                            checked={authType === 'password'}
-                            onChange={useCallback(() => setAuthType('password'), [])}
-                        />
-                        Password
-                    </label>
-                </fieldset>
-            </div>
-            {authType === 'accessToken' ? <>
+        <main>
+            <form className="identity-editor-form" onSubmit={handleSubmit}>
+                <div>
+                    <HighUpLabelInput
+                        label="Internal name"
+                        name="name"
+                        pattern="[^\\\/]+"
+                        required
+                        value={name}
+                        onInput={useCallback(({target}) => setName(target.value), [])}
+                    />
+                </div>
+                {name.includes('/') && <p>The name must not include a slash character (/).</p>}
+                <div>
+                    <HighUpLabelInput
+                        label="Server address (e.g. https://matrix-client.matrix.org)"
+                        name="url"
+                        type="url"
+                        required
+                        value={serverAddress}
+                        onInput={useCallback(({target}) => setServerAddress(target.value), [])}
+                    />
+                </div>
                 <div>
                     <HighUpLabelInput
                         autoComplete="current-password"
@@ -455,33 +509,28 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
                         onInput={handleMasqueradeAsInput}
                     />
                 </div>
-            </> : 
-                <PasswordInput
-                    serverAddress={serverAddress}
-                    onAccessToken={handleReceivedAccessToken}
-                />
-            }
-            {!!localStorage && 
-                <div>
-                    <ul className="checkbox-list">
-                        <li><label>
-                            <input
-                                checked={rememberLogin}
-                                type="checkbox"
-                                onChange={handleRememberLoginClick}
-                            />
-                            Save to localStorage
-                        </label></li>
-                    </ul>
+                {!!localStorage && 
+                    <div>
+                        <ul className="checkbox-list">
+                            <li><label>
+                                <input
+                                    checked={rememberLogin}
+                                    type="checkbox"
+                                    onChange={handleRememberLoginClick}
+                                />
+                                Save to localStorage
+                            </label></li>
+                        </ul>
+                    </div>
+                }
+                {error !== undefined && <p>{error}</p>}
+                <div className="card">
+                    <WhoAmI identity={changedIdentity}/>
                 </div>
-            }
-            {!!error && <p>{error}</p>}
-            <div className="card">
-                <WhoAmI identity={changedIdentity}/>
-            </div>
-            <a className="button" href="#">Cancel</a>
-            <button type="submit" className="primary">Save</button>
-        </form>
+                <a className="button" href="#">Cancel</a>
+                <button type="submit" className="primary">Save</button>
+            </form>
+        </main>
     </>;
 }
 
@@ -645,12 +694,12 @@ const IdentitySelectorRow: FC<{ identity: Identity, onDelete: (identity: Identit
         >{identity.name}</a>
         <a
             className="identity-page_action"
-            href="#identity/${identity.name}"
-            title="Edit identity ${identity.name}"
+            href={`#identity/${identity.name}`}
+            title={`Edit identity ${identity.name}`}
         >✏️</a>
         <button
             className="identity-page_action"
-            title="Delete identity ${identity.name}"
+            title={`Delete identity ${identity.name}`}
             type="button"
             onClick={useCallback(() => onDelete(identity), [identity, onDelete])}
         >❌</button>
@@ -814,6 +863,7 @@ function IdentitySelectorPage() {
                 </ul>
             </>)}
             <a className="button" href="#identity">Add identity</a>
+            <a className="button" href="#password-login">Log in via password</a>
         </main>
     </>;
 }
@@ -1880,6 +1930,8 @@ export function App() {
         child = <AboutPage />
     } else if (page === 'settings') {
         child = <SettingsPage />
+    } else if (page === 'password-login') {
+        child = <PasswordLoginPage />
     } else if (matchIdentityEditorPage) {
         child = <IdentityEditorPage identityName={identityName} />
     } else if (matchRoomPage) {

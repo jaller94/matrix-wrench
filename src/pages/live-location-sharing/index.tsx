@@ -89,7 +89,7 @@ export const LocationInput: FC<{
                 role="tab"
                 type="button"
                 onClick={useCallback(() => handleMethodChange('geolocation'), [])}
-            >Browser's Geolocation API</button>
+            >Browser&apos;s Geolocation API</button>
             <button
                 role="tab"
                 type="button"

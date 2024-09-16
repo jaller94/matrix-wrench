@@ -1,8 +1,8 @@
 /**
  * Gets an access token by logging in with a password.
+ * @param user MXID or user localpart
  */
-
-export async function loginWithPassword(serverAddress: string, user: string, password: string): Promise<Record<string, unknown>> {
+export async function logInWithPassword(serverAddress: string, user: string, password: string): Promise<Record<string, unknown>> {
     const resp = await fetch(`${serverAddress}/_matrix/client/v3/login`, {
         method: 'POST',
         headers: {
@@ -11,10 +11,12 @@ export async function loginWithPassword(serverAddress: string, user: string, pas
         },
         body: JSON.stringify({
             type: 'm.login.password',
+            // https://spec.matrix.org/v1.11/client-server-api/#matrix-user-id
             identifier: {
               type: 'm.id.user',
               user,
             },
+            initial_device_display_name: 'Matrix Wrench',
             password,
         }),
     });
