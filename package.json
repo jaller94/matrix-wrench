@@ -1,7 +1,7 @@
 {
   "name": "matrix-wrench",
   "description": "Webapp to tweak Matrix rooms",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "type": "module",
   "scripts": {
     "build": "mkdir -p public && cp --archive static/* public/ && NODE_ENV=production bun build src/index.tsx --target=browser --sourcemap=external --minify --outdir ./public",
