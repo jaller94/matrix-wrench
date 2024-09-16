@@ -24,12 +24,13 @@ import { RoomLink } from './components/room-link';
 import AboutPage from './pages/about';
 import { AppServicePage } from './pages/appservice';
 import { ContactListPage } from './pages/contact-list';
+import { LiveLocationSharingPage } from './pages/live-location-sharing';
 import { MassJoinerPage } from './pages/mass-joiner';
 import { OverviewPage } from './pages/overview/index';
 import { PolychatPage } from './pages/polychat/index';
 import { RoomToYamlPage } from './pages/room-to-yaml';
 import { RoomListPage } from './pages/room-list';
-import { SpaceManagementPage } from './pages/space-viewer.jsx';
+import { SpaceManagementPage } from './pages/space-viewer';
 import { SynapseAdminPage } from './pages/synapse-admin';
 import { UserInspectorPage } from './pages/user-inspector';
 // import {
@@ -1935,6 +1936,11 @@ export function App() {
                             />;
                         } else if (matchRoomPage.groups.subpage === 'mass-joiner') {
                             return <MassJoinerPage
+                                identity={identity}
+                                roomId={roomId}
+                            />;
+                        } else if (matchRoomPage.groups.subpage === 'live-location-sharing') {
+                            return <LiveLocationSharingPage
                                 identity={identity}
                                 roomId={roomId}
                             />;
