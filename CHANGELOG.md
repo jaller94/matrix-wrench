@@ -12,6 +12,7 @@
 
 ## v0.14.2 (2024-09-16)
 * Added: Live Location Sharing
+* Added: List many more pages on the overview
 * Fixed: The buttons to edit identity were broken
 * Fixed: Logging in with a password was broken
 
