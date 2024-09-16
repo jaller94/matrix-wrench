@@ -10,6 +10,9 @@
 * Added: Register accounts with an AppService token
 * Added: Send messages to a room
 
+## v0.14.3 (2024-09-16)
+* Fixed: Live location sharing sent empty geo URIs
+
 ## v0.14.2 (2024-09-16)
 * Added: Live Location Sharing
 * Added: List many more pages on the overview

@@ -64,8 +64,8 @@ export const LocationInput: FC<{
     const [inputMethod, setInputMethod] = useState('text');
     const [geoUri, setGeoUri] = useState('');
 
-    const handleChange = useCallback((uri: string, ts: number) => {
-        setGeoUri(uri);
+    const handleChange = useCallback((geoUri: string, ts: number) => {
+        setGeoUri(geoUri);
         onChange({geoUri, ts});
     }, [onChange]);
 
@@ -125,7 +125,6 @@ export const LiveLocationSharingPage: FC<{
     useEffect(() => {
         if (sharing && !beaconEventId) {
             setBeaconEventId('start');
-            console.log('start');
             async function func() {
                 const res = await updateBeaconState(identity, roomId, matrixUserId, true);
                 setBeaconEventId(res.event_id);
