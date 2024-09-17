@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { ChangeEventHandler, FC, useCallback, useEffect, useRef, useState } from 'react';
 import { AppHeader } from '../../components/header';
 import { Identity, NetworkLog } from '../../app';
 
@@ -20,11 +20,12 @@ async function updateBeaconState(
     matrixUserId: string,
     enabled = true,
     beaconInfo = {},
+    timeout = 1 * 60 * 60 * 1000,
 ): Promise<unknown> {
     const content = {
         ...beaconInfo,
-        'live': enabled,
-        'timeout': 1 * 60 * 60 * 1000, // how long from the last event until we consider the beacon inactive in milliseconds
+        live: enabled,
+        timeout, // how long from the last event until we consider the beacon inactive in milliseconds
         'org.matrix.msc3488.ts': Date.now(), // creation timestamp of the beacon on the client
         'org.matrix.msc3488.asset': {
             'type': 'm.self' // the type of asset being tracked as per MSC3488
@@ -110,9 +111,11 @@ export const LiveLocationSharingPage: FC<{
 }> = ({identity, roomId}) => {
     const location = useRef<{geoUri: string, ts: number} | null>(null);
     const [sharing, setSharing] = useState(false);
+    const [sharingExpiry, setSharingExpiry] = useState<number | undefined>();
     const [matrixUserId, setMatrixUserId] = useState('');
     const [beaconEventId, setBeaconEventId] = useState('');
     const [lastLocation, setLastLocation] = useState('');
+    const [frequency, setFrequency] = useState(10000);
 
     useEffect(() => {
         async function func() {
@@ -125,19 +128,31 @@ export const LiveLocationSharingPage: FC<{
     useEffect(() => {
         if (sharing && !beaconEventId) {
             setBeaconEventId('start');
+            const expiryDuration = 1 * 60 * 60 * 1000;
+            setSharingExpiry(Date.now() + expiryDuration);
             async function func() {
-                const res = await updateBeaconState(identity, roomId, matrixUserId, true);
+                const res = await updateBeaconState(identity, roomId, matrixUserId, true, undefined, expiryDuration);
                 setBeaconEventId(res.event_id);
             }
             func();
-        }
-        if (!sharing && beaconEventId) {
+        } else if (!sharing && beaconEventId) {
             if (beaconEventId !== 'start') {
                 updateBeaconState(identity, roomId, matrixUserId, false);
             }
             setBeaconEventId('');
+            setSharingExpiry(undefined);
         }
     }, [beaconEventId, sharing]);
+
+    useEffect(() => {
+        if (sharingExpiry === undefined) {
+            return;
+        }
+        const timeout = setTimeout(() => {
+            setSharing(false);
+        }, Math.max(0, sharingExpiry - Date.now()));
+        return () => clearTimeout(timeout);
+    }, [sharingExpiry]);
     
     useEffect(() => {
         if (!beaconEventId || beaconEventId === 'start') {
@@ -153,7 +168,7 @@ export const LiveLocationSharingPage: FC<{
             }
             postBeaconData(identity, roomId, beaconEventId, location.current.geoUri, location.current.ts);
             setLastLocation(location.current.geoUri);
-        }, 10000);
+        }, frequency);
         return () => {
             clearInterval(interval);
         };
@@ -163,14 +178,33 @@ export const LiveLocationSharingPage: FC<{
         location.current = loc ?? null;
     }, []);
 
+    const handleFrequencyChange: ChangeEventHandler<HTMLSelectElement> = useCallback((event) => {
+        setFrequency(Number.parseInt(event.target.value));
+    }, []);
+
     return <>
         <AppHeader
             backUrl={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
         >Live Location Sharing</AppHeader>
         <main>
             <div className="card">
-                <p>Sharing: {sharing ? 'yes' : 'no'}</p>
+                <p>Sharing: {sharing ? 'yes' : 'no'}{sharingExpiry && ` (until ${new Date(sharingExpiry).toLocaleTimeString()})`}</p>
                 <p>Last sent event: {lastLocation}</p>
+                <label>
+                    Event frequency:
+                    <select
+                        disabled={sharing}
+                        value={frequency}
+                        onChange={handleFrequencyChange}
+                    >
+                        <option value="2000">every 2 seconds</option>
+                        <option value="5000">every 5 seconds</option>
+                        <option value="10000">every 10 seconds</option>
+                        <option value="20000">every 20 seconds</option>
+                        <option value="30000">every 30 seconds</option>
+                        <option value="60000">every minute</option>
+                    </select>
+                </label>
                 <div>
                     <button
                         disabled={!matrixUserId || sharing}
