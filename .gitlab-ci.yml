@@ -1,18 +1,21 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 image: oven/bun:latest
-
 cache:
-  key: ${CI_COMMIT_REF_SLUG}
+  key: "${CI_COMMIT_REF_SLUG}"
   paths:
   - node_modules/
-
 before_script:
 - bun install --frozen-lockfile
-
 test:
   script:
   - bun run lint
   - bun run test
-
 pages:
   script:
   - bun run build
@@ -21,3 +24,5 @@ pages:
     - public
   only:
   - main
+include:
+- template: Security/Dependency-Scanning.gitlab-ci.yml
