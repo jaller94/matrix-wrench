@@ -1,18 +1,14 @@
 image: oven/bun:latest
-
 cache:
-  key: ${CI_COMMIT_REF_SLUG}
+  key: "${CI_COMMIT_REF_SLUG}"
   paths:
   - node_modules/
-
 before_script:
 - bun install --frozen-lockfile
-
 test:
   script:
   - bun run lint
   - bun run test
-
 pages:
   script:
   - bun run build
