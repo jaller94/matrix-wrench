@@ -3,16 +3,14 @@ cache:
   key: "${CI_COMMIT_REF_SLUG}"
   paths:
   - node_modules/
-# before_script:
-#- bun install --frozen-lockfile
 test:
   script:
-  - npm ci
+  - bun install --frozen-lockfile
   - bun run lint
   - bun run test
 pages:
   script:
-  - npm ci
+  - bun install --frozen-lockfile
   - bun run build
   artifacts:
     paths:
