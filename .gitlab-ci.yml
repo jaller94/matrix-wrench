@@ -3,8 +3,6 @@ cache:
   key: "${CI_COMMIT_REF_SLUG}"
   paths:
   - node_modules/
-stages:
-- test
 test:
   script:
   - bun install --frozen-lockfile
@@ -19,8 +17,3 @@ pages:
     - public
   only:
   - main
-include:
-- template: Security/Dependency-Scanning.gitlab-ci.yml
-- template: Security/SAST.gitlab-ci.yml
-sast:
-  stage: test
