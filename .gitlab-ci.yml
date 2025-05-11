@@ -19,4 +19,3 @@ pages:
   - main
 include:
 - template: Security/Dependency-Scanning.gitlab-ci.yml
-
