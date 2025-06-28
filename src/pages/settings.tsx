@@ -50,6 +50,8 @@ const DEFAULT_THEME = {
     'input-required-color': 'darkred',
     'input-error-color': '#000',
     'link-color': '#66b3ff',
+    'table-header-bg-color': '#04aa6d',
+    'table-alt-bg-color': '#f2f2f2',
 };
 
 let IDENTITIES: Identity[] = [];
@@ -263,7 +265,7 @@ export const ThemeSetter: FC = () => {
         } else if (theme === 'custom') {
             html.setAttribute('data-theme', 'custom');
         } else {
-            const systemSettingDark = window.matchMedia('(prefers-color-scheme: dark)');
+            const systemSettingDark = globalThis.matchMedia('(prefers-color-scheme: dark)');
             html.setAttribute('data-theme', systemSettingDark.matches ? 'dark' : 'light');
 
             // Listen to changes of the browser setting

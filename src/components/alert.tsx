@@ -43,15 +43,15 @@ export function AlertSingleton() {
             setTitle(event.detail.title);
             setOpen(true);
         }
-        window.addEventListener('confirm', handleConfirmDialog);
+        globalThis.addEventListener('confirm', handleConfirmDialog);
         return () => {
-            window.removeEventListener('confirm', handleConfirmDialog);
+            globalThis.removeEventListener('confirm', handleConfirmDialog);
         };
     }, []);
     
     const handleClose = (response: boolean) => {
         setOpen(false);
-        window.dispatchEvent(new CustomEvent('confirmed', {
+        globalThis.dispatchEvent(new CustomEvent('confirmed', {
             detail: {
                 response,
             },
@@ -68,7 +68,7 @@ export function AlertSingleton() {
 }
 
 export const confirm = (title: string) => new Promise((resolve) => {
-    window.dispatchEvent(new CustomEvent('confirm', {
+    globalThis.dispatchEvent(new CustomEvent('confirm', {
         detail: {
             title,
         },
@@ -78,5 +78,5 @@ export const confirm = (title: string) => new Promise((resolve) => {
     }
      
     // FIXME: Memory leak. This will not be cleaned up.
-    window.addEventListener('confirmed', handleClose);
+    globalThis.addEventListener('confirmed', handleClose);
 });

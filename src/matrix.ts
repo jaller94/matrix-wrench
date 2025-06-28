@@ -16,7 +16,7 @@ let nextRequestId = 1;
 export async function doRequest(resource: string | URL, init: RequestInit) {
     const requestId = nextRequestId;
     nextRequestId += 1;
-    window.dispatchEvent(new CustomEvent('matrix-request', {
+    globalThis.dispatchEvent(new CustomEvent('matrix-request', {
         detail: {
             init,
             resource,
@@ -24,7 +24,7 @@ export async function doRequest(resource: string | URL, init: RequestInit) {
         },
     }));
     if (dryRun) {
-        window.dispatchEvent(new CustomEvent('matrix-response', {
+        globalThis.dispatchEvent(new CustomEvent('matrix-response', {
             detail: { requestId, },
         }));
         return {};
@@ -35,7 +35,7 @@ export async function doRequest(resource: string | URL, init: RequestInit) {
     try {
         response = await fetch(resource, init);
     } catch (error) {
-        window.dispatchEvent(new CustomEvent('matrix-response', {
+        globalThis.dispatchEvent(new CustomEvent('matrix-response', {
             detail: {
                 requestId,
             },
@@ -47,7 +47,7 @@ export async function doRequest(resource: string | URL, init: RequestInit) {
     } catch {
         isNotJson = true;
     }
-    window.dispatchEvent(new CustomEvent('matrix-response', {
+    globalThis.dispatchEvent(new CustomEvent('matrix-response', {
         detail: {
             isNotJson,
             requestId,

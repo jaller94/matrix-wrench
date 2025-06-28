@@ -311,7 +311,7 @@ const PasswordLoginPage: FC = () => {
                     }
                 }
                 setError(undefined);
-                window.location.href = '#';
+                globalThis.location.href = '#';
                 return newIdentities;
             });
         } catch (err) {
@@ -421,7 +421,7 @@ const IdentityEditorPage: FC<{identityName: string}> = ({identityName}) => {
                 }
             }
             setEditingError(undefined);
-            window.location.href = '#';
+            globalThis.location.href = '#';
             return newIdentities;
         });
     }, [identityName, setIdentities]);
@@ -651,11 +651,11 @@ const NetworkRequestsProvider: FC<PropsWithChildren> = ({children}) => {
             });
         };
 
-        window.addEventListener('matrix-request', handleMatrixRequest);
-        window.addEventListener('matrix-response', handleMatrixResponse);
+        globalThis.addEventListener('matrix-request', handleMatrixRequest);
+        globalThis.addEventListener('matrix-response', handleMatrixResponse);
         return () => {
-            window.removeEventListener('matrix-request', handleMatrixRequest);
-            window.removeEventListener('matrix-response', handleMatrixResponse);
+            globalThis.removeEventListener('matrix-request', handleMatrixRequest);
+            globalThis.removeEventListener('matrix-response', handleMatrixResponse);
         };
     }, []);
 
@@ -935,7 +935,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
     const [busy, setBusy] = useState(false);
 
     const handleSelectRoom = useCallback((roomId: string) => {
-        window.location.href = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
+        globalThis.location.href = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setRecentRooms(recentRooms => ([
             roomId,
             ...recentRooms.filter(r => r !== roomId),
@@ -979,7 +979,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
                 setBusy(false);
             }
         }
-        window.location.href = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
+        globalThis.location.href = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setResolvedRoomId(roomId);
         setRecentRooms(recentRooms => ([
             roomId,
@@ -988,7 +988,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
     }, [identity, room]);
 
     const handleResetRoomId = useCallback(() => {
-        window.location.href = `#/${encodeURIComponent(identity.name)}`;
+        globalThis.location.href = `#/${encodeURIComponent(identity.name)}`;
     }, [identity.name]);
 
     const handleRoomInput = useCallback(({target}) => setRoom(target.value), []);
@@ -1867,7 +1867,7 @@ const BulkKickPage: FC<{ identity: Identity, roomId: string }> = ({identity, roo
 
 const Shortcuts: FC<{ identity: Identity }> = ({ identity }) => {
     const handleClick = () => {
-        window.location.href = `#/${encodeURIComponent(identity.name)}/overview`;
+        globalThis.location.href = `#/${encodeURIComponent(identity.name)}/overview`;
     };
 
     useEffect(() => {
@@ -1882,11 +1882,11 @@ const Shortcuts: FC<{ identity: Identity }> = ({ identity }) => {
             if (event.key === 'P') {
                 event.preventDefault();
                 event.stopPropagation();
-                window.location.href = `#/${encodeURIComponent(identity.name)}/overview`;
+                globalThis.location.href = `#/${encodeURIComponent(identity.name)}/overview`;
             } else if (event.key === 'p') {
                 event.preventDefault();
                 event.stopPropagation();
-                window.location.href = `#/${encodeURIComponent(identity.name)}/room-selector`;
+                globalThis.location.href = `#/${encodeURIComponent(identity.name)}/room-selector`;
             }
         };
 
@@ -1904,7 +1904,92 @@ const Shortcuts: FC<{ identity: Identity }> = ({ identity }) => {
     >Navigate to overview</button>;
 }
 
-export function App() {
+export const MainRouter: FC<{identity: Identity, roomId: string, subpage: string}> = ({ identity, roomId, subpage }) => {
+    console.log(roomId, subpage);
+    if (roomId.startsWith('!')) {
+        if (subpage === 'yaml') {
+            return <RoomToYamlPage
+                identity={identity}
+                roomId={roomId}
+            />;
+        } else if (subpage === 'invite') {
+            return <BulkInvitePage
+                identity={identity}
+                roomId={roomId}
+            />;
+        } else if (subpage === 'mass-joiner') {
+            return <MassJoinerPage
+                identity={identity}
+                roomId={roomId}
+            />;
+        } else if (subpage === 'live-location-sharing') {
+            return <LiveLocationSharingPage
+                identity={identity}
+                roomId={roomId}
+            />;
+        } else if (subpage === 'kick') {
+            return <BulkKickPage
+                identity={identity}
+                roomId={roomId}
+            />;
+        } else if (subpage === 'space-management') {
+            return <SpaceManagementPage
+                identity={identity}
+                roomId={roomId}
+            />;
+        } else if (subpage === '') {
+            return <MainPage
+                identity={identity}
+                roomId={roomId}
+            />;
+        } else {
+            return <p>404: Unknown subpage</p>;
+        }
+    } else if (roomId.startsWith('#')) {
+        return <p>TODO: Resolve alias</p>
+    }
+    if (roomId === 'synapse-admin') {
+        return <SynapseAdminPage
+            identity={identity}
+        />;
+    } else if (roomId === 'appservice') {
+        return <AppServicePage
+            identity={identity}
+        />;
+    } else if (roomId === 'contact-list') {
+        return <ContactListPage
+            identity={identity}
+        />;
+    } else if (roomId === 'mass-joiner') {
+        return <MassJoinerPage
+            identity={identity}
+        />;
+    } else if (roomId === 'overview') {
+        return <OverviewPage
+            identity={identity}
+        />;
+    } else if (roomId === 'polychat') {
+        return <PolychatPage
+            identity={identity}
+        />;
+    } else if (roomId === 'room-list') {
+        return <RoomListPage
+            identity={identity}
+        />;
+    } else if (roomId === 'user-inspector') {
+        return <UserInspectorPage
+            identity={identity}
+        />;
+    } else if (roomId === '') {
+        return <MainPage
+            identity={identity}
+            roomId={roomId}
+        />;
+    }
+    return <p>404: Unknown page</p>;
+}
+
+export const App: FC = () => {
     const [page, setPage] = useState(location.hash.slice(1));
 
     useEffect(() => {
@@ -1912,9 +1997,9 @@ export function App() {
             setPage(location.hash.slice(1));
         };
 
-        window.addEventListener('hashchange', handleHashChange);
+        globalThis.addEventListener('hashchange', handleHashChange);
         return () => {
-            window.removeEventListener('hashchange', handleHashChange);
+            globalThis.removeEventListener('hashchange', handleHashChange);
         };
     }, []);
 
@@ -1945,69 +2030,11 @@ export function App() {
                 identityName={identityName}
                 render={(identity) => {
                     if (matchRoomPage) {
-                        if (matchRoomPage.groups.roomId === 'synapse-admin') {
-                            return <SynapseAdminPage
-                                identity={identity}
-                            />;
-                        } else if (matchRoomPage.groups.roomId === 'appservice') {
-                            return <AppServicePage
-                                identity={identity}
-                            />;
-                        } else if (matchRoomPage.groups.roomId === 'contact-list') {
-                            return <ContactListPage
-                                identity={identity}
-                            />;
-                        } else if (matchRoomPage.groups.roomId === 'mass-joiner') {
-                            return <MassJoinerPage
-                                identity={identity}
-                            />;
-                        } else if (matchRoomPage.groups.roomId === 'overview') {
-                            return <OverviewPage
+                        return <MainRouter
                             identity={identity}
-                            />;
-                        } else if (matchRoomPage.groups.roomId === 'polychat') {
-                            return <PolychatPage
-                            identity={identity}
-                            />;
-                        } else if (matchRoomPage.groups.roomId === 'room-list') {
-                            return <RoomListPage
-                                identity={identity}
-                            />;
-                        } else if (matchRoomPage.groups.roomId === 'user-inspector') {
-                            return <UserInspectorPage
-                                identity={identity}
-                            />;
-                        } else if (matchRoomPage.groups.subpage === 'yaml') {
-                            return <RoomToYamlPage
-                                identity={identity}
-                                roomId={roomId}
-                            />;
-                        } else if (matchRoomPage.groups.subpage === 'invite') {
-                            return <BulkInvitePage
-                                identity={identity}
-                                roomId={roomId}
-                            />;
-                        } else if (matchRoomPage.groups.subpage === 'mass-joiner') {
-                            return <MassJoinerPage
-                                identity={identity}
-                                roomId={roomId}
-                            />;
-                        } else if (matchRoomPage.groups.subpage === 'live-location-sharing') {
-                            return <LiveLocationSharingPage
-                                identity={identity}
-                                roomId={roomId}
-                            />;
-                        } else if (matchRoomPage.groups.subpage === 'kick') {
-                            return <BulkKickPage
-                                identity={identity}
-                                roomId={roomId}
-                            />;
-                        } else if (matchRoomPage.groups.subpage === 'space-management') {
-                            return <SpaceManagementPage
-                                identity={identity}
-                                roomId={roomId}
-                            />;
-                        }
+                            roomId={matchRoomPage.groups?.roomId ?? ''}
+                            subpage={matchRoomPage.groups?.subpage ?? ''}
+                        />
                     }
                     return <MainPage
                         identity={identity}

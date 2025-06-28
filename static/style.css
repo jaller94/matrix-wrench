@@ -3,16 +3,7 @@
     --btn-bg-hover-color: #c9c9cb;
     --btn-text-color: #000;
     --btn-border-color: #000;
-    --main-bg-color: #fff;
-    --main-bg-hover-color: #eee;
-    --main-bg-hover-hover-color: #ddd;
-    --main-border-color: grey;
-    --main-text-color: #121212;
     --header-bg-color: #eee;
-    --primary-btn-bg-color: #6716ec;
-    --primary-btn-bg-hover-color: #915ae8;
-    --primary-btn-border-color: #6716ec;
-    --primary-btn-text-color: #fff;
     --input-bg-color: #fff;
     --input-label-color: darkblue;
     --input-border-color: #000;
@@ -20,6 +11,17 @@
     --input-required-color: darkred;
     --input-error-color: #000;
     --link-color: #66b3ff;
+    --main-bg-color: #fff;
+    --main-bg-hover-color: #eee;
+    --main-bg-hover-hover-color: #ddd;
+    --main-border-color: grey;
+    --main-text-color: #121212;
+    --primary-btn-bg-color: #6716ec;
+    --primary-btn-bg-hover-color: #915ae8;
+    --primary-btn-border-color: #6716ec;
+    --primary-btn-text-color: #fff;
+    --table-header-bg-color: #04aa6d;
+    --table-alt-bg-color: #f2f2f2;
 }
 
 [data-theme="dark"] {
@@ -27,16 +29,7 @@
     --btn-bg-hover-color: #c9c9cb;
     --btn-text-color: #000;
     --btn-border-color: #000;
-    --main-bg-color: #141A13;
-    --main-bg-hover-color: #1c261b;
-    --main-bg-hover-hover-color: #273525;
-    --main-border-color: grey;
-    --main-text-color: #cdc;
     --header-bg-color: #1c261b;
-    --primary-btn-bg-color: #642eba;
-    --primary-btn-bg-hover-color: #311067;
-    --primary-btn-border-color: #854be0;
-    --primary-btn-text-color: #fff;
     --input-bg-color: #000;
     --input-label-color: lightblue;
     --input-border-color: #888;
@@ -44,6 +37,17 @@
     --input-required-color: darkred;
     --input-error-color: #000;
     --link-color: #66b3ff;
+    --main-bg-color: #141A13;
+    --main-bg-hover-color: #1c261b;
+    --main-bg-hover-hover-color: #273525;
+    --main-border-color: grey;
+    --main-text-color: #cdc;
+    --primary-btn-bg-color: #642eba;
+    --primary-btn-bg-hover-color: #311067;
+    --primary-btn-border-color: #854be0;
+    --primary-btn-text-color: #fff;
+    --table-header-bg-color: #04aa6d;
+    --table-alt-bg-color: rgba(255,255,255,0.07);
 }
 
 /* :root body.black {

@@ -1,4 +1,4 @@
-window.onerror = (msg, url, line, col, error) => {
+globalThis.onerror = (msg, url, line, col, error) => {
     // Note that col & error are new to the HTML 5 spec and may not be 
     // supported in every browser.  It worked for me in Chrome.
     let extra = col ? `\ncolumn: ${col}` : '';
