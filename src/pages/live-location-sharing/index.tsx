@@ -21,7 +21,7 @@ async function updateBeaconState(
     enabled = true,
     beaconInfo = {},
     timeout = 1 * 60 * 60 * 1000,
-): Promise<unknown> {
+) {
     const content = {
         ...beaconInfo,
         live: enabled,

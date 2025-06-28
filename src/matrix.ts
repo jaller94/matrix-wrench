@@ -140,7 +140,7 @@ const zBanUser = z.looseObject({});
  * Ban a user from a room.
  */
 export async function banUser(identity: Identity, roomId: string, userId: string, reason?: string) {
-    return zBanUser.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/ban`, {
+    return zBanUser.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/ban`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -159,7 +159,7 @@ const zClientVersion = z.looseObject({});
  * Get a list of client features and versions supported by the server.
  */
 export async function clientVersions(identity: Identity) {
-    return zClientVersion.parse(doRequest(`${identity.serverAddress}/_matrix/client/versions`, {
+    return zClientVersion.parse(await doRequest(`${identity.serverAddress}/_matrix/client/versions`, {
         method: 'GET',
     }));
 }
@@ -172,7 +172,7 @@ const zCreateRoom = z.looseObject({
  * Create a new room.
  */
 export async function createRoom(identity: Identity, body: object) {
-    return zCreateRoom.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/createRoom`, {
+    return zCreateRoom.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/createRoom`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -188,7 +188,7 @@ const zCreateRoomAlias = z.looseObject({});
  * Create a new room alias.
  */
 export async function createRoomAlias(identity: Identity, roomAlias: string, roomId: string) {
-    return zCreateRoomAlias.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
+    return zCreateRoomAlias.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -206,7 +206,7 @@ const zDeleteRoomAlias = z.looseObject({});
  * Delete a room alias.
  */
 export async function deleteRoomAlias(identity: Identity, roomAlias: string): Promise<object> {
-    return zDeleteRoomAlias.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
+    return zDeleteRoomAlias.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -241,7 +241,7 @@ export async function getHierachy(identity: Identity, roomId: string, from?: str
     if (from) {
         url += `?from=${encodeURIComponent(from)}`;
     }
-    return zGetHierachy.parse(doRequest(...auth(identity, url, {
+    return zGetHierachy.parse(await doRequest(...auth(identity, url, {
         method: 'GET',
     })));
 }
@@ -254,7 +254,7 @@ const zGetJoinedMembers = z.looseObject({
  * Gets a list of joined members of a room.
  */
 export async function getJoinedMembers(identity: Identity, roomId: string) {
-    return zGetJoinedMembers.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/joined_members`, {
+    return zGetJoinedMembers.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/joined_members`, {
         method: 'GET',
     })));
 }
@@ -267,7 +267,7 @@ const zGetJoinedRooms = z.looseObject({
  * Returns a list of the user's current rooms.
  */
 export async function getJoinedRooms(identity: Identity) {
-    return zGetJoinedRooms.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/joined_rooms`, {
+    return zGetJoinedRooms.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/joined_rooms`, {
         method: 'GET',
     })));
 }
@@ -280,7 +280,7 @@ const zGetMediaByRoom = z.looseObject({});
  * Synapse Admin API
  */
 export async function getMediaByRoom(identity: Identity, roomId: string) {
-    return zGetMediaByRoom.parse(doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v1/room/${encodeURIComponent(roomId)}/media`, {
+    return zGetMediaByRoom.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v1/room/${encodeURIComponent(roomId)}/media`, {
         method: 'GET',
     })));
 }
@@ -292,7 +292,7 @@ const zGetMembers = z.looseObject({});
  * Get the members of a room.
  */
 export async function getMembers(identity: Identity, roomId: string): Promise<object> {
-    return zGetMembers.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/members`, {
+    return zGetMembers.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/members`, {
         method: 'GET',
     })));
 }
@@ -322,7 +322,7 @@ const zInviteUser = z.looseObject({});
  * Invite a user to a room.
  */
 export async function inviteUser(identity: Identity, roomId: string, userId: string) {
-    return zInviteUser.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/invite`, {
+    return zInviteUser.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/invite`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -340,7 +340,7 @@ const zJoinRoom = z.looseObject({});
  * Join a room.
  */
 export async function joinRoom(identity: Identity, roomId: string) {
-    return zJoinRoom.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/join`, {
+    return zJoinRoom.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/join`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -358,7 +358,7 @@ const zKickUser = z.looseObject({});
  * Kick a user from a room.
  */
 export async function kickUser(identity: Identity, roomId: string, userId: string, reason?: string) {
-    return zKickUser.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/kick`, {
+    return zKickUser.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/kick`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -394,7 +394,7 @@ const zResolveAlias = z.looseObject({
  * Resolves a room alias to a room ID.
  */
 export async function resolveAlias(identity: Identity, roomAlias: string) {
-    return zResolveAlias.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
+    return zResolveAlias.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'GET',
     })));
 }
@@ -428,10 +428,10 @@ const zSendEvent = z.looseObject({
 /**
  * Send an event to a room.
  */
-export async function sendEvent(identity: Identity, roomId: string, type: string, content: object, transactionId?: string): Promise<object> {
+export async function sendEvent(identity: Identity, roomId: string, type: string, content: object, transactionId?: string) {
     const url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/send/` +
         `${encodeURIComponent(type)}/${encodeURIComponent(transactionId ?? Math.random())}`;
-    return zSendEvent.parse(doRequest(...auth(identity, url, {
+    return zSendEvent.parse(await doRequest(...auth(identity, url, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -440,28 +440,35 @@ export async function sendEvent(identity: Identity, roomId: string, type: string
     })));
 }
 
+const zSetState = z.looseObject({
+    event_id: z.string(),
+});
+
 /**
  * Set the state of a room.
  */
-export async function setState(identity: Identity, roomId: string, type: string, stateKey: string | undefined, content: object): Promise<object> {
+export async function setState(identity: Identity, roomId: string, type: string, stateKey: string | undefined, content: object) {
     let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/state/${encodeURIComponent(type)}`;
     if (stateKey) {
         url += `/${encodeURIComponent(stateKey)}`;
     }
-    return doRequest(...auth(identity, url, {
+    return zSetState.parse(await doRequest(...auth(identity, url, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(content),
-    }));
+    })));
 }
+
+// TODO Look up response in the Matrix Spec
+const zUnbanUser = z.looseObject({});
 
 /**
  * Unban a user to a room.
  */
 export async function unbanUser(identity: Identity, roomId: string, userId: string): Promise<object> {
-    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/unban`, {
+    return zUnbanUser.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/unban`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -469,7 +476,7 @@ export async function unbanUser(identity: Identity, roomId: string, userId: stri
         body: JSON.stringify({
             user_id: userId,
         }),
-    }));
+    })));
 }
 
 const zWhoAmI = z.looseObject({
@@ -480,7 +487,7 @@ const zWhoAmI = z.looseObject({
  * Gets information about the owner of a given access token.
  */
 export async function whoAmI(identity: Identity) {
-    return zWhoAmI.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/account/whoami`, {
+    return zWhoAmI.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/account/whoami`, {
         method: 'GET',
     })));
 }
