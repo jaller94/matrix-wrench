@@ -76,7 +76,7 @@ export const PolychatPage: FC<{ identity: Identity }> = ({ identity }) => {
     }, [identity, network]);
 
 
-    const handleNetworkChange: ChangeEventHandler<HTMLInputElement> = useCallback(async (event) => {
+    const handleNetworkChange: ChangeEventHandler<HTMLInputElement> = useCallback((event) => {
         setNetwork(event.target.value);
     }, []);
 

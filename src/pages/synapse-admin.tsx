@@ -101,7 +101,7 @@ const MutateUserForm: FC<{ identity: Identity }> = ({ identity }) => {
                     Deactivated
                 </label></li>
             </ul>
-            <button>Create/mutate user</button>
+            <button type="submit">Create/mutate user</button>
         </CustomForm>
     </>;
 };

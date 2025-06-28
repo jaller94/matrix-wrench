@@ -370,8 +370,11 @@ export async function kickUser(identity: Identity, roomId: string, userId: strin
     })));
 }
 
+// TODO Look up response in the Matrix Spec
+const zRegisterAppServiceUser = z.looseObject({});
+
 export async function registerAppServiceUser(identity: Identity, username: string) {
-    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/register`, {
+    return zRegisterAppServiceUser.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -380,7 +383,7 @@ export async function registerAppServiceUser(identity: Identity, username: strin
             type: 'm.login.application_service',
             username,
         }),
-    }));
+    })));
 }
 
 const zResolveAlias = z.looseObject({
@@ -481,6 +484,8 @@ export async function unbanUser(identity: Identity, roomId: string, userId: stri
 
 const zWhoAmI = z.looseObject({
     user_id: z.string(),
+    is_guest: z.boolean(),
+    device_id: z.string(),
 });
 
 /**

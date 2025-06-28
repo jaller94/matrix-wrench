@@ -160,7 +160,7 @@ const MakeRoomAdminForm: FC<{identity: Identity, roomId: string}> = ({ identity,
                 value={userId}
                 onInput={useCallback(({target}) => setUserId(target.value), [])}
             />
-            <button>Make user a room admin</button>
+            <button type="submit">Make user a room admin</button>
         </CustomForm>
     );
 }
@@ -798,7 +798,7 @@ const UnencryptedTextMessage: FC<{identity: Identity, roomId: string}> = ({ iden
                 value={message}
                 onInput={useCallback(({ target }) => setMessage(target.value), [])}
             />
-            <button>Send message</button>
+            <button type="submit">Send message</button>
         </CustomForm>
     );
 }
@@ -996,7 +996,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
     if (roomId) {
         return <>
             <hr/>
-            <button onClick={handleResetRoomId}>Switch to a different room</button>
+            <button type="button" onClick={handleResetRoomId}>Switch to a different room</button>
             <RoomPage identity={identity} roomId={roomId}/>
         </>;
     }
@@ -1835,7 +1835,7 @@ const BulkKickPage: FC<{ identity: Identity, roomId: string }> = ({identity, roo
     }, []);
 
     const action: (userId: string) => void  = useCallback(async userId => {
-        return kickUser(identity, roomId, userId);
+        await kickUser(identity, roomId, userId);
     }, [identity, roomId]);
 
     return <>

@@ -14,7 +14,7 @@ import { GeolocationGpxReplayer } from './geolocation-gpx-replayer';
 /**
  * @returns resolves to the event ID that represents the event
  */
-async function updateBeaconState(
+function updateBeaconState(
     identity: Identity,
     roomId: string,
     matrixUserId: string,
@@ -38,13 +38,13 @@ async function updateBeaconState(
  * Posts an event in the room to update the beacon's data.
  * @returns resolves to the event ID that represents the event
  */
-async function postBeaconData(
+function postBeaconData(
     identity: Identity,
     roomId: string,
     beaconEventId: string,
     locationUri: string,
     timestamp: number,
-): Promise<unknown> {
+) {
     const content = {
         'm.relates_to': { // from MSC2674: https://github.com/matrix-org/matrix-doc/pull/2674
             'rel_type': 'm.reference', // from MSC3267: https://github.com/matrix-org/matrix-doc/pull/3267
@@ -162,7 +162,7 @@ export const LiveLocationSharingPage: FC<{
             postBeaconData(identity, roomId, beaconEventId, location.current.geoUri, location.current.ts);
             setLastLocation(location.current.geoUri);
         }
-        const interval = setInterval(async () => {
+        const interval = setInterval(() => {
             if (!location.current) {
                 return;
             }
