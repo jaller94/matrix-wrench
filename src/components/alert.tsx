@@ -73,7 +73,7 @@ export const confirm = (title: string) => new Promise((resolve) => {
             title,
         },
     }));
-    const handleClose = async (event: Event) => {
+    const handleClose = (event: Event) => {
         resolve(event.detail.response);
     }
      

@@ -148,7 +148,7 @@ const MakeRoomAdminForm: FC<{identity: Identity, roomId: string}> = ({ identity,
             body={body}
             identity={identity}
             method="POST"
-            requiresConfirmation={true}
+            requiresConfirmation
             url="/_synapse/admin/v1/rooms/!{roomId}/make_room_admin"
             variables={variables}
         >

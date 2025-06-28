@@ -46,7 +46,7 @@ const MutateUserForm: FC<{ identity: Identity }> = ({ identity }) => {
             body={body}
             identity={identity}
             method="PUT"
-            requiresConfirmation={true}
+            requiresConfirmation
             url="/_synapse/admin/v2/users/!{userId}"
             variables={variables}
         >
