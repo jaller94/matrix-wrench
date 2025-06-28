@@ -511,12 +511,12 @@ label {
 }
 
 .room-list th {
-    background-color: #04AA6D;
+    background-color: var(--table-header-bg-color);
     color: white;
 }
 
 .room-list tr:nth-child(even) {
-    background-color: #f2f2f2;
+    background-color: var(--table-alt-bg-color);
 }
 
 .modal_frame {
