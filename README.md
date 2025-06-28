@@ -14,8 +14,11 @@ Maturity: Alpha
 * Static web app (cacheable and no need for PHP, a database or whatever)
 * [Keep it small and simple](https://en.wikipedia.org/wiki/KISS_principle)
   * Minimal dependencies
+    * Currently:
+      * React to build components and manage the application state
+      * zod to validate API responses
 
 ## Disclaimer
 
-This is a hobby project without security guarantees. It is neither backed nor endorsed by my employer.
+This is a hobby project without security guarantees.
 Use it at your own risk!

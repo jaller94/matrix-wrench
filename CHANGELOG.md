@@ -1,9 +1,11 @@
 # Changelog for Matrix Wrench
 
 ## Future
-* Added: Act as other users when using AppService tokens.
+* Added: Act as other users when using AppService tokens
+* Added: Validation of Matrix server responses using the zod library
 * Changed: Moved "Register account (AppService API)" to an AppService API page.
 * Fixed: An invalid room type resulted in `roomVersion` being reported as "!invalid" in the Room List
+* Fixed: Pagination of querying children of a Space.
 
 ### Alpha Features
 * Added: Space Management Page
