@@ -239,7 +239,7 @@ const zGetHierachy = z.looseObject({
 export async function getHierachy(identity: Identity, roomId: string, from?: string) {
     let url = `${identity.serverAddress}/_matrix/client/v1/rooms/${encodeURIComponent(roomId)}/hierarchy`;
     if (from) {
-        url += `?from={encodeURIComponent(from)}`;
+        url += `?from=${encodeURIComponent(from)}`;
     }
     return zGetHierachy.parse(doRequest(...auth(identity, url, {
         method: 'GET',
