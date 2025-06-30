@@ -1905,7 +1905,6 @@ const Shortcuts: FC<{ identity: Identity }> = ({ identity }) => {
 }
 
 export const MainRouter: FC<{identity: Identity, roomId: string, subpage: string}> = ({ identity, roomId, subpage }) => {
-    console.log(roomId, subpage);
     if (roomId.startsWith('!')) {
         if (subpage === 'yaml') {
             return <RoomToYamlPage
@@ -2032,7 +2031,7 @@ export const App: FC = () => {
                     if (matchRoomPage) {
                         return <MainRouter
                             identity={identity}
-                            roomId={matchRoomPage.groups?.roomId ?? ''}
+                            roomId={roomId ?? ''}
                             subpage={matchRoomPage.groups?.subpage ?? ''}
                         />
                     }
