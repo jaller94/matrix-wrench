@@ -130,10 +130,10 @@ export const LiveLocationSharingPage: FC<{
             setBeaconEventId('start');
             const expiryDuration = 1 * 60 * 60 * 1000;
             setSharingExpiry(Date.now() + expiryDuration);
-            async function func() {
+            const func = async() => {
                 const res = await updateBeaconState(identity, roomId, matrixUserId, true, undefined, expiryDuration);
                 setBeaconEventId(res.event_id);
-            }
+            };
             func();
         } else if (!sharing && beaconEventId) {
             if (beaconEventId !== 'start') {

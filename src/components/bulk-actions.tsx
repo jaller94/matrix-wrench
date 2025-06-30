@@ -30,7 +30,7 @@ export const BulkActionForm: FC<{
                     onInput={useCallback(({target}) => setUserIdsString(target.value), [])}
                 />
             </label>
-            <button className="primary">{actionLabel}</button>
+            <button className="primary" type="submit">{actionLabel}</button>
         </form>
     );
 };

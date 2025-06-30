@@ -103,8 +103,8 @@ export const MassJoinerPage: FC<{
         return items;
     }, [identity, roomIds, userIds]);
 
-    const action = useCallback(async ({ masqueradedIdentity, roomId }: { masqueradedIdentity: Identity, roomId: string }) => {
-        return joinRoom(masqueradedIdentity, roomId);
+    const action = useCallback(async({ masqueradedIdentity, roomId }: { masqueradedIdentity: Identity, roomId: string }) => {
+        await joinRoom(masqueradedIdentity, roomId);
     }, []);
 
     return <>

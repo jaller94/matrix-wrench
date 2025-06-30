@@ -302,7 +302,7 @@ export async function getMembers(identity: Identity, roomId: string): Promise<ob
  */
 export function getState(identity: Identity, roomId: string): Promise<Record<string, unknown>[]>;
 export function getState(identity: Identity, roomId: string, type: string, stateKey?: string): Promise<Record<string, unknown>>;
-export async function getState(identity: Identity, roomId: string, type?: string, stateKey?: string): Promise<Record<string, unknown> | Record<string, unknown>[]> {
+export function getState(identity: Identity, roomId: string, type?: string, stateKey?: string): Promise<Record<string, unknown> | Record<string, unknown>[]> {
     let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/state`;
     if (type) {
         url += `/${encodeURIComponent(type)}`;
