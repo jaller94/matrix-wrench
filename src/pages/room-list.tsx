@@ -10,6 +10,7 @@ import {
     whoAmI,
     getState,
 } from '../matrix';
+import { string, z } from 'zod/v4';
 
 // const fakeData = [
 //     {
@@ -73,21 +74,34 @@ import {
 //     },
 // ];
 
+const stateValidators = {
+    'm.room.create': z.looseObject({
+        creator: z.string().optional(),
+        'm.federate': z.boolean().optional(),
+        predecessor: z.looseObject({
+            event_id: z.string(),
+            room_id: z.string(),
+        }).optional(),
+        room_version: z.string(),
+        type: z.string().optional(),
+    }),
+} as const;
+
 async function roomToObject(identity: Identity, roomId: string, myUserId: string) {
-    const data = {};
+    const data: {
+        type?: string,
+        roomVersion: string,
+    } = {
+        type: '!invalid!',
+        roomVersion: '!invalid!',
+    };
     try {
         const state = await getState(identity, roomId);
 
-        const roomCreateState = state.find(e => e.type === 'm.room.create' && e.state_key === '')?.content;
-        if (typeof roomCreateState === 'object' && ['undefined', 'string'].includes(typeof roomCreateState.type)) {
-            data.type = roomCreateState?.type;
-        } else {
-            data.type = '!invalid!';
-        }
-        if (typeof roomCreateState === 'object' && ['undefined', 'string'].includes(typeof roomCreateState.room_version)) {
-            data.roomVersion = roomCreateState?.room_version  ?? '1';
-        } else {
-            data.roomVersion = '!invalid!';
+        const roomCreateState = stateValidators['m.room.create'].safeParse(state.find(e => e.type === 'm.room.create' && e.state_key === '')?.content);
+        if (roomCreateState.success) {
+            data.type = roomCreateState.data.type;
+            data.roomVersion = roomCreateState.data.room_version  ?? '1';
         }
         
         const roomPowerLevelState = state.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
