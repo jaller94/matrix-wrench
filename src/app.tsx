@@ -35,13 +35,11 @@ import { SpaceManagementPage } from './pages/space-viewer';
 import { SynapseAdminPage } from './pages/synapse-admin';
 import { UserInspectorPage } from './pages/user-inspector';
 import {
-    auth,
     MatrixError,
     banUser,
     createRoom,
     createRoomAlias,
     deleteRoomAlias,
-    doRequest,
     getJoinedRooms,
     getMediaByRoom,
     getMembers,
@@ -56,6 +54,7 @@ import {
     unbanUser,
     whoAmI,
     resolveServerUrl,
+    deleteRoom,
 } from './matrix';
 import {
     logInWithPassword,
@@ -831,7 +830,7 @@ const MainPage: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) 
     </>;
 }
 
-function IdentitySelectorPage() {
+const IdentitySelectorPage = () => {
     const {identities, setIdentities} = useContext(Settings);
 
     const handleDelete = useCallback(async(identity: Identity) => {
@@ -867,7 +866,7 @@ function IdentitySelectorPage() {
             <a className="button" href="#password-login">Log in via password</a>
         </main>
     </>;
-}
+};
 
 const RoomList: FC<{roomIds: string[], onSelectRoom?: (roomId: string) => void}> = ({roomIds, onSelectRoom}) => {
     const { externalMatrixUrl } = useContext(Settings);
@@ -1035,7 +1034,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
     );
 }
 
-async function getRoomsInASpaceInner(identity: Identity, roomId: string, maxDepth: number, roomMap: Map<string, unknown>) {
+const getRoomsInASpaceInner = async(identity: Identity, roomId: string, maxDepth: number, roomMap: Map<string, unknown>) => {
     if (maxDepth === 0) return;
     const state = await getState(identity, roomId);
     const childEvents = state.filter(event => event.type === 'm.space.child' && Array.isArray(event.content.via));
@@ -1048,20 +1047,13 @@ async function getRoomsInASpaceInner(identity: Identity, roomId: string, maxDept
         });
         await getRoomsInASpaceInner(identity, childEvent.state_key, maxDepth - 1, roomMap);
     }
-}
+};
 
-async function getRoomsInASpace(identity: Identity, roomId: string, maxDepth = 1) {
+const getRoomsInASpace = async(identity: Identity, roomId: string, maxDepth = 1) => {
     const roomMap = new Map();
     await getRoomsInASpaceInner(identity, roomId, maxDepth, roomMap);
     return [...roomMap.values()];
-}
-
-async function deleteRoom(identity: Identity, roomId: string, body = {}) {
-    await doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
-        method: 'DELETE',
-        body: JSON.stringify(body),
-    }));
-}
+};
 
 const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity, roomId }) => {
     const [busy, setBusy] = useState(false);
@@ -1381,7 +1373,7 @@ const RoomSummary: FC<{ identity: Identity, stateEvents: object[] }> = ({identit
     );
 }
 
-function assertTombstone(myMatrixId: string, stateEvents: object[]) {
+const assertTombstone = (myMatrixId: string, stateEvents: object[]) => {
     const isTombstoned = stateEvents.some(e => e.type === 'm.room.tombstone' && e.state_key === '');
     if (isTombstoned) {
         throw Error('Room already has a tombstone.');
@@ -1398,7 +1390,7 @@ function assertTombstone(myMatrixId: string, stateEvents: object[]) {
     if (myPowerLevel < tombstoneRequirement) {
         throw Error('Insufficient permission to place tombstone.');
     }
-}
+};
 
 const RoomUpgradeActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
     const [replacementRoom, setReplacementRoom] = useState('');

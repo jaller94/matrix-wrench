@@ -34,7 +34,7 @@ export const Alert: FC<{ open: boolean, title: string, onClose: (open: boolean) 
     );
 }
 
-export function AlertSingleton() {
+export const AlertSingleton: FC = () => {
     const [open, setOpen] = useState(false);
     const [title, setTitle] = useState('');
 

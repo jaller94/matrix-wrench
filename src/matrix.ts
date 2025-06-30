@@ -199,6 +199,13 @@ export async function createRoomAlias(identity: Identity, roomAlias: string, roo
     })));
 }
 
+export const deleteRoom = async(identity: Identity, roomId: string, body = {}) => {
+    await doRequest(...auth(identity, `${identity.serverAddress}/_synapse/admin/v2/rooms/${encodeURIComponent(roomId)}`, {
+        method: 'DELETE',
+        body: JSON.stringify(body),
+    }));
+};
+
 // TODO Look up response in the Matrix Spec
 const zDeleteRoomAlias = z.looseObject({});
 

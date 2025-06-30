@@ -55,7 +55,7 @@ export const BulkActionTracker: FC<{ action: (item: unknown) => Promise<void>, i
     }, [allItems, items]);
 
     useEffect(() => {
-        async function doAction() {
+        const doAction = async() => {
             for (const item of allItems) {
                 try {
                     setCurrentItem(item);
@@ -71,7 +71,7 @@ export const BulkActionTracker: FC<{ action: (item: unknown) => Promise<void>, i
                     ]);
                 }
                 setProgress(value => value + 1);
-            }
+            };
             setCurrentItem(null);
         }
         doAction();
