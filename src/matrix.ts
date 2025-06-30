@@ -388,9 +388,7 @@ export async function registerAppServiceUser(identity: Identity, username: strin
 
 const zResolveAlias = z.looseObject({
     room_id: z.string(),
-    servers: z.array(z.looseObject({
-        room_id: z.string(),
-    })),
+    servers: z.array(z.string()),
 });
 
 /**
