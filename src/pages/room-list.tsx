@@ -82,7 +82,7 @@ const stateValidators = {
             event_id: z.string(),
             room_id: z.string(),
         }).optional(),
-        room_version: z.string(),
+        room_version: z.string().optional(),
         type: z.string().optional(),
     }),
 } as const;
