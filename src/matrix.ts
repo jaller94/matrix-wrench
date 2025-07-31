@@ -307,12 +307,19 @@ export async function getMembers(identity: Identity, roomId: string) {
     })));
 }
 
+const zState = z.array(z.looseObject({
+    content: z.record(z.string(), z.unknown()),
+    type: z.string(),
+    sender: z.string(),
+    state_key: z.string(),
+}));
+
 /**
  * Get the state of a room.
  */
-export function getState(identity: Identity, roomId: string): Promise<Record<string, unknown>[]>;
-export function getState(identity: Identity, roomId: string, type: string, stateKey?: string): Promise<Record<string, unknown>>;
-export function getState(identity: Identity, roomId: string, type?: string, stateKey?: string): Promise<Record<string, unknown> | Record<string, unknown>[]> {
+export async function getState(identity: Identity, roomId: string): Promise<z.infer<typeof zState>>;
+export async function getState(identity: Identity, roomId: string, type: string, stateKey?: string): Promise<Record<string, unknown>>;
+export async function getState(identity: Identity, roomId: string, type?: string, stateKey?: string): Promise<Record<string, unknown> | Record<string, unknown>[]> {
     let url = `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/state`;
     if (type) {
         url += `/${encodeURIComponent(type)}`;
@@ -320,9 +327,13 @@ export function getState(identity: Identity, roomId: string, type?: string, stat
     if (stateKey) {
         url += `/${encodeURIComponent(stateKey)}`;
     }
-    return doRequest(...auth(identity, url, {
+    const result = await doRequest(...auth(identity, url, {
         method: 'GET',
     }));
+    if (type === undefined) {
+        return zState.parse(result);
+    }
+    return result;
 }
 
 // TODO Look up response in the Matrix Spec
@@ -485,6 +496,25 @@ export async function unbanUser(identity: Identity, roomId: string, userId: stri
         },
         body: JSON.stringify({
             user_id: userId,
+        }),
+    })));
+}
+
+const zUpgradeRoom = z.looseObject({
+    replacement_room: z.string(),
+});
+
+/**
+ * Upgrade a room.
+ */
+export async function upgradeRoom(identity: Identity, roomId: string, newVersion: string) {
+    return zUpgradeRoom.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/upgrade`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            new_version: newVersion,
         }),
     })));
 }

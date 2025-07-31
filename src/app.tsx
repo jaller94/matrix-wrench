@@ -55,6 +55,7 @@ import {
     whoAmI,
     resolveServerUrl,
     deleteRoom,
+    upgradeRoom,
 } from './matrix';
 import {
     logInWithPassword,
@@ -1232,7 +1233,7 @@ const RoomPage: FC<{ identity: Identity, roomId: string}> = ({identity, roomId})
             <div className="section">
                 <details open>
                     <summary><h2>Room Upgrade</h2></summary>
-                    <RoomUpgradeActions identity={identity} roomId={roomId}/>
+                    <RoomUpgrade identity={identity} roomId={roomId}/>
                 </details>
             </div>
             <div className="section">
@@ -1490,7 +1491,11 @@ const RoomUpgradeActions: FC<{identity: Identity, roomId: string}> = ({identity,
         setBusy(true);
         try {
             const stateEvents = await getState(identity, roomId);
-            const toMigrate = [];
+            const toMigrate: {
+                content: Record<string, unknown>,
+                type: string,
+                state_key: string,
+            }[] = [];
             const myMatrixId = (await whoAmI(identity)).user_id;
             assertTombstone(myMatrixId, stateEvents);
             for (const event of stateEvents) {
@@ -1585,7 +1590,47 @@ const RoomUpgradeActions: FC<{identity: Identity, roomId: string}> = ({identity,
             </ol>
         </fieldset></form>
     );
-}
+};
+
+const RoomUpgrade: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+    const [replacementRoom, setReplacementRoom] = useState('');
+    const [roomVersion, setRoomVersion] = useState('');
+
+    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBusy(true);
+        setError('');
+        try {
+            setReplacementRoom((await upgradeRoom(identity, roomId, roomVersion)).replacement_room); 
+        } catch (err) {
+            console.warn('Error while upgrading a room', err);
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('Unhandled error');
+            }
+        } finally {
+            setBusy(false);
+        }
+    }, [identity, roomId, roomVersion]);
+
+    return (<>
+        <form onSubmit={handleSubmit}><fieldset disabled={busy}>
+            <HighUpLabelInput
+                label="New room version"
+                value={roomVersion}
+                onInput={useCallback(({target}) => setRoomVersion(target.value), [])}
+            />
+            <button disabled={busy} type="submit">Upgrade</button>
+        </fieldset></form>
+        {busy && <progress aria-label="Upgrading…"/>}
+        {error && <p>{error}</p>}
+        {replacementRoom && <p>New room: {replacementRoom && <RoomLink identity={identity} roomId={replacementRoom} />}</p>}
+    </>);
+};
 
 const UserActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId}) => {
     const [userId, setUserId] = useState('');
