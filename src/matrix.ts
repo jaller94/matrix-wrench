@@ -1,5 +1,5 @@
 import { Identity } from "./app";
-import * as z from './zod';
+import { z } from './zod';
 
 const dryRun = false;
 

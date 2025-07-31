@@ -10,7 +10,7 @@ import {
     whoAmI,
     getState,
 } from '../matrix';
-import { string, z } from 'zod/v4';
+import { z } from '../zod';
 
 // const fakeData = [
 //     {
