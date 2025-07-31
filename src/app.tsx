@@ -60,6 +60,7 @@ import {
     logInWithPassword,
 } from './matrix-auth';
 import { saveIdentitiesToLocalStorage, Settings, SettingsPage, SettingsProvider, ThemeSetter } from './pages/settings.tsx';
+import { z } from 'zod';
 
 const NETWORKLOG_MAX_ENTRIES = 500;
 
@@ -1227,7 +1228,7 @@ const RoomPage: FC<{ identity: Identity, roomId: string}> = ({identity, roomId})
             </div>
             <div className="section">
                 <details open>
-                    <summary><h2>Room Upgrade (experimental)</h2></summary>
+                    <summary><h2>Room Upgrade</h2></summary>
                     <RoomUpgradeActions identity={identity} roomId={roomId}/>
                 </details>
             </div>
@@ -1303,7 +1304,7 @@ const RoomSummaryWrapper: FC<{ identity: Identity, roomId: string }> = (props) =
 
 const RoomSummaryWrapperInner: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
-    const [stateEvents, setStateEvents] = useState<object[] | undefined>();
+    const [stateEvents, setStateEvents] = useState<unknown[] | undefined>();
 
     const handleClick = useCallback(async () => {
         setBusy(true);
@@ -1320,14 +1321,49 @@ const RoomSummaryWrapperInner: FC<{ identity: Identity, roomId: string }> = ({id
     </>;
 }
 
-const getHighestPowerLevel: FC<{ powerLevelsContent: unknown, defaultUserPowerLevel: number }> = (powerLevelsContent, defaultUserPowerLevel) => {
+const zCreateStateEventContent = z.looseObject({
+    additional_creators: z.array(z.string()).optional(),
+    'm.federate': z.boolean().optional(),
+    predecessor: z.looseObject({
+        room_id: z.string(),
+    }).optional(),
+    room_version: z.string().optional(),
+    type: z.string().optional(),
+});
+
+const zNameStateEventContent = z.looseObject({
+    name: z.string(),
+});
+
+const zPowerLevelStateEventContent = z.looseObject({
+    users: z.record(z.string(), z.union([z.string(), z.int()])).optional(),
+});
+
+const zTombstoneStateEventContent = z.looseObject({
+    body: z.string(),
+    replacement_room: z.string(),
+});
+
+const getHighestExplicitPowerLevel = (powerLevelsContent: unknown, defaultUserPowerLevel: number) => {
+    const safePowerLevelsContent = zPowerLevelStateEventContent.parse(powerLevelsContent);
     let highest = defaultUserPowerLevel;
-    for (const powerLevel of Object.values(powerLevelsContent?.users ?? {})) {
-        if (highest < powerLevel) {
-            highest = powerLevel;
+    for (const powerLevel of Object.values(safePowerLevelsContent?.users ?? {})) {
+        const powerLevelAsInt = typeof powerLevel === 'string' ? Number.parseInt(powerLevel) : powerLevel;
+        if (highest < powerLevelAsInt) {
+            highest = powerLevelAsInt;
         }
     }
     return highest;
+}
+
+/**
+ * Room versions are strings, but for some simple feature detection, they get parsed to an integer.
+ */
+const getRoomVersionAsInt = (roomVersion: string) => {
+    if (!/^\d{1,2}/.test(roomVersion)) {
+        return;
+    }
+    return Number.parseInt(roomVersion);
 }
 
 const getUnchangeableEventTypes: FC<{ powerLevelsContent: object, powerLevel: number }> = (powerLevelsContent, powerLevel) => {
@@ -1340,30 +1376,72 @@ const getUnchangeableEventTypes: FC<{ powerLevelsContent: object, powerLevel: nu
     return unchangableEventTypes.length === 0 ? undefined : unchangableEventTypes;
 }
 
-const RoomSummary: FC<{ identity: Identity, stateEvents: object[] }> = ({identity, stateEvents}) => {
-    const name = stateEvents.find(e => e.type === 'm.room.name' && e.state_key === '')?.content?.['name'];
-    const avatar = stateEvents.find(e => e.type === 'm.room.avatar' && e.state_key === '')?.content?.['url'];
-    const doesFederate = stateEvents.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.['m.federate'] ?? true;
-    const powerLevelsContent = stateEvents.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
-    const encryptionAlgorithm = stateEvents.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content?.algorithm;
-    const joinRule = stateEvents.find(e => e.type === 'm.room.join_rules' && e.state_key === '')?.content?.join_rule;
-    // const guestAccess = stateEvents.find(e => e.type === 'm.room.guest_access' && e.state_key === '')?.content?.guest_access;
-    const historyVisibility = stateEvents.find(e => e.type === 'm.room.history_visibility' && e.state_key === '')?.content?.history_visibility;
-    const defaultUserPowerLevel = powerLevelsContent?.users_default;
-    const highestPowerLevel = getHighestPowerLevel(powerLevelsContent, defaultUserPowerLevel);
-    const predecessorRoom = stateEvents.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.predecessor?.room_id;
-    const roomVersion = stateEvents.find(e => e.type === 'm.room.create' && e.state_key === '')?.content?.room_version;
-    const replacementRoom = stateEvents.find(e => e.type === 'm.room.tombstone' && e.state_key === '')?.content?.replacement_room;
+const zStateEvent = z.looseObject({
+    type: z.string(),
+    state_key: z.string(),
+    sender: z.string(),
+    content: z.looseObject({}),
+});
+
+const analyzeCreateEvent = (stateEvent: z.infer<typeof zStateEvent> | undefined) => {
+    if (!stateEvent) {
+        return;
+    }
+    const safeContent = zCreateStateEventContent.safeParse(stateEvent.content);
+    if (!safeContent.success) {
+        console.warn(safeContent.error);
+        return;
+    }
+    const roomVersionAsInt = getRoomVersionAsInt(safeContent.data.room_version ?? '1');
+    const beforeRoomVersion12 = !!roomVersionAsInt && roomVersionAsInt < 12; 
+    return {
+        beforeRoomVersion12,
+        creators: beforeRoomVersion12 ? [
+            stateEvent.sender,
+            ...(safeContent.data.additional_creators ?? []),
+        ] : undefined,
+        federationAllowed: safeContent.data['m.federate'] ?? true,
+        rawRoomVersion: safeContent.data.room_version,
+        roomVersionAsInt: roomVersionAsInt,
+        predecessor: safeContent.data.predecessor,
+        type: safeContent.data.type,
+    };
+};
+
+const RoomSummary: FC<{ identity: Identity, stateEvents: unknown[] }> = ({identity, stateEvents: stateEventsRaw}) => {
+    const stateEvents = z.array(zStateEvent).safeParse(stateEventsRaw);
+    if (!stateEvents.success) {
+        console.warn(stateEventsRaw, stateEvents.error);
+        return <p>Wrench failed the validation of state events. This is likely a temporary bug as I&quot;m reworking this feature.</p>;
+    }
+    const safeNameContent = zNameStateEventContent.safeParse(stateEvents.data.find(e => e.type === 'm.room.name' && e.state_key === '')?.content);
+    const name = safeNameContent.data?.name;
+    const avatar = stateEvents.data.find(e => e.type === 'm.room.avatar' && e.state_key === '')?.content?.['url'];
+    const createEvent = stateEvents.data.find(e => e.type === 'm.room.create' && e.state_key === '');
+    const analyzedCreateEvent = analyzeCreateEvent(createEvent);
+    const powerLevelsContent = stateEvents.data.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
+    const encryptionAlgorithm = stateEvents.data.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content?.algorithm;
+    const joinRule = stateEvents.data.find(e => e.type === 'm.room.join_rules' && e.state_key === '')?.content?.join_rule;
+    // const guestAccess = stateEvents.data.find(e => e.type === 'm.room.guest_access' && e.state_key === '')?.content?.guest_access;
+    const historyVisibility = stateEvents.data.find(e => e.type === 'm.room.history_visibility' && e.state_key === '')?.content?.history_visibility;
+    const defaultUserPowerLevel = powerLevelsContent?.users_default ?? 50;
+    const highestPowerLevel = getHighestExplicitPowerLevel(powerLevelsContent, defaultUserPowerLevel);
+    const safeTombstoneEvent = zTombstoneStateEventContent.safeParse(stateEvents.data.find(e => e.type === 'm.room.tombstone' && e.state_key === '')?.content);
+    const replacementRoom = safeTombstoneEvent.data?.replacement_room;
     const unchangableEventTypes = getUnchangeableEventTypes(powerLevelsContent, highestPowerLevel);
     return (
         <ul>
             {name ? <li>This room is called <q>{name}</q>.</li> : <li>This room has no name.</li>}
             {avatar ? <li>This room&apos;s avatar is <q>{avatar}</q>.</li> : <li>This room has no avatar.</li>}
-            <li>This room does {doesFederate === false && <strong>NOT</strong>}federate.</li>
-            {roomVersion && <li>The room version is {roomVersion}.</li>}
-            {predecessorRoom && <li>This room replaced <RoomLink identity={identity} roomId={predecessorRoom}/>.</li>}
+            {analyzedCreateEvent ? <>
+                {analyzedCreateEvent.type !== undefined && <li>This room has the type <q>{analyzedCreateEvent.type}</q>.</li>}
+                <li>This room does {!analyzedCreateEvent.federationAllowed && <><strong>NOT</strong>{" "}</>}federate.</li>
+                {analyzedCreateEvent.rawRoomVersion ? <li>The room version is <q>{analyzedCreateEvent.rawRoomVersion}</q>.</li> : <li>The room version defaults to <q>1</q>.</li>}
+                {analyzedCreateEvent.predecessor && <li>This room replaced <RoomLink identity={identity} roomId={analyzedCreateEvent.predecessor.room_id}/>.</li>}
+            </> : <li>Failed to validate the m.room.create event.</li>}
             {replacementRoom && <li>⚠️ This room was replaced by <RoomLink identity={identity} roomId={replacementRoom}/>.</li>}
-            {typeof highestPowerLevel === 'number' && <li>The highest power level is {highestPowerLevel}.</li>}
+            {analyzedCreateEvent?.beforeRoomVersion12 && <li>The room version came before "12". The room creator has no infinite power level.</li>}
+            {typeof highestPowerLevel === 'number' && <li>The highest power level is {highestPowerLevel}{analyzedCreateEvent && !analyzedCreateEvent.beforeRoomVersion12 && <> and there {analyzedCreateEvent.creators?.length} {analyzedCreateEvent.creators?.length === 1 ? 'is 1 creator' : `are ${analyzedCreateEvent.creators?.length} creators`}</>}.</li>}
             {unchangableEventTypes && <li><strong>⚠️Unusual:</strong> No user has the power level to post these event types: {unchangableEventTypes.join(', ')}</li>}
             {unchangableEventTypes?.includes('m.room.power_levels') && <li><strong>💔Broken:</strong> No user can change the power levels.</li>}
             {(defaultUserPowerLevel >= highestPowerLevel) && <li><strong>⚠️Unusual:</strong> No user has a higher power level than the default.</li>}
@@ -1373,6 +1451,9 @@ const RoomSummary: FC<{ identity: Identity, stateEvents: object[] }> = ({identit
     );
 }
 
+/**
+ * Asserts if the current user can tombstone the room.
+ */
 const assertTombstone = (myMatrixId: string, stateEvents: object[]) => {
     const isTombstoned = stateEvents.some(e => e.type === 'm.room.tombstone' && e.state_key === '');
     if (isTombstoned) {
