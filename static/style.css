@@ -16,6 +16,8 @@
     --main-bg-hover-hover-color: #ddd;
     --main-border-color: grey;
     --main-text-color: #121212;
+    --network-status-success: #00e000;
+    --network-status-client-error: #f00;
     --primary-btn-bg-color: #6716ec;
     --primary-btn-bg-hover-color: #915ae8;
     --primary-btn-border-color: #6716ec;
@@ -42,6 +44,8 @@
     --main-bg-hover-hover-color: #273525;
     --main-border-color: grey;
     --main-text-color: #cdc;
+    --network-status-success: #006400;
+    --network-status-client-error: #500;
     --primary-btn-bg-color: #642eba;
     --primary-btn-bg-hover-color: #311067;
     --primary-btn-border-color: #854be0;
@@ -479,11 +483,11 @@ label {
 }
 
 .network-log-request_status--success {
-    background-color: rgb(0, 224, 0);
+    background-color: var(--network-status-success)
 }
 
 .network-log-request_status--client-error {
-    background-color: red;
+    background-color: var(--network-status-client-error);
 }
 
 .network-log-request_status--server-error {
