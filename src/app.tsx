@@ -199,6 +199,7 @@ const WhoAmI: FC<{identity: Identity}> = ({identity}) => {
             type="button"
             onClick={handleSubmit}
         >Who am I?</button>
+        {busy && <progress aria-label="Loading…"/>}
         <p>
             Matrix ID: {info?.user_id || 'unknown'}
             <br/>
@@ -279,10 +280,6 @@ const PasswordLoginPage: FC = () => {
             const serverName = getServerNameFromMXID(user);
             const serverAddress = await resolveServerUrl(serverName);
             const data = await logInWithPassword(serverAddress, user, password);
-            if (typeof data.access_token !== 'string') {
-                setError('Server seems to have created a device, but did not respond with an access token.');
-                return;
-            }
             const accessToken = data.access_token;
             const identity: Identity = {
                 accessToken,
@@ -330,7 +327,7 @@ const PasswordLoginPage: FC = () => {
             backUrl="#"
         >Log in with a password</AppHeader>
         <main>
-            <p>Note, Matrix Wrench does not support verifications. This will create an unverified session.</p>
+            <p>Matrix Wrench does not support verifications. This will create an unverified session.</p>
             <form onSubmit={handleSubmit}><fieldset className="identity-editor-form" disabled={busy}>
                 <div>
                     <HighUpLabelInput
@@ -1323,6 +1320,7 @@ const RoomSummaryWrapperInner: FC<{ identity: Identity, roomId: string }> = ({id
 
     return <>
         <button disabled={busy} type="button" onClick={handleClick}>Get state</button>
+        {busy && <progress aria-label="State loading…"/>}
         {stateEvents && <RoomSummary identity={identity} stateEvents={stateEvents}/>}
     </>;
 }
@@ -1805,6 +1803,7 @@ const MembersExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, 
             <p>Doesn&apos;t support pagination yet. Up to 60.000 users seems safe.</p>
             <button type="submit">Get members</button>
         </fieldset></form>
+        {busy && <progress aria-label="Members loading…"/>}
         {groups && <>
             <details open>
                 <summary><h3>Joined ({groups.get('join').length})</h3></summary>
@@ -1830,17 +1829,22 @@ const MembersExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, 
     </>;
 }
 
+const zMediaInRoom = z.object({
+    local: z.array(z.string()),
+    remote: z.array(z.string()),
+});
+
 const MediaExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
-    const [media, setMedia] = useState<object | null>(null);
+    const [media, setMedia] = useState<z.infer<typeof zMediaInRoom> | null>(null);
 
     const handleGet: FormEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
         try {
-            const data = await getMediaByRoom(identity, roomId);
-            setMedia(data.chunk);
+            const data = zMediaInRoom.parse(await getMediaByRoom(identity, roomId));
+            setMedia(data);
         } catch (error) {
             alert(error);
         } finally {
@@ -1852,6 +1856,7 @@ const MediaExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
         <form onSubmit={handleGet}><fieldset disabled={busy}>
             <button type="submit">Get media</button>
         </fieldset></form>
+        {busy && <progress aria-label="Media loading…"/>}
         {media && (<>
             <details open>
                 <summary><h3>Local ({media.local.length})</h3></summary>

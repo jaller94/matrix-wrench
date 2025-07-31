@@ -1,8 +1,14 @@
+import z from "zod";
+
+const zLoginResponse = z.looseObject({
+    access_token: z.string(),
+})
+
 /**
  * Gets an access token by logging in with a password.
  * @param user MXID or user localpart
  */
-export const logInWithPassword = async(serverAddress: string, user: string, password: string): Promise<Record<string, unknown>> => {
+export const logInWithPassword = async(serverAddress: string, user: string, password: string) => {
     const resp = await fetch(`${serverAddress}/_matrix/client/v3/login`, {
         method: 'POST',
         headers: {
@@ -23,5 +29,5 @@ export const logInWithPassword = async(serverAddress: string, user: string, pass
     if (!resp.ok) {
         throw Error('Failed to log in.');
     }
-    return await resp.json();
+    return zLoginResponse.parse(await resp.json());
 };

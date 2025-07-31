@@ -181,7 +181,6 @@ export async function createRoom(identity: Identity, body: object) {
     })));
 }
 
-// TODO Look up response in the Matrix Spec
 const zCreateRoomAlias = z.looseObject({});
 
 /**
@@ -206,13 +205,12 @@ export const deleteRoom = async(identity: Identity, roomId: string, body = {}) =
     }));
 };
 
-// TODO Look up response in the Matrix Spec
 const zDeleteRoomAlias = z.looseObject({});
 
 /**
  * Delete a room alias.
  */
-export async function deleteRoomAlias(identity: Identity, roomAlias: string): Promise<object> {
+export async function deleteRoomAlias(identity: Identity, roomAlias: string) {
     return zDeleteRoomAlias.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/directory/room/${encodeURIComponent(roomAlias)}`, {
         method: 'DELETE',
         headers: {
@@ -224,15 +222,17 @@ export async function deleteRoomAlias(identity: Identity, roomAlias: string): Pr
     })));
 }
 
+const zAccountDataContent = z.looseObject({});
+
 /**
  * @param user The Matrix User ID of the current user, if already known.
  * @param type The type of the account data object
  */
-export async function getAccountData(identity: Identity, user: string | undefined, type: string): Promise<object> {
+export async function getAccountData(identity: Identity, user: string | undefined, type: string) {
     const userId = user ?? (await whoAmI(identity)).user_id;
-    return doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/user/${encodeURIComponent(userId)}/account_data/${encodeURIComponent(type)}`, {
+    return zAccountDataContent.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/user/${encodeURIComponent(userId)}/account_data/${encodeURIComponent(type)}`, {
         method: 'GET',
-    }));
+    })));
 }
 
 const zGetHierachy = z.looseObject({
@@ -279,8 +279,10 @@ export async function getJoinedRooms(identity: Identity) {
     })));
 }
 
-// TODO Look up response in the Matrix Spec
-const zGetMediaByRoom = z.looseObject({});
+const zGetMediaByRoom = z.looseObject({
+    local: z.array(z.string()),
+    remote: z.array(z.string()),
+});
 
 /**
  * Gets a list of known media in a room. However, it only shows media from unencrypted events or rooms.
@@ -292,13 +294,14 @@ export async function getMediaByRoom(identity: Identity, roomId: string) {
     })));
 }
 
-// TODO Look up response in the Matrix Spec
-const zGetMembers = z.looseObject({});
+const zGetMembers = z.looseObject({
+    chunk: z.array(z.unknown()),
+});
 
 /**
  * Get the members of a room.
  */
-export async function getMembers(identity: Identity, roomId: string): Promise<object> {
+export async function getMembers(identity: Identity, roomId: string) {
     return zGetMembers.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/members`, {
         method: 'GET',
     })));
@@ -395,7 +398,7 @@ export async function registerAppServiceUser(identity: Identity, username: strin
 
 const zResolveAlias = z.looseObject({
     room_id: z.string(),
-    servers: z.array(z.string()),
+    servers: z.array(z.string()).optional(),
 });
 
 /**
@@ -469,13 +472,12 @@ export async function setState(identity: Identity, roomId: string, type: string,
     })));
 }
 
-// TODO Look up response in the Matrix Spec
 const zUnbanUser = z.looseObject({});
 
 /**
  * Unban a user to a room.
  */
-export async function unbanUser(identity: Identity, roomId: string, userId: string): Promise<object> {
+export async function unbanUser(identity: Identity, roomId: string, userId: string) {
     return zUnbanUser.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/unban`, {
         method: 'POST',
         headers: {
