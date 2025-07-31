@@ -3,7 +3,6 @@ import { AppHeader } from '../components/header.tsx';
 import { Identity, NetworkLog } from '../app.tsx';
 
 import {
-    getState,
     yieldHierachy,
 } from '../matrix.js';
 
@@ -85,51 +84,10 @@ export const SpaceManagementPage: FC<SpaceManagementPageProps> = ({identity, roo
                 type="button"
                 onClick={handleClick}
             >Start fetching</button>
+            {busy && <progress aria-label="Space loading…"/>}
             {text && <p>{text}</p>}
             {data && <SpaceViewer identity={identity} rooms={data} />}
         </main>
         <NetworkLog />
     </>;
 };
-
-type SpaceManagementStatePageProps = {
-    identity: Identity,
-    roomId: string,
-};
-/*
- * Unused alternative to SpaceManagementPage using a room state query.
- */
-export const SpaceManagementStatePage: FC<SpaceManagementStatePageProps> = ({identity, roomId}) => {
-    const [rooms, setRooms] = useState<object[] | null>(null);
-
-    const handleQuery = useCallback(async() => {
-        const state = await getState(identity, roomId);
-        const childrenEvents = state.filter(event => event.type === 'm.space.child');
-        const { name } = state.find(event => event.type === 'm.room.name').content;
-        const childrenRoomIds = childrenEvents.map(event => event.state_key);
-        const rooms = [
-            {
-                id: roomId,
-                name,
-                children: childrenRoomIds.map(roomId => ({
-                    id: roomId,
-                })),
-            },
-        ];
-        setRooms(rooms);
-    }, [identity, roomId]);
-
-    return <>
-        <AppHeader
-            backUrl={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`}
-        >Space Management</AppHeader>
-        <main>
-            <button
-                type="button"
-                onClick={handleQuery}
-            >Query</button>
-            {rooms && <SpaceViewer identity={identity} rooms={rooms} />}
-        </main>
-        <NetworkLog />
-    </>;
-}
