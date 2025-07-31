@@ -966,10 +966,17 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
         event.preventDefault();
         event.stopPropagation();
         let roomId = room;
-        if (room.startsWith('#')) {
+        if (room.startsWith('matrix:r/')) {
+            roomId = `#${room.slice('matrix:r/'.length).replace(/\?.*/g, '')}`;
+        } else if (room.startsWith('matrix:roomid/')) {
+            roomId = `!${room.slice('matrix:r/'.length).replace(/\?.*/g, '')}`;
+        } else if (room.startsWith('https://matrix.to/#/')) {
+            roomId = room.slice('https://matrix.to/#/'.length).replace(/\?.*/g, '');
+        }
+        if (roomId.startsWith('#')) {
             setBusy(true);
             try {
-                roomId = (await resolveAlias(identity, room)).room_id;
+                roomId = (await resolveAlias(identity, roomId)).room_id;
             } catch (error) {
                 console.warn(error);
                 const message = `Couldn't resolve alias! ${error}`;
@@ -1008,7 +1015,6 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
                 <HighUpLabelInput
                     name="room"
                     label="Room alias or ID"
-                    pattern="[!#].+:.+"
                     required
                     value={room}
                     onInput={handleRoomInput}
@@ -1420,7 +1426,7 @@ const RoomSummary: FC<{ identity: Identity, stateEvents: unknown[] }> = ({identi
     const createEvent = stateEvents.data.find(e => e.type === 'm.room.create' && e.state_key === '');
     const analyzedCreateEvent = analyzeCreateEvent(createEvent);
     const powerLevelsContent = stateEvents.data.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
-    const encryptionAlgorithm = stateEvents.data.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content?.algorithm;
+    const encryptionAlgorithm = stateEvents.data.find(e => e.type === 'm.room.encryption' && e.state_key === '')?.content?.algorithm;
     const joinRule = stateEvents.data.find(e => e.type === 'm.room.join_rules' && e.state_key === '')?.content?.join_rule;
     // const guestAccess = stateEvents.data.find(e => e.type === 'm.room.guest_access' && e.state_key === '')?.content?.guest_access;
     const historyVisibility = stateEvents.data.find(e => e.type === 'm.room.history_visibility' && e.state_key === '')?.content?.history_visibility;
