@@ -51,3 +51,18 @@ export function getServerNameFromMXID(mxid: string) {
     }
     return mxid.slice(mxid.indexOf(':') + 1);
 }
+
+export function memberEventsToGroups<T extends {content: {membership: string}}>(memberEvents: T[] | null) {
+    if (!Array.isArray(memberEvents)) {
+        return null;
+    }
+    const membersByMembership = new Map<string, T[]>();
+    for (const event of memberEvents) {
+        const arr = membersByMembership.get(event.content.membership) ?? [];
+        if (arr.length === 0) {
+            membersByMembership.set(event.content.membership, arr);
+        }
+        arr.push(event);
+    }
+    return membersByMembership;
+}

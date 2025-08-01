@@ -294,8 +294,15 @@ export async function getMediaByRoom(identity: Identity, roomId: string) {
     })));
 }
 
+export const zMembers = z.array(z.looseObject({
+    content: z.looseObject({
+        membership: z.string(),
+    }),
+    state_key: z.string(),
+}));
+
 const zGetMembers = z.looseObject({
-    chunk: z.array(z.unknown()),
+    chunk: zMembers,
 });
 
 /**
