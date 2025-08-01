@@ -25,6 +25,7 @@ export const OverviewPages: FC<{
         { name: 'View and edit room state', note: 'room page' },
         { name: 'Send a message', note: 'room page' },
         { name: 'Upgrade a room', note: 'room page' },
+        { name: 'Manually upgrade a room', note: 'room page → "Other pages"' },
         { name: 'Make someone a room admin (Synapse Admin API)', note: 'room page' },
         { name: 'Delete a room (Synapse Admin API)', note: 'room page' },
         { name: 'Delete a space recursively (Synapse Admin API)', note: 'room page' },

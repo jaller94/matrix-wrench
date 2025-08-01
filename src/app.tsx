@@ -127,9 +127,10 @@ const RoomActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId
         <nav><ul>
             <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/invite`}>Bulk invite</a></li>
             <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/kick`}>Bulk kick</a></li>
-            <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/mass-joiner`}>Mass joiner (AppService API)</a></li>
-            <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/live-location-sharing`}>Live Location Sharing</a></li>
             <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/yaml`}>JSON export</a></li>
+            <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/live-location-sharing`}>Live Location Sharing</a></li>
+            <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/mass-joiner`}>Mass joiner (AppService API)</a></li>
+            <li><a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}/upgrade`}>Advanced room upgrade</a></li>
         </ul></nav>
     </>;
 };
@@ -1001,7 +1002,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
 
     if (roomId) {
         return <>
-            <hr/>
+            <hr style={{width: '100%'}}/>
             <button type="button" onClick={handleResetRoomId}>Switch to a different room</button>
             <RoomPage identity={identity} roomId={roomId}/>
         </>;
