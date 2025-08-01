@@ -1,16 +1,26 @@
 # Changelog for Matrix Wrench
 
 ## Future
-* Added: Act as other users when using AppService tokens
-* Added: Validation of Matrix server responses using the zod library
-* Changed: Moved "Register account (AppService API)" to an AppService API page.
-* Fixed: An invalid room type resulted in `roomVersion` being reported as "!invalid" in the Room List
-* Fixed: Pagination of querying children of a Space.
 
 ### Alpha Features
 * Added: Space Management Page
 * Added: Register accounts with an AppService token
 * Added: Send messages to a room
+
+## v0.15.0 (2025-08-01)
+*3rd Matrix Community Summit*
+
+* Added: Validation of many Matrix server responses using the zod library
+* Added: Server-side room upgrades
+* Added: Act as other users when using AppService tokens
+* Added: The Summary of rooms supports a few changes of room version "12", like mentioning the existance of creators
+* Added: The room selector now parses matrix: URIs and matrix.to URLs
+* Added: Loading indicators on many long-running tasks
+* Added: Allow to configure the live location sharing frequency
+* Changed: Moved manual room upgrades to an "Advanced Room Upgrades" page
+* Changed: Moved "Register account (AppService API)" to an "AppService API" page
+* Fixed: An invalid room type resulted in `roomVersion` being reported as "!invalid" in the Room List
+* Fixed: Pagination of querying children of a Space
 
 ## v0.14.3 (2024-09-16)
 * Fixed: Live location sharing sent empty geo URIs
