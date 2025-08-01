@@ -1446,7 +1446,7 @@ const RoomSummary: FC<{ identity: Identity, stateEvents: unknown[] }> = ({identi
                 {analyzedCreateEvent.predecessor && <li>This room replaced <RoomLink identity={identity} roomId={analyzedCreateEvent.predecessor.room_id}/>.</li>}
             </> : <li>Failed to validate the m.room.create event.</li>}
             {replacementRoom && <li>⚠️ This room was replaced by <RoomLink identity={identity} roomId={replacementRoom}/>.</li>}
-            {analyzedCreateEvent?.beforeRoomVersion12 && <li>The room version came before "12". The room creator has no infinite power level.</li>}
+            {analyzedCreateEvent?.beforeRoomVersion12 && <li>The room version came before <q>12</q>. The room creator has no infinite power level.</li>}
             {typeof highestPowerLevel === 'number' && <li>The highest power level is {highestPowerLevel}{analyzedCreateEvent && !analyzedCreateEvent.beforeRoomVersion12 && <> and there {analyzedCreateEvent.creators?.length} {analyzedCreateEvent.creators?.length === 1 ? 'is 1 creator' : `are ${analyzedCreateEvent.creators?.length} creators`}</>}.</li>}
             {unchangableEventTypes && <li><strong>⚠️Unusual:</strong> No user has the power level to post these event types: {unchangableEventTypes.join(', ')}</li>}
             {unchangableEventTypes?.includes('m.room.power_levels') && <li><strong>💔Broken:</strong> No user can change the power levels.</li>}
