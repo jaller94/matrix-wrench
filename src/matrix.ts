@@ -171,7 +171,26 @@ const zCreateRoom = z.looseObject({
 /**
  * Create a new room.
  */
-export async function createRoom(identity: Identity, body: object) {
+export async function createRoom(identity: Identity, body: {
+    creation_content?: {
+        predecessor: {
+            room_id: string,
+            event_id?: string,
+        },
+        [x: string]: unknown,
+    },
+    initial_state?: {
+        type: string,
+        state_key: string,
+        content: Record<string, unknown>,
+    }[],
+    is_direct?: boolean,
+    power_level_content_override?: {
+        [x: string]: unknown,
+    },
+    room_version?: string,
+    [x: string]: unknown,
+}) {
     return zCreateRoom.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/createRoom`, {
         method: 'POST',
         headers: {
