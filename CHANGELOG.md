@@ -7,6 +7,12 @@
 * Added: Register accounts with an AppService token
 * Added: Send messages to a room
 
+## v0.15.0 (2025-11-14)
+*Bye, dad*
+
+* Changed: Updated various dependencies
+* Fixed: Reduced the bundle size from 0.54 MB to 0.35 MB by importing zod in a tree-shakable way
+
 ## v0.15.0 (2025-08-01)
 *3rd Matrix Community Summit*
 
