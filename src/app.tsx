@@ -11,6 +11,7 @@ import React, {
     useMemo,
     useState,
 } from 'react';
+import * as z from 'zod';
 import {
     classnames,
     getServerNameFromMXID,
@@ -61,7 +62,6 @@ import {
     logInWithPassword,
 } from './matrix-auth';
 import { saveIdentitiesToLocalStorage, Settings, SettingsPage, SettingsProvider, ThemeSetter } from './pages/settings.tsx';
-import { z } from 'zod';
 import { AdvancedRoomUpgradePage } from './pages/room-upgrade/index.tsx';
 
 const NETWORKLOG_MAX_ENTRIES = 500;

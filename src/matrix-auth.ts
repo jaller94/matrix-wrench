@@ -1,4 +1,4 @@
-import z from "zod";
+import * as z from 'zod';
 
 const zLoginResponse = z.looseObject({
     access_token: z.string(),

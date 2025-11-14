@@ -1,4 +1,5 @@
 import React, { FC, MouseEventHandler, useCallback, useMemo, useState } from 'react';
+import * as z from 'zod';
 import { AppHeader } from '../components/header';
 import { RoomListFilterer } from '../components/table';
 import { Identity, NetworkLog } from '../app';
@@ -10,7 +11,6 @@ import {
     whoAmI,
     getState,
 } from '../matrix';
-import { z } from 'zod';
 
 // const fakeData = [
 //     {
