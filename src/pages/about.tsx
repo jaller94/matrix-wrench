@@ -1,5 +1,5 @@
 import React, { DetailedHTMLProps } from 'react';
-import { AppHeader } from '../components/header';
+import { AppHeader } from '../components/header.tsx';
 
 function ExternalLink(props: DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>) {
     return <a {...props}/>;

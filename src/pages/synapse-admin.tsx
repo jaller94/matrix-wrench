@@ -1,8 +1,8 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { HighUpLabelInput } from '../components/inputs';
-import { CustomForm } from '../components/custom-forms';
-import { AppHeader } from '../components/header';
-import { Identity, NetworkLog } from '../app';
+import { HighUpLabelInput } from '../components/inputs.tsx';
+import { CustomForm } from '../components/custom-forms.tsx';
+import { AppHeader } from '../components/header.tsx';
+import { Identity, NetworkLog } from '../app.tsx';
 
 type SynapseAdminPageProps = {
     identity: Identity,

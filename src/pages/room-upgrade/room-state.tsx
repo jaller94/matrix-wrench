@@ -1,9 +1,9 @@
 import React, { FC, useCallback, useState } from 'react';
-import { Identity } from '../../app';
+import { Identity } from '../../app.tsx';
 import {
     getState,
-} from '../../matrix';
-import { memberEventsToGroups } from '../../helper';
+} from '../../matrix.ts';
+import { memberEventsToGroups } from '../../helper.ts';
 
 interface RoomStateInfo {
     name: string | null;

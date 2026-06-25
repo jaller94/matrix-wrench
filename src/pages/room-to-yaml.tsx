@@ -1,10 +1,10 @@
 import React, { FC, MouseEventHandler, useCallback, useState } from 'react';
-import { AppHeader } from '../components/header';
-import { Identity, NetworkLog } from '../app';
+import { AppHeader } from '../components/header.tsx';
+import { Identity, NetworkLog } from '../app.tsx';
 
 import {
     getState,
-} from '../matrix';
+} from '../matrix.ts';
 
 async function roomToYaml(identity: Identity, roomId: string) {
     const data: {

@@ -1,11 +1,11 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { AppHeader } from '../components/header';
-import { BulkActionTracker, BulkActionForm } from '../components/bulk-actions';
-import { Identity, NetworkLog } from '../app';
+import { AppHeader } from '../components/header.tsx';
+import { BulkActionTracker, BulkActionForm } from '../components/bulk-actions.tsx';
+import { Identity, NetworkLog } from '../app.tsx';
 import {
     getHierachy,
     joinRoom,
-} from '../matrix';
+} from '../matrix.ts';
 
 const SpaceRoomPicker: FC<{
     identity: Identity,

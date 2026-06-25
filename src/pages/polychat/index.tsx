@@ -1,14 +1,14 @@
 import React, { ChangeEventHandler, FC, MouseEventHandler, useCallback, useContext, useState } from 'react';
-import { AppHeader } from '../../components/header';
-import { Identity, NetworkLog } from '../../app';
+import { AppHeader } from '../../components/header.tsx';
+import { Identity, NetworkLog } from '../../app.tsx';
 
 import {
     createRoom,
-} from '../../matrix';
-import { HighUpLabelInput } from '../../components/inputs';
-import { RoomLink } from '../../components/room-link';
-import { PolychatExistingRooms } from './existing-rooms';
-import { Settings } from '../settings';
+} from '../../matrix.ts';
+import { HighUpLabelInput } from '../../components/inputs.tsx';
+import { RoomLink } from '../../components/room-link.tsx';
+import { PolychatExistingRooms } from './existing-rooms.tsx';
+import { Settings } from '../settings.tsx';
 
 export const PolychatStateEventType = {
     room: 'de.polychat.room',

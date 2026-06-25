@@ -1,13 +1,13 @@
 import React, { FC, MouseEventHandler, useCallback, useMemo, useState } from 'react';
-import { AppHeader } from '../components/header';
-import { RoomsInput } from '../components/rooms-input';
-import { UsersInput } from '../components/users-input';
-import { RoomListFilterer } from '../components/table';
-import { Identity, NetworkLog } from '../app';
+import { AppHeader } from '../components/header.tsx';
+import { RoomsInput } from '../components/rooms-input.tsx';
+import { UsersInput } from '../components/users-input.tsx';
+import { RoomListFilterer } from '../components/table.tsx';
+import { Identity, NetworkLog } from '../app.tsx';
 
 import {
     getState,
-} from '../matrix';
+} from '../matrix.ts';
 
 async function roomToObject(identity: Identity, roomId: string, userId: string) {
     const data = {};

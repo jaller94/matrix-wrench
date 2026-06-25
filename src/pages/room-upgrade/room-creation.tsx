@@ -1,9 +1,9 @@
 import React, { FC, FormEventHandler, useCallback, useState } from 'react';
-import { Identity } from '../../app';
+import { Identity } from '../../app.tsx';
 import {
     createRoom,
-} from '../../matrix';
-import { HighUpLabelInput } from '../../components/inputs';
+} from '../../matrix.ts';
+import { HighUpLabelInput } from '../../components/inputs.tsx';
 
 export const RoomCreation: FC<{
     identity: Identity,

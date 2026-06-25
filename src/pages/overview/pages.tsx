@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import { Identity } from '../../app';
+import { Identity } from '../../app.tsx';
 
 export const OverviewPages: FC<{
     identity: Identity,

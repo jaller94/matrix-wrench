@@ -1,13 +1,13 @@
 import React, { FC, MouseEventHandler, useCallback, useMemo, useState } from 'react';
-import { AppHeader } from '../components/header';
-import { RoomListFilterer } from '../components/table';
-import { Identity, NetworkLog } from '../app';
+import { AppHeader } from '../components/header.tsx';
+import { RoomListFilterer } from '../components/table.tsx';
+import { Identity, NetworkLog } from '../app.tsx';
 
 import {
     getAccountData,
     getJoinedMembers,
     getJoinedRooms,
-} from '../matrix';
+} from '../matrix.ts';
 
 async function *stats(identity: Identity) {
     const mDirectContent = await getAccountData(identity, null, 'm.direct');

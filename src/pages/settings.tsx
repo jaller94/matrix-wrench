@@ -1,8 +1,8 @@
 import { createContext, FC, FormEventHandler, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { Identity, NetworkLog } from "../app";
-import { AppHeader } from "../components/header";
+import { Identity, NetworkLog } from "../app.tsx";
+import { AppHeader } from "../components/header.tsx";
 import React from "react";
-import { HighUpLabelInput } from "../components/inputs";
+import { HighUpLabelInput } from "../components/inputs.tsx";
 
 export const Settings = createContext<{
     customTheme: string

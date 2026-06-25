@@ -1,17 +1,17 @@
 import React, { FC, FormEventHandler, useCallback, useState } from 'react';
-import { AppHeader } from '../../components/header';
-import { Identity, NetworkLog } from '../../app';
-import { RoomCreation } from './room-creation';
-import { RoomState } from './room-state';
+import { AppHeader } from '../../components/header.tsx';
+import { Identity, NetworkLog } from '../../app.tsx';
+import { RoomCreation } from './room-creation.tsx';
+import { RoomState } from './room-state.tsx';
 
 import {
     getMembers,
     inviteUser,
     setState,
     whoAmI,
-} from '../../matrix';
-import { HighUpLabelInput } from '../../components/inputs';
-import { memberEventsToGroups } from '../../helper';
+} from '../../matrix.ts';
+import { HighUpLabelInput } from '../../components/inputs.tsx';
+import { memberEventsToGroups } from '../../helper.ts';
 
 
 const RoomUpgradeActions: FC<{

@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import React from 'react';
-import { App } from './app';
+import { App } from './app.tsx';
 const rootDiv = document.getElementById('app');
 if (!rootDiv) {
     throw Error('#app not found');

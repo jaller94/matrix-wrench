@@ -9,12 +9,12 @@ import React, {
 import {
     auth,
     doRequest,
-} from '../matrix';
+} from '../matrix.ts';
 import {
     fillInVariables,
-} from '../helper';
-import { confirm } from './alert';
-import { Identity } from '../app';
+} from '../helper.ts';
+import { confirm } from './alert.tsx';
+import { Identity } from '../app.tsx';
 
 type CustomButtonProp = {
     body?: string | unknown,

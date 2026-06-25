@@ -1,8 +1,8 @@
 import React, { FC, useCallback, useState } from 'react';
-import { CustomButton } from '../components/custom-forms';
-import { AppHeader } from '../components/header';
-import { HighUpLabelInput } from '../components/inputs';
-import { Identity, NetworkLog } from '../app';
+import { CustomButton } from '../components/custom-forms.tsx';
+import { AppHeader } from '../components/header.tsx';
+import { HighUpLabelInput } from '../components/inputs.tsx';
+import { Identity, NetworkLog } from '../app.tsx';
 
 const AccountCreator: FC<{
     identity: Identity,

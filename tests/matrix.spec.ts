@@ -1,7 +1,7 @@
 import {
     auth,
     toCurlCommand,
-} from '../src/matrix';
+} from '../src/matrix.ts';
 
 describe('auth', () => {
     test('can deal with an empty identity', () => {

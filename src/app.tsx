@@ -18,24 +18,24 @@ import {
     memberEventsToGroups,
     uniqueId,
 } from './helper.ts';
-import { AlertSingleton, confirm } from './components/alert.js';
-import { BulkActionTracker, BulkActionForm } from './components/bulk-actions';
-import { CustomButton, CustomForm } from './components/custom-forms';
-import { AppHeader } from './components/header';
-import { HighUpLabelInput } from './components/inputs';
-import { RoomLink } from './components/room-link';
-import AboutPage from './pages/about';
-import { AppServicePage } from './pages/appservice';
-import { ContactListPage } from './pages/contact-list';
-import { LiveLocationSharingPage } from './pages/live-location-sharing/index';
-import { MassJoinerPage } from './pages/mass-joiner';
-import { OverviewPage } from './pages/overview/index';
-import { PolychatPage } from './pages/polychat/index';
-import { RoomToYamlPage } from './pages/room-to-yaml';
-import { RoomListPage } from './pages/room-list';
-import { SpaceManagementPage } from './pages/space-viewer';
-import { SynapseAdminPage } from './pages/synapse-admin';
-import { UserInspectorPage } from './pages/user-inspector';
+import { AlertSingleton, confirm } from './components/alert.tsx';
+import { BulkActionTracker, BulkActionForm } from './components/bulk-actions.tsx';
+import { CustomButton, CustomForm } from './components/custom-forms.tsx';
+import { AppHeader } from './components/header.tsx';
+import { HighUpLabelInput } from './components/inputs.tsx';
+import { RoomLink } from './components/room-link.tsx';
+import AboutPage from './pages/about.tsx';
+import { AppServicePage } from './pages/appservice.tsx';
+import { ContactListPage } from './pages/contact-list.tsx';
+import { LiveLocationSharingPage } from './pages/live-location-sharing/index.tsx';
+import { MassJoinerPage } from './pages/mass-joiner.tsx';
+import { OverviewPage } from './pages/overview/index.tsx';
+import { PolychatPage } from './pages/polychat/index.tsx';
+import { RoomToYamlPage } from './pages/room-to-yaml.tsx';
+import { RoomListPage } from './pages/room-list.tsx';
+import { SpaceManagementPage } from './pages/space-viewer.tsx';
+import { SynapseAdminPage } from './pages/synapse-admin.tsx';
+import { UserInspectorPage } from './pages/user-inspector.tsx';
 import {
     MatrixError,
     banUser,
@@ -57,10 +57,10 @@ import {
     deleteRoom,
     upgradeRoom,
     zMembers,
-} from './matrix';
+} from './matrix.ts';
 import {
     logInWithPassword,
-} from './matrix-auth';
+} from './matrix-auth.ts';
 import { saveIdentitiesToLocalStorage, Settings, SettingsPage, SettingsProvider, ThemeSetter } from './pages/settings.tsx';
 import { AdvancedRoomUpgradePage } from './pages/room-upgrade/index.tsx';
 

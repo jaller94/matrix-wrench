@@ -1,8 +1,8 @@
 import React, { FC, FormEventHandler, useCallback, useState } from 'react';
-import { Identity } from '../../app';
-import { AppHeader } from '../../components/header';
-import { HighUpLabelInput } from '../../components/inputs';
-import { OverviewPages } from './pages';
+import { Identity } from '../../app.tsx';
+import { AppHeader } from '../../components/header.tsx';
+import { HighUpLabelInput } from '../../components/inputs.tsx';
+import { OverviewPages } from './pages.tsx';
 
 export const OverviewPage: FC<{identity: Identity}> = ({ identity }) => {
     const [filterString, setFilterString] = useState('');

@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Identity } from '../app';
+import { Identity } from '../app.tsx';
 
 type RoomsLinkProps = {
     identity: Identity,

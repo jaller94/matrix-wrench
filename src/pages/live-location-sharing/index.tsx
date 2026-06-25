@@ -1,15 +1,15 @@
 import React, { ChangeEventHandler, FC, useCallback, useEffect, useRef, useState } from 'react';
-import { AppHeader } from '../../components/header';
-import { Identity, NetworkLog } from '../../app';
+import { AppHeader } from '../../components/header.tsx';
+import { Identity, NetworkLog } from '../../app.tsx';
 
 import {
     sendEvent,
     setState,
     whoAmI,
-} from '../../matrix';
-import { GeolocationTextInput } from './geolocation-text-input';
-import { GeolocationApiWatcher } from './geolocation-api-watcher';
-import { GeolocationGpxReplayer } from './geolocation-gpx-replayer';
+} from '../../matrix.ts';
+import { GeolocationTextInput } from './geolocation-text-input.tsx';
+import { GeolocationApiWatcher } from './geolocation-api-watcher.tsx';
+import { GeolocationGpxReplayer } from './geolocation-gpx-replayer.tsx';
 
 /**
  * @returns resolves to the event ID that represents the event

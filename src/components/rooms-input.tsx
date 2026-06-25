@@ -1,8 +1,8 @@
 import React, { ChangeEventHandler, FC, useCallback, useEffect, useState } from 'react';
 import {
     getJoinedRooms,
-} from '../matrix';
-import { Identity } from '../app';
+} from '../matrix.ts';
+import { Identity } from '../app.tsx';
 
 type RoomsInputProps = {
     identity: Identity,

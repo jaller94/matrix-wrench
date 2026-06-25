@@ -4,7 +4,7 @@ import { Identity, NetworkLog } from '../app.tsx';
 
 import {
     yieldHierachy,
-} from '../matrix.js';
+} from '../matrix.ts';
 
 function populateRoomChildren(root: object, rooms: object[]) {
     for (const roomInfo of root.childrenInfo) {

@@ -1,5 +1,5 @@
 import { FC, FormEventHandler, useCallback, useEffect, useState } from "react";
-import { HighUpLabelInput } from "../../components/inputs";
+import { HighUpLabelInput } from "../../components/inputs.tsx";
 import React from "react";
 
 export const GeolocationTextInput: FC<{

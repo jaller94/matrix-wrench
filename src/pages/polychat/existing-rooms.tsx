@@ -2,9 +2,9 @@ import React, { FC, MouseEventHandler, useCallback, useState } from 'react';
 
 import {
     getJoinedRooms, getState,
-} from '../../matrix';
-import { RoomLink } from '../../components/room-link';
-import { Identity } from '../../app';
+} from '../../matrix.ts';
+import { RoomLink } from '../../components/room-link.tsx';
+import { Identity } from '../../app.tsx';
 
 const PolychatStateEventType = {
     room: 'de.polychat.room',
