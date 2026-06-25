@@ -333,7 +333,7 @@ const PasswordLoginPage: FC = () => {
             <form onSubmit={handleSubmit}><fieldset className="identity-editor-form" disabled={busy}>
                 <div>
                     <HighUpLabelInput
-                        label="Internal name"
+                        label="Label"
                         name="name"
                         pattern="[^\\\/]+"
                         required
@@ -470,7 +470,7 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
             <form className="identity-editor-form" onSubmit={handleSubmit}>
                 <div>
                     <HighUpLabelInput
-                        label="Internal name"
+                        label="Label"
                         name="name"
                         pattern="[^\\\/]+"
                         required
