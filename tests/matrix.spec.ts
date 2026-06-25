@@ -77,7 +77,7 @@ describe('toCurlCommand', () => {
             body: `{"foo":"'value_with_single_quotes'"}`,
         })).toBe(`curl -X PUT --data '{"foo":"\\'value_with_single_quotes\\'"}' 'https://localhost:8080/_matrix/v3/test'`);
     });
-    test('escapes a body with a back slashe', () => {
+    test('escapes a body with a back slash', () => {
         expect(toCurlCommand('https://localhost:8080/_matrix/v3/test', {
             method: 'PUT',
             body: `{"foo":"\\"}`,
