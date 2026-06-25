@@ -1,4 +1,4 @@
-import React, { FC, FormEventHandler, useCallback, useState } from 'react';
+import React, { FC, SubmitEventHandler, useCallback, useState } from 'react';
 import { AppHeader } from '../../components/header.tsx';
 import { Identity, NetworkLog } from '../../app.tsx';
 import { RoomCreation } from './room-creation.tsx';
@@ -23,7 +23,7 @@ const RoomUpgradeActions: FC<{
     const [busy, setBusy] = useState(false);
     const [failedInvites, setFailedInvites] = useState<string[] | undefined>();
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
     }, []);

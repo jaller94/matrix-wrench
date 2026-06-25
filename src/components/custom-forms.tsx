@@ -1,6 +1,6 @@
 import React, {
     FC,
-    FormEventHandler,
+    SubmitEventHandler,
     MouseEventHandler,
     PropsWithChildren,
     ReactElement,
@@ -64,7 +64,7 @@ type CustomFormProp = PropsWithChildren & {
     variables?: Record<string, string>,
 };
 export const CustomForm: FC<CustomFormProp> = ({ body, children, identity, method, requiresConfirmation, url, variables, ...props }) => {
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         if (requiresConfirmation) {

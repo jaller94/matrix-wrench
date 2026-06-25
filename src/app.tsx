@@ -1,10 +1,11 @@
 import React, {
     createContext,
     FC,
-    FormEventHandler,
+    SubmitEventHandler,
     MouseEventHandler,
     PropsWithChildren,
     ReactNode,
+    SubmitEventHandler,
     useCallback,
     useContext,
     useEffect,
@@ -274,7 +275,7 @@ const PasswordLoginPage: FC = () => {
 
     const handleRememberLoginClick = useCallback(({target}) => setRememberLogin(target.checked), []);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async(event) => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async(event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -448,7 +449,7 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
         masqueradeAs,
     }), [serverAddress, accessToken, masqueradeAs]);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
         onSave({
@@ -723,7 +724,7 @@ const AliasResolver: FC<{identity: Identity}> = ({identity}) => {
     const [busy, setBusy] = useState(false);
     const [roomId, setRoomId] = useState('');
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -870,7 +871,7 @@ const IdentitySelectorPage = () => {
 
 const RoomList: FC<{roomIds: string[], onSelectRoom?: (roomId: string) => void}> = ({roomIds, onSelectRoom}) => {
     const { externalMatrixUrl } = useContext(Settings);
-    const handleSelectRoom: FormEventHandler = useCallback(event => {
+    const handleSelectRoom: MouseEventHandler = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
         onSelectRoom?.(event.target.dataset.roomId);
@@ -961,7 +962,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
         setResolvedRoomId(roomId);
     }, [identity, room]);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         let roomId = room;
@@ -1070,7 +1071,7 @@ const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity
     const [purge, setPurge] = useState(true);
     const [forcePurge, setForcePurge] = useState(false);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback((event) => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback((event) => {
         // Just ignore submit. We have two buttons - no submit button.
         event.preventDefault();
         event.stopPropagation();
@@ -1260,7 +1261,7 @@ const AliasActions: FC<{ identity: Identity, roomId: string }> = ({ identity, ro
     const [alias, setAlias] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         const action = event.submitter.getAttribute('value');
@@ -1463,7 +1464,7 @@ const RoomUpgrade: FC<{identity: Identity, roomId: string}> = ({identity, roomId
     const [replacementRoom, setReplacementRoom] = useState('');
     const [roomVersion, setRoomVersion] = useState('');
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async (event) => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async (event) => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -1502,7 +1503,7 @@ const UserActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId
     const [reason, setReason] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         const action = event.submitter.getAttribute('value');
@@ -1556,7 +1557,7 @@ const StateExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
     const [busy, setBusy] = useState(false);
     const [data, setData] = useState('');
 
-    const handleGet: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleGet: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         if (!type) {
@@ -1575,7 +1576,7 @@ const StateExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
         }
     }, [identity, roomId, stateKey, type]);
 
-    const handlePut: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handlePut: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -1672,7 +1673,7 @@ const MembersExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, 
         setMembers(null);
     }, [roomId]);
 
-    const handleGet: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleGet: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);
@@ -1728,7 +1729,7 @@ const MediaExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
     const [busy, setBusy] = useState(false);
     const [media, setMedia] = useState<z.infer<typeof zMediaInRoom> | null>(null);
 
-    const handleGet: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleGet: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         setBusy(true);

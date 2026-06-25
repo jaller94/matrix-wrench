@@ -1,4 +1,4 @@
-import { FC, FormEventHandler, useCallback, useEffect, useState } from "react";
+import { FC, SubmitEventHandler, useCallback, useEffect, useState } from "react";
 import { HighUpLabelInput } from "../../components/inputs.tsx";
 import React from "react";
 
@@ -11,7 +11,7 @@ export const GeolocationTextInput: FC<{
         onChange(geoUri, Date.now());
     }, []);
 
-    const handleSubmit: FormEventHandler = useCallback((event) => {
+    const handleSubmit: SubmitEventHandler = useCallback((event) => {
         event.preventDefault();
         if (!/^geo:-?\d{1,3}(\.\d+)?,-?\d{1,3}(\.\d+)?(;u=\d+(\.)?)?$/.test(geoUri)) {
             alert('Invalid geo uri');

@@ -1,4 +1,4 @@
-import React, { FC, FormEventHandler, useCallback, useEffect, useState } from 'react';
+import React, { FC, SubmitEventHandler, useCallback, useEffect, useState } from 'react';
 import {
     uniqueId,
 } from '../helper.ts';
@@ -9,7 +9,7 @@ export const BulkActionForm: FC<{
 }> = ({actionLabel, onSubmit}) => {
     const [userIdsString, setUserIdsString] = useState('');
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
         let userIds = userIdsString.split(/[\s,;]/);

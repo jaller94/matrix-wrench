@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler, FC, FormEventHandler, useCallback, useMemo, useState } from 'react';
+import React, { ChangeEventHandler, FC, InputEventHandler, useCallback, useMemo, useState } from 'react';
 
 const RegExpToggleButton = ({...props}) => {
     return (
@@ -24,7 +24,7 @@ export const ListWithSearch: FC<{
 
     const handleIsRegExpClick = useCallback(() => setIsRegExp(value => !value), []);
 
-    const handleSearchTermInput: FormEventHandler<HTMLInputElement> = useCallback(event => {
+    const handleSearchTermInput: InputEventHandler<HTMLInputElement> = useCallback(event => {
         setSearchTerm(event.target.value);
     }, []);
 

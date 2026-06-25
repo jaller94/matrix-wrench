@@ -1,4 +1,4 @@
-import React, { FC, FormEventHandler, useCallback, useState } from 'react';
+import React, { FC, SubmitEventHandler, useCallback, useState } from 'react';
 import { Identity } from '../../app.tsx';
 import {
     createRoom,
@@ -15,7 +15,7 @@ export const RoomCreation: FC<{
     const [additionalCreatorsString, setAdditionalCreatorsString] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(event => {
+    const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(event => {
         event.preventDefault();
         event.stopPropagation();
     }, []);

@@ -1,4 +1,4 @@
-import { createContext, FC, FormEventHandler, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, FC, SubmitEventHandler, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Identity, NetworkLog } from "../app.tsx";
 import { AppHeader } from "../components/header.tsx";
 import React from "react";
@@ -142,7 +142,7 @@ export const SettingsPage: FC = () => {
         theme, setTheme,
     } = useContext(Settings);
 
-    const ignoreSubmit: FormEventHandler<HTMLFormElement> = useCallback((event) => {
+    const ignoreSubmit: SubmitEventHandler<HTMLFormElement> = useCallback((event) => {
         event.preventDefault();
         event.stopPropagation();
     }, []);
