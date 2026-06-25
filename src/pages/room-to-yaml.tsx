@@ -79,7 +79,7 @@ export const RoomToYamlPage: FC<{
             const data = await roomToYaml(identity, roomId);
             setText(JSON.stringify(data, null, 2));
         } catch (error) {
-            setText(error);
+            setText(error instanceof Error ? error.message : 'An error occurred');
         } finally {
             setBusy(false);
         }
