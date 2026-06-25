@@ -11,7 +11,6 @@ export const OverviewPages: FC<{
         // { url: `#/${encodeURIComponent(identity.name)}/user-inspector`, name: 'User inspector' },
         { url: `#/${encodeURIComponent(identity.name)}/appservice`, name: 'AppService API' },
         { url: `#/${encodeURIComponent(identity.name)}/mass-joiner`, name: 'Mass Joiner (AppService API)' },
-        // { url: `#/${encodeURIComponent(identity.name)}/polychat`, name: 'Polychat' },
 
         // Room links
         { name: 'Bulk invite', note: 'room page → "Other pages"' },

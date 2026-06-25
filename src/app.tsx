@@ -30,7 +30,6 @@ import { ContactListPage } from './pages/contact-list.tsx';
 import { LiveLocationSharingPage } from './pages/live-location-sharing/index.tsx';
 import { MassJoinerPage } from './pages/mass-joiner.tsx';
 import { OverviewPage } from './pages/overview/index.tsx';
-import { PolychatPage } from './pages/polychat/index.tsx';
 import { RoomToYamlPage } from './pages/room-to-yaml.tsx';
 import { RoomListPage } from './pages/room-list.tsx';
 import { SpaceManagementPage } from './pages/space-viewer.tsx';
@@ -1952,10 +1951,6 @@ export const MainRouter: FC<{identity: Identity, roomId: string, subpage: string
         />;
     } else if (roomId === 'overview') {
         return <OverviewPage
-            identity={identity}
-        />;
-    } else if (roomId === 'polychat') {
-        return <PolychatPage
             identity={identity}
         />;
     } else if (roomId === 'room-list') {
