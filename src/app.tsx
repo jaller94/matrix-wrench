@@ -1449,11 +1449,11 @@ const RoomSummary: FC<{ identity: Identity, stateEvents: unknown[] }> = ({identi
             {replacementRoom && <li>⚠️ This room was replaced by <RoomLink identity={identity} roomId={replacementRoom}/>.</li>}
             {analyzedCreateEvent?.beforeRoomVersion12 && <li>The room version came before <q>12</q>. The room creator has no infinite power level.</li>}
             {typeof highestPowerLevel === 'number' && <li>The highest power level is {highestPowerLevel}{analyzedCreateEvent && !analyzedCreateEvent.beforeRoomVersion12 && <> and there {analyzedCreateEvent.creators?.length} {analyzedCreateEvent.creators?.length === 1 ? 'is 1 creator' : `are ${analyzedCreateEvent.creators?.length} creators`}</>}.</li>}
-            {unchangableEventTypes && <li><strong>⚠️Unusual:</strong> No user has the power level to post these event types: {unchangableEventTypes.join(', ')}</li>}
+            {unchangableEventTypes && <li><strong>⚠️ Unusual:</strong> No user has the power level to post these event types: {unchangableEventTypes.join(', ')}</li>}
             {unchangableEventTypes?.includes('m.room.power_levels') && <li><strong>💔Broken:</strong> No user can change the power levels.</li>}
-            {(defaultUserPowerLevel >= highestPowerLevel) && <li><strong>⚠️Unusual:</strong> No user has a higher power level than the default.</li>}
-            {(encryptionAlgorithm && historyVisibility === 'world_readable') && <li><strong>⚠️Unusual:</strong> The room uses encryption but is readable without joining.</li>}
-            {(encryptionAlgorithm && joinRule === 'public') && <li><strong>⚠️Unusual:</strong> The room uses encryption but is publicly joinable.</li>}
+            {(defaultUserPowerLevel >= highestPowerLevel) && <li><strong>⚠️ Unusual:</strong> No user has a higher power level than the default.</li>}
+            {(encryptionAlgorithm && historyVisibility === 'world_readable') && <li><strong>⚠️ Unusual:</strong> The room uses encryption but is readable without joining.</li>}
+            {(encryptionAlgorithm && joinRule === 'public') && <li><strong>⚠️ Unusual:</strong> The room uses encryption but is publicly joinable.</li>}
         </ul>
     );
 }
