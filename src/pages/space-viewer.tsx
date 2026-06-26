@@ -1,4 +1,5 @@
 import React, { FC, Fragment, MouseEventHandler, useCallback, useState } from 'react';
+import * as z from 'zod';
 import { AppHeader } from '../components/header.tsx';
 import { Identity, NetworkLog } from '../app.tsx';
 
@@ -6,9 +7,22 @@ import {
     yieldHierachy,
 } from '../matrix.ts';
 
-function populateRoomChildren(root: object, rooms: object[]) {
+type RoomInfo = {
+    id: string;
+    name?: string;
+    joinRule?: string;
+    children?: RoomInfo[];
+    childrenInfo: {
+        id: string;
+    }[];
+};
+
+function populateRoomChildren(root: RoomInfo, rooms: RoomInfo[]) {
     for (const roomInfo of root.childrenInfo) {
-        const room = rooms.find(r => r.id === roomInfo.id) ?? roomInfo;
+        const room = rooms.find(r => r.id === roomInfo.id) ?? {
+            ...roomInfo,
+            childrenInfo: [],
+        };
         root.children = root.children ?? [];
         root.children.push(room);
         if (room.childrenInfo) {
@@ -17,12 +31,22 @@ function populateRoomChildren(root: object, rooms: object[]) {
     }
 }
 
+const zRawRooms = z.array(z.object({
+    room_id: z.string(),
+    name: z.optional(z.string()),
+    join_rule: z.optional(z.string()),
+    children_state: z.array(z.object({
+        state_key: z.string(),
+    }))
+}));
+
 function convertRoomsToHierarchyTree(rawRooms: object[]) {
-    if (rawRooms.length === 0) {
-        return [];
+    const safeRawRooms = zRawRooms.safeParse(rawRooms);
+    if (!safeRawRooms.data) {
+        console.log(safeRawRooms.error);
+        throw Error('Validation error');
     }
-    console.log('rawRooms', rawRooms);
-    const rooms = rawRooms.map(r => ({
+    const rooms = safeRawRooms.data.map(r => ({
         id: r.room_id,
         name: r.name,
         joinRule: r.join_rule,
@@ -31,11 +55,14 @@ function convertRoomsToHierarchyTree(rawRooms: object[]) {
         })),
     }));
     const root = rooms.shift();
+    if (!root) {
+        return [];
+    }
     populateRoomChildren(root, rooms);
     return [root];
 }
 
-const SpaceViewer: FC<{ identity: Identity, rooms: object[] }> = ({identity, rooms}) => {
+const SpaceViewer: FC<{ identity: Identity, rooms: RoomInfo[] }> = ({identity, rooms}) => {
     return <ul>
         {rooms.map(room => <Fragment key={room.id}>
             <li>
@@ -53,7 +80,7 @@ type SpaceManagementPageProps = {
 
 export const SpaceManagementPage: FC<SpaceManagementPageProps> = ({identity, roomId}) => {
     const [busy, setBusy] = useState(false);
-    const [data, setData] = useState<object[] | undefined>();
+    const [data, setData] = useState<RoomInfo[] | undefined>();
     const [text, setText] = useState('');
 
     const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(async(event) => {
@@ -68,7 +95,7 @@ export const SpaceManagementPage: FC<SpaceManagementPageProps> = ({identity, roo
             }
         } catch(error) {
             console.error(error);
-            setText(error);
+            setText(error instanceof Error ? error.message : 'An error occurred');
         } finally {
             setBusy(false);
         }

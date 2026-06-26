@@ -255,8 +255,8 @@ export async function getAccountData(identity: Identity, user: string | undefine
 }
 
 const zGetHierachy = z.looseObject({
-    next_batch: z.string(),
-    rooms: z.array(z.string()),
+    next_batch: z.optional(z.string()),
+    rooms: z.array(z.record(z.string(), z.unknown())),
 });
 
 /**
@@ -562,7 +562,7 @@ export async function whoAmI(identity: Identity) {
 
 export async function *yieldHierachy(identity: Identity, roomId: string) {
     let rooms: unknown[] = [];
-    let nextBatch;
+    let nextBatch: string | undefined;
     do {
         const response = await getHierachy(identity, roomId, nextBatch);
         rooms = [
