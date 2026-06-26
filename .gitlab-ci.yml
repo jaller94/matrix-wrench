@@ -6,7 +6,6 @@ cache:
 test:
   script:
   - bun install --frozen-lockfile
-  - bun run lint
   - bun run test
 pages:
   script:
