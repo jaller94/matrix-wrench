@@ -7,7 +7,11 @@
 * Added: Register accounts with an AppService token
 * Added: Send messages to a room
 
-## v0.15.0 (2025-11-14)
+### Upcoming release
+* Changed: Renamed "Internal name" of identities to "Label"
+* Fixed: The Space Viewer page was broken because of incorrect validation of server responses
+
+## v0.15.1 (2025-11-14)
 *Bye, dad*
 
 * Changed: Updated various dependencies
