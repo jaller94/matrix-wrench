@@ -11,6 +11,8 @@ type RoomInfo = {
     id: string;
     name?: string;
     joinRule?: string;
+    roomType?: string;
+    roomVersion?: string;
     children?: RoomInfo[];
     childrenInfo: {
         id: string;
@@ -35,6 +37,8 @@ const zRawRooms = z.array(z.object({
     room_id: z.string(),
     name: z.optional(z.string()),
     join_rule: z.optional(z.string()),
+    room_type: z.optional(z.string()),
+    room_version: z.optional(z.string()),
     children_state: z.array(z.object({
         state_key: z.string(),
     }))
@@ -50,6 +54,8 @@ function convertRoomsToHierarchyTree(rawRooms: object[]) {
         id: r.room_id,
         name: r.name,
         joinRule: r.join_rule,
+        roomType: r.room_type,
+        roomVersion: r.room_version,
         childrenInfo: r.children_state.map(r => ({
             id: r.state_key,
         })),
@@ -66,7 +72,10 @@ const SpaceViewer: FC<{ identity: Identity, rooms: RoomInfo[] }> = ({identity, r
     return <ul>
         {rooms.map(room => <Fragment key={room.id}>
             <li>
-                <a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(room.id)}}`}>{room.name ?? room.id}</a>
+                <a href={`#/${encodeURIComponent(identity.name)}/${encodeURIComponent(room.id)}}`}>
+                    {room.roomType === 'm.space' ? '📁' : '📄'}
+                    {room.name ?? room.id}
+                </a>
             </li>
             {room.children && <SpaceViewer key={room.id} identity={identity} rooms={room.children} />}
         </Fragment>)}
