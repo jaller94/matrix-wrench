@@ -65,13 +65,15 @@ import { AdvancedRoomUpgradePage } from './pages/room-upgrade/index.tsx';
 
 const NETWORKLOG_MAX_ENTRIES = 500;
 
-export type Identity = {
-    accessToken: string,
-    masqueradeAs?: string,
-    name: string,
-    rememberLogin: boolean,
-    serverAddress: string,
-};
+const zIdentity = z.looseObject({
+    accessToken: z.string(),
+    masqueradeAs: z.optional(z.string()),
+    name: z.string(),
+    rememberLogin: z.boolean(),
+    serverAddress: z.string(),
+});
+
+export type Identity = z.infer<typeof zIdentity>;
 
 const NetworkRequests = createContext({
     isShortened: false,
