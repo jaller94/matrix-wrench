@@ -1569,7 +1569,7 @@ const StateExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
             setData(JSON.stringify(data, null, 2));
         } catch (error) {
             console.warn(error);
-            setData(error.message);
+            setData(error instanceof Error ? error.message : 'An error occurred');
         } finally {
             setBusy(false);
         }
