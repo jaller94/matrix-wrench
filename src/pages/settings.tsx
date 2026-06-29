@@ -1,7 +1,7 @@
-import { createContext, FC, SubmitEventHandler, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, FC, SubmitEventHandler, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import * as z from "zod/mini";
 import { Identity, NetworkLog } from "../app.tsx";
 import { AppHeader } from "../components/header.tsx";
-import React from "react";
 import { HighUpLabelInput } from "../components/inputs.tsx";
 
 export const Settings = createContext<{
@@ -55,25 +55,46 @@ const DEFAULT_THEME = {
 };
 
 let IDENTITIES: Identity[] = [];
-try {
-    const identities = JSON.parse(localStorage.getItem('identities'));
-    if (!Array.isArray(identities)) {
-        throw Error(`Expected an array, got ${typeof identities}`);
+const zIdentitiesInStorage = z.array(z.looseObject({
+    accessToken: z.string(),
+    masqueradeAs: z.optional(z.string()),
+    name: z.string(),
+    serverAddress: z.string(),
+}));
+const tryToLoadIdentities = () => {
+    const rawIdentities = localStorage.getItem('identities');
+    if (!rawIdentities) {
+        return;
     }
-    IDENTITIES = identities.map(identity => ({
+    const safeIdentities = zIdentitiesInStorage.parse(JSON.parse(rawIdentities));
+    IDENTITIES = safeIdentities.map(identity => ({
         ...identity,
         rememberLogin: true,
     }));
+}
+try {
+    tryToLoadIdentities();
 } catch (error) {
     console.warn('No identities loaded from localStorage.', error);
 }
+
 let SETTINGS = {};
-try {
-    const settings = JSON.parse(localStorage.getItem('settings'));
-    if (typeof settings !== 'object') {
-        throw Error(`Expected an object, got ${typeof settings}`);
+const zSettingsInStorage = z.looseObject({
+    customTheme: z.optional(z.string()),
+    externalMatrixUrl: z.optional(z.string()),
+    showNetworkLog: z.optional(z.boolean()),
+    theme: z.optional(z.string()),
+});
+const tryToLoadSettings = () => {
+    const rawSettings = localStorage.getItem('settings');
+    if (!rawSettings) {
+        return;
     }
-    SETTINGS = settings;
+    const safeSettings = zSettingsInStorage.parse(JSON.parse(rawSettings));
+    SETTINGS = safeSettings;
+}
+try {
+    tryToLoadSettings();
 } catch (error) {
     console.warn('No settings loaded from localStorage.', error);
 }
