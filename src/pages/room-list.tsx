@@ -198,7 +198,7 @@ async function optionalAccountData(identity: Identity, myMatrixId: string, type:
     }
 }
 
-async function *stats(identity) {
+async function *stats(identity: Identity) {
     const joinedRooms = (await getJoinedRooms(identity)).joined_rooms;
     let rows = joinedRooms.map(roomId => ({roomId}));
     const myMatrixId = (await whoAmI(identity)).user_id;
