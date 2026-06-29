@@ -1374,8 +1374,8 @@ const getRoomVersionAsInt = (roomVersion: string) => {
     return Number.parseInt(roomVersion);
 }
 
-const getUnchangeableEventTypes: FC<{ powerLevelsContent: object, powerLevel: number }> = (powerLevelsContent, powerLevel) => {
-    const unchangableEventTypes = [];
+const getUnchangeableEventTypes = (powerLevelsContent: object, powerLevel: number) => {
+    const unchangableEventTypes: string[] = [];
     for (const [type, requiredPowerLevel] of Object.entries(powerLevelsContent?.events ?? {})) {
         if (powerLevel < requiredPowerLevel) {
             unchangableEventTypes.push(type);
