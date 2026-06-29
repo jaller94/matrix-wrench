@@ -16,7 +16,8 @@
     "jsx": "react",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
+    "allowJs": false,
     "noUncheckedIndexedAccess": true,
+    // "exactOptionalPropertyTypes": true,
   }
 }
