@@ -1,5 +1,5 @@
 import React, { FC, Fragment, MouseEventHandler, useCallback, useState } from 'react';
-import * as z from 'zod';
+import * as z from 'zod/mini';
 import { AppHeader } from '../components/header.tsx';
 import { Identity, NetworkLog } from '../app.tsx';
 

@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import * as z from 'zod/mini';
 import { Identity } from "./app.tsx";
 
 const dryRun = false;
@@ -435,7 +435,7 @@ export async function registerAppServiceUser(identity: Identity, username: strin
 
 const zResolveAlias = z.looseObject({
     room_id: z.string(),
-    servers: z.array(z.string()).optional(),
+    servers: z.optional(z.array(z.string())),
 });
 
 /**

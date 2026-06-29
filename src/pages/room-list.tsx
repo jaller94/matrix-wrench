@@ -1,5 +1,5 @@
 import React, { FC, MouseEventHandler, useCallback, useMemo, useState } from 'react';
-import * as z from 'zod';
+import * as z from 'zod/mini';
 import { AppHeader } from '../components/header.tsx';
 import { RoomListFilterer } from '../components/table.tsx';
 import { Identity, NetworkLog } from '../app.tsx';
@@ -76,14 +76,14 @@ import {
 
 const stateValidators = {
     'm.room.create': z.looseObject({
-        creator: z.string().optional(),
-        'm.federate': z.boolean().optional(),
-        predecessor: z.looseObject({
+        creator: z.optional(z.string()),
+        'm.federate': z.optional(z.boolean()),
+        predecessor: z.optional(z.looseObject({
             event_id: z.string(),
             room_id: z.string(),
-        }).optional(),
-        room_version: z.string().optional(),
-        type: z.string().optional(),
+        })),
+        room_version: z.optional(z.string()),
+        type: z.optional(z.string()),
     }),
 } as const;
 

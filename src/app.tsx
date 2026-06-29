@@ -11,7 +11,7 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import * as z from 'zod';
+import * as z from 'zod/mini';
 import {
     classnames,
     getServerNameFromMXID,
@@ -1328,13 +1328,13 @@ const RoomSummaryWrapperInner: FC<{ identity: Identity, roomId: string }> = ({id
 }
 
 const zCreateStateEventContent = z.looseObject({
-    additional_creators: z.array(z.string()).optional(),
-    'm.federate': z.boolean().optional(),
-    predecessor: z.looseObject({
+    additional_creators: z.optional(z.array(z.string())),
+    'm.federate': z.optional(z.boolean()),
+    predecessor: z.optional(z.looseObject({
         room_id: z.string(),
-    }).optional(),
-    room_version: z.string().optional(),
-    type: z.string().optional(),
+    })),
+    room_version: z.optional(z.string()),
+    type: z.optional(z.string()),
 });
 
 const zNameStateEventContent = z.looseObject({
@@ -1342,7 +1342,7 @@ const zNameStateEventContent = z.looseObject({
 });
 
 const zPowerLevelStateEventContent = z.looseObject({
-    users: z.record(z.string(), z.union([z.string(), z.int()])).optional(),
+    users: z.record(z.string(), z.optional(z.union([z.string(), z.int()]))),
 });
 
 const zTombstoneStateEventContent = z.looseObject({
