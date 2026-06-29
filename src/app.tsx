@@ -24,7 +24,7 @@ import { CustomButton, CustomForm } from './components/custom-forms.tsx';
 import { AppHeader } from './components/header.tsx';
 import { HighUpLabelInput } from './components/inputs.tsx';
 import { RoomLink } from './components/room-link.tsx';
-import AboutPage from './pages/about.tsx';
+import { AboutPage } from './pages/about.tsx';
 import { AppServicePage } from './pages/appservice.tsx';
 import { ContactListPage } from './pages/contact-list.tsx';
 import { LiveLocationSharingPage } from './pages/live-location-sharing/index.tsx';

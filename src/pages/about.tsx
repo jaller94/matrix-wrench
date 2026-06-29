@@ -5,7 +5,7 @@ function ExternalLink(props: DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAn
     return <a {...props}/>;
 }
 
-export default function AboutPage() {
+export function AboutPage() {
     return <>
         <AppHeader backUrl="#">About</AppHeader>
         <h2>What is Matrix Wrench?</h2>
