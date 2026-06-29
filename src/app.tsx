@@ -970,7 +970,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
         if (room.startsWith('matrix:r/')) {
             roomId = `#${room.slice('matrix:r/'.length).replace(/\?.*/g, '')}`;
         } else if (room.startsWith('matrix:roomid/')) {
-            roomId = `!${room.slice('matrix:r/'.length).replace(/\?.*/g, '')}`;
+            roomId = `!${room.slice('matrix:roomid/'.length).replace(/\?.*/g, '')}`;
         } else if (room.startsWith('https://matrix.to/#/')) {
             roomId = room.slice('https://matrix.to/#/'.length).replace(/\?.*/g, '');
         }

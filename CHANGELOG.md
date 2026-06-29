@@ -11,6 +11,7 @@
 * Changed: Renamed "Internal name" of identities to "Label"
 * Fixed: The Space Viewer page was broken because of incorrect validation of server responses
 * Fixed: Reduced the bundle size from 0.37 MB to 0.31 MB by importing zod/mini
+* Fixed: Fix parsing of Matrix URIs starting with matrix:roomid/
 
 ## v0.15.1 (2025-11-14)
 *Bye, dad*
