@@ -10,9 +10,13 @@ import {
 } from '../matrix.ts';
 
 async function *stats(identity: Identity) {
-    const mDirectContent = await getAccountData(identity, null, 'm.direct');
+    const mDirectContent = await getAccountData(identity, undefined, 'm.direct');
     const contactUserIds = Object.keys(mDirectContent);
-    let rows = contactUserIds.map(userId => ({userId}));
+    let rows: {
+        userId: string,
+        sharedRooms?: Set<string>,
+        names?: Set<string>,
+    }[] = contactUserIds.map(userId => ({userId}));
     yield {
         rows,
     };
@@ -26,11 +30,14 @@ async function *stats(identity: Identity) {
                 if (!contactInThisRoom) {
                     return user;
                 }
+                let names = user.names;
+                if (typeof contactInThisRoom.display_name === 'string') {
+                    names = (user.names ?? new Set()).add(contactInThisRoom.display_name);
+                }
                 return {
                     ...user,
                     sharedRooms: (user.sharedRooms ?? new Set()).add(roomId),
-                    sharedRoomsCount: (user.sharedRoomsCount ?? 0) + 1,
-                    names: (user.names ?? new Set()).add(contactInThisRoom.display_name),
+                    names,
                 };
             })
         } catch (error) {
@@ -66,7 +73,8 @@ export const ContactListPage: FC<{ identity: Identity }> = ({identity}) => {
                 setText(JSON.stringify(result.rows, null, 2));
             }
         } catch(error) {
-            setText(error);
+            console.error(error);
+            setText(error instanceof Error ? error.message : 'An error occurred');
         } finally {
             setBusy(false);
             setProgressValue(undefined);
