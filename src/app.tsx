@@ -1383,8 +1383,11 @@ const getRoomVersionAsInt = (roomVersion: string) => {
     return Number.parseInt(roomVersion);
 }
 
-const getUnchangeableEventTypes = (powerLevelsContent: object, powerLevel: number) => {
+const getUnchangeableEventTypes = (powerLevelsContent: {[x: string]: unknown}, powerLevel: number, hasCreators: boolean) => {
     const unchangableEventTypes: string[] = [];
+    if (hasCreators) {
+        return undefined;
+    }
     for (const [type, requiredPowerLevel] of Object.entries(powerLevelsContent?.events ?? {})) {
         if (powerLevel < requiredPowerLevel) {
             unchangableEventTypes.push(type);
@@ -1413,10 +1416,10 @@ const analyzeCreateEvent = (stateEvent: z.infer<typeof zStateEvent> | undefined)
     const beforeRoomVersion12 = !!roomVersionAsInt && roomVersionAsInt < 12; 
     return {
         beforeRoomVersion12,
-        creators: beforeRoomVersion12 ? [
+        creators: beforeRoomVersion12 ? undefined : [
             stateEvent.sender,
             ...(safeContent.data.additional_creators ?? []),
-        ] : undefined,
+        ],
         federationAllowed: safeContent.data['m.federate'] ?? true,
         rawRoomVersion: safeContent.data.room_version,
         roomVersionAsInt: roomVersionAsInt,
@@ -1436,6 +1439,7 @@ const RoomSummary: FC<{ identity: Identity, stateEvents: unknown[] }> = ({identi
     const avatar = stateEvents.data.find(e => e.type === 'm.room.avatar' && e.state_key === '')?.content?.['url'];
     const createEvent = stateEvents.data.find(e => e.type === 'm.room.create' && e.state_key === '');
     const analyzedCreateEvent = analyzeCreateEvent(createEvent);
+    console.log(analyzedCreateEvent);
     const powerLevelsContent = stateEvents.data.find(e => e.type === 'm.room.power_levels' && e.state_key === '')?.content;
     const encryptionAlgorithm = stateEvents.data.find(e => e.type === 'm.room.encryption' && e.state_key === '')?.content?.algorithm;
     const joinRule = stateEvents.data.find(e => e.type === 'm.room.join_rules' && e.state_key === '')?.content?.join_rule;
@@ -1445,7 +1449,7 @@ const RoomSummary: FC<{ identity: Identity, stateEvents: unknown[] }> = ({identi
     const highestPowerLevel = getHighestExplicitPowerLevel(powerLevelsContent, defaultUserPowerLevel);
     const safeTombstoneEvent = zTombstoneStateEventContent.safeParse(stateEvents.data.find(e => e.type === 'm.room.tombstone' && e.state_key === '')?.content);
     const replacementRoom = safeTombstoneEvent.data?.replacement_room;
-    const unchangableEventTypes = getUnchangeableEventTypes(powerLevelsContent, highestPowerLevel);
+    const unchangableEventTypes = getUnchangeableEventTypes(powerLevelsContent, highestPowerLevel, !analyzedCreateEvent?.beforeRoomVersion12);
     return (
         <ul>
             {name ? <li>This room is called <q>{name}</q>.</li> : <li>This room has no name.</li>}
@@ -1458,7 +1462,7 @@ const RoomSummary: FC<{ identity: Identity, stateEvents: unknown[] }> = ({identi
             </> : <li>Failed to validate the m.room.create event.</li>}
             {replacementRoom && <li>⚠️ This room was replaced by <RoomLink identity={identity} roomId={replacementRoom}/>.</li>}
             {analyzedCreateEvent?.beforeRoomVersion12 && <li>The room version came before <q>12</q>. The room creator has no infinite power level.</li>}
-            {typeof highestPowerLevel === 'number' && <li>The highest power level is {highestPowerLevel}{analyzedCreateEvent && !analyzedCreateEvent.beforeRoomVersion12 && <> and there {analyzedCreateEvent.creators?.length} {analyzedCreateEvent.creators?.length === 1 ? 'is 1 creator' : `are ${analyzedCreateEvent.creators?.length} creators`}</>}.</li>}
+            {typeof highestPowerLevel === 'number' && <li>The highest power level is {highestPowerLevel}{analyzedCreateEvent && !analyzedCreateEvent.beforeRoomVersion12 && <> and there {analyzedCreateEvent.creators?.length === 1 ? 'is 1 creator' : `are ${analyzedCreateEvent.creators?.length} creators`}</>}.</li>}
             {unchangableEventTypes && <li><strong>⚠️ Unusual:</strong> No user has the power level to post these event types: {unchangableEventTypes.join(', ')}</li>}
             {unchangableEventTypes?.includes('m.room.power_levels') && <li><strong>💔Broken:</strong> No user can change the power levels.</li>}
             {(defaultUserPowerLevel >= highestPowerLevel) && <li><strong>⚠️ Unusual:</strong> No user has a higher power level than the default.</li>}
