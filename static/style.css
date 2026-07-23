@@ -224,12 +224,11 @@ a.button:hover {
 }
 
 .app-header_back {
-    height: 50px;
-    width: 70px;
+    width: 1.2em;
     margin-right: 1em;
-    align-self: center;
-    font-size: 2em;
+    font-size: 1.7em !important;
     font-weight: bold;
+    text-align: center;
 }
 
 .app-header_nav {

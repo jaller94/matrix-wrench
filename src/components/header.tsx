@@ -4,31 +4,18 @@ type AppHeaderProps = {
     backLabel?: string,
     backUrl?: string,
     children: string,
-    onBack?: MouseEventHandler<HTMLButtonElement>,
 };
 
-export const AppHeader: FC<AppHeaderProps> = ({backLabel = 'Back', backUrl, children, onBack}) => {
-    const handleBack = useCallback<MouseEventHandler<HTMLButtonElement>>(event => {
-        if (backUrl) {
-            event.preventDefault();
-            event.stopPropagation();
-            globalThis.location.href = backUrl;
-        }
-        if (onBack) {
-            onBack(event);
-        }
-    }, [backUrl, onBack]);
-
+export const AppHeader: FC<AppHeaderProps> = ({backLabel = 'Back', backUrl, children}) => {
     return (
         <header className="app-header">
-            {(onBack || typeof backUrl === 'string') && (
-                <button
+            {typeof backUrl === 'string' && (
+                <a
                     aria-label={backLabel}
-                    className="app-header_back"
+                    className="app-header_back button"
+                    href={backUrl}
                     title={backLabel}
-                    type="button"
-                    onClick={handleBack}
-                >{'<'}</button>
+                >{'<'}</a>
             )}
             <h1 className="app-header_label">{children}</h1>
             <nav className="app-header_nav">
