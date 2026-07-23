@@ -56,18 +56,18 @@ const MutateUserForm: FC<{ identity: Identity }> = ({ identity }) => {
                 required
                 title="A user id, e.g. @user:server.com"
                 value={userId}
-                onInput={useCallback(({target}) => setUserId(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setUserId(currentTarget.value), [])}
             />
             <HighUpLabelInput
                 label="Password"
                 title="Optional password"
                 value={password}
-                onInput={useCallback(({target}) => setPassword(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setPassword(currentTarget.value), [])}
             />
             <p>
                 <label>User type
                     <select
-                        onInput={useCallback(({target}) => setUserType(target.value), [])}
+                        onInput={useCallback(({currentTarget}) => setUserType(currentTarget.value), [])}
                     >
                         <option value="">None</option>
                         <option value="bot">Bot</option>
@@ -80,7 +80,7 @@ const MutateUserForm: FC<{ identity: Identity }> = ({ identity }) => {
                     <input
                         checked={logoutDevices}
                         type="checkbox"
-                        onChange={useCallback(({target}) => setLogoutDevices(target.checked), [])}
+                        onChange={useCallback(({currentTarget}) => setLogoutDevices(currentTarget.checked), [])}
                     />
                     Log out all devices
                 </label></li>
@@ -88,7 +88,7 @@ const MutateUserForm: FC<{ identity: Identity }> = ({ identity }) => {
                     <input
                         checked={admin}
                         type="checkbox"
-                        onChange={useCallback(({target}) => setAdmin(target.checked), [])}
+                        onChange={useCallback(({currentTarget}) => setAdmin(currentTarget.checked), [])}
                     />
                     Synapse admin
                 </label></li>
@@ -96,7 +96,7 @@ const MutateUserForm: FC<{ identity: Identity }> = ({ identity }) => {
                     <input
                         checked={deactivated}
                         type="checkbox"
-                        onChange={useCallback(({ target }) => setDeactivated(target.checked), [])}
+                        onChange={useCallback(({currentTarget}) => setDeactivated(currentTarget.checked), [])}
                     />
                     Deactivated
                 </label></li>

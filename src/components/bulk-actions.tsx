@@ -27,7 +27,7 @@ export const BulkActionForm: FC<{
                 User IDs (separated by spaces, new lines, commas or semi-colons)
                 <textarea
                     value={userIdsString}
-                    onInput={useCallback(({target}) => setUserIdsString(target.value), [])}
+                    onInput={useCallback(({currentTarget}) => setUserIdsString(currentTarget.value), [])}
                 />
             </label>
             <button className="primary" type="submit">{actionLabel}</button>

@@ -74,7 +74,7 @@ const RoomUpgradeActions: FC<{
                             pattern="!.+"
                             title="A room id"
                             value={replacementRoom}
-                            onInput={useCallback(({target}) => handleReplacementRoomChange(target.value), [])}
+                            onInput={useCallback(({currentTarget}) => handleReplacementRoomChange(currentTarget.value), [])}
                         />
                     </li>
                     <li><button disabled={busy || !replacementRoom} type="button" onClick={handleInviteMembers}>Invite members</button></li>

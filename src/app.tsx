@@ -1,6 +1,8 @@
 import React, {
+    ChangeEventHandler,
     createContext,
     FC,
+    InputEventHandler,
     MouseEventHandler,
     PropsWithChildren,
     ReactNode,
@@ -177,7 +179,7 @@ const MakeRoomAdminForm: FC<{identity: Identity, roomId: string}> = ({ identity,
                 required
                 title="A user id, e.g. @foo:matrix.org"
                 value={userId}
-                onInput={useCallback(({target}) => setUserId(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setUserId(currentTarget.value), [])}
             />
             <button type="submit">Make user a room admin</button>
         </CustomForm>
@@ -355,7 +357,7 @@ const PasswordLoginPage: FC = () => {
                         pattern="[^\\\/]+"
                         required
                         value={name}
-                        onInput={useCallback(({target}) => setName(target.value), [])}
+                        onInput={useCallback(({currentTarget}) => setName(currentTarget.value), [])}
                     />
                 </div>
                 {name.includes('/') && <p>The name must not include a slash character (/).</p>}
@@ -364,7 +366,7 @@ const PasswordLoginPage: FC = () => {
                         label="Matrix ID"
                         name="user"
                         value={user}
-                        onInput={useCallback(({target}) => setUser(target.value), [])}
+                        onInput={useCallback(({currentTarget}) => setUser(currentTarget.value), [])}
                     />
                 </div>
                 <div>
@@ -374,7 +376,7 @@ const PasswordLoginPage: FC = () => {
                         name="password"
                         value={password}
                         type="password"
-                        onInput={useCallback(({target}) => setPassword(target.value), [])}
+                        onInput={useCallback(({currentTarget}) => setPassword(currentTarget.value), [])}
                     />
                 </div>
                 {!!localStorage && 
@@ -477,7 +479,7 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
         });
     }, [accessToken, masqueradeAs, name, rememberLogin, serverAddress, onSave]);
 
-    const handleRememberLoginClick = useCallback(({target}) => setRememberLogin(target.checked), []);
+    const handleRememberLoginClick: ChangeEventHandler<HTMLInputElement> = useCallback(({currentTarget}) => setRememberLogin(currentTarget.checked), []);
 
     return <>
         <AppHeader
@@ -492,7 +494,7 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
                         pattern="[^\\\/]+"
                         required
                         value={name}
-                        onInput={useCallback(({target}) => setName(target.value), [])}
+                        onInput={useCallback(({currentTarget}) => setName(currentTarget.value), [])}
                     />
                 </div>
                 {name.includes('/') && <p>The name must not include a slash character (/).</p>}
@@ -503,7 +505,7 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
                         type="url"
                         required
                         value={serverAddress}
-                        onInput={useCallback(({target}) => setServerAddress(target.value), [])}
+                        onInput={useCallback(({currentTarget}) => setServerAddress(currentTarget.value), [])}
                     />
                 </div>
                 <div>
@@ -551,7 +553,7 @@ const IdentityEditor: FC<{error?: string, identity: Identity, onSave: (identity:
     </>;
 }
 
-const ResponseStatus: FC<{ invalid: boolean, status: number }> = ({invalid, status}) => {
+const ResponseStatus: FC<{ invalid: boolean | undefined, status: number | null | undefined }> = ({invalid, status}) => {
     let label = '...';
     let title = 'Fetching data…';
     if (status === null) {
@@ -570,9 +572,9 @@ const ResponseStatus: FC<{ invalid: boolean, status: number }> = ({invalid, stat
             className={classnames(
                 'network-log-request_status',
                 {
-                    'network-log-request_status--success': status >= 200 && status < 300,
-                    'network-log-request_status--client-error': status >= 400 && status < 500,
-                    'network-log-request_status--server-error': status >= 500 || invalid,
+                    'network-log-request_status--success': typeof status === "number" && status >= 200 && status < 300,
+                    'network-log-request_status--client-error': typeof status === "number" && status >= 400 && status < 500,
+                    'network-log-request_status--server-error': (typeof status === "number" && status >= 500) || !!invalid,
                     'network-log-request_status--network': status === null,
                     'network-log-request_status--pending': status === undefined,
                 },
@@ -763,7 +765,7 @@ const AliasResolver: FC<{identity: Identity}> = ({identity}) => {
                 required
                 title="A room alias starting with a number sign, e.g. #matrixhq:matrix.org"
                 value={alias}
-                onInput={useCallback(({target}) => setAlias(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setAlias(currentTarget.value), [])}
             />
             <button type="submit">Resolve</button>
         </fieldset></form>
@@ -813,7 +815,7 @@ const UnencryptedTextMessage: FC<{identity: Identity, roomId: string}> = ({ iden
                 label="Message"
                 required
                 value={message}
-                onInput={useCallback(({ target }) => setMessage(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setMessage(currentTarget.value), [])}
             />
             <button type="submit">Send message</button>
         </CustomForm>
@@ -1010,7 +1012,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
         globalThis.location.href = `#/${encodeURIComponent(identity.name)}`;
     }, [identity.name]);
 
-    const handleRoomInput = useCallback(({target}) => setRoom(target.value), []);
+    const handleRoomInput: InputEventHandler<HTMLInputElement> = useCallback(({currentTarget}) => setRoom(currentTarget.value), []);
 
     if (roomId) {
         return <>
@@ -1096,10 +1098,6 @@ const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity
         setBusy(newBusy);
     }, []);
 
-    const handleBlockClick = useCallback(() => setBlock(value => !!value), []);
-    const handlePurgeClick = useCallback(() => setPurge(value => !!value), []);
-    const handleForcePurgeClick = useCallback(() => setForcePurge(value => !!value), []);
-
     const body = useMemo(() => ({
         block,
         purge,
@@ -1117,7 +1115,7 @@ const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity
                     <input
                         checked={block}
                         type="checkbox"
-                        onChange={handleBlockClick}
+                        onChange={useCallback(({currentTarget}) => setBlock(currentTarget.checked), [])}
                     />
                     Block in the future
                 </label></li>
@@ -1125,7 +1123,7 @@ const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity
                     <input
                         checked={purge}
                         type="checkbox"
-                        onChange={handlePurgeClick}
+                        onChange={useCallback(({currentTarget}) => setPurge(currentTarget.checked), [])}
                     />
                     Purge from database
                 </label></li>
@@ -1133,7 +1131,7 @@ const SynapseAdminDelete: FC<{identity: Identity, roomId: string}> = ({ identity
                     <input
                         checked={forcePurge}
                         type="checkbox"
-                        onChange={handleForcePurgeClick}
+                        onChange={useCallback(({currentTarget}) => setForcePurge(currentTarget.checked), [])}
                     />
                     Purge even if local users cannot be removed
                 </label></li>
@@ -1307,7 +1305,7 @@ const AliasActions: FC<{ identity: Identity, roomId: string }> = ({ identity, ro
                 required
                 title="A room alias, e.g. #matrix:matrix.org"
                 value={alias}
-                onInput={useCallback(({target}) => setAlias(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setAlias(currentTarget.value), [])}
             />
             <button type="submit" value="add">Add</button>
             <button type="submit" value="remove">Remove</button>
@@ -1500,7 +1498,7 @@ const RoomUpgrade: FC<{identity: Identity, roomId: string}> = ({identity, roomId
             <HighUpLabelInput
                 label="New room version"
                 value={roomVersion}
-                onInput={useCallback(({target}) => setRoomVersion(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setRoomVersion(currentTarget.value), [])}
             />
             <button disabled={busy} type="submit">Upgrade</button>
         </fieldset></form>
@@ -1546,14 +1544,14 @@ const UserActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId
                 required
                 title="A user id, e.g. @foo:matrix.org"
                 value={userId}
-                onInput={useCallback(({target}) => setUserId(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setUserId(currentTarget.value), [])}
             />
             <HighUpLabelInput
                 name="kick_reason"
                 label="Reason for kick or ban"
                 title="A reason why this user gets kicked or banned."
                 value={reason}
-                onInput={useCallback(({target}) => setReason(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setReason(currentTarget.value), [])}
             />
             <button type="submit" value="invite">Invite</button>
             <button type="submit" value="kick">Kick</button>
@@ -1625,13 +1623,13 @@ const StateExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
                 label="Type"
                 list="state-types"
                 value={type}
-                onInput={useCallback(({target}) => setType(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setType(currentTarget.value), [])}
             />
             <HighUpLabelInput
                 name="state_key"
                 label="State Key"
                 value={stateKey}
-                onInput={useCallback(({target}) => setStateKey(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setStateKey(currentTarget.value), [])}
             />
             <button type="submit">Query</button>
         </fieldset></form>
@@ -1643,7 +1641,7 @@ const StateExplorer: FC<{ identity: Identity, roomId: string }> = ({identity, ro
                     autoCorrect="off"
                     spellCheck={false}
                     value={data}
-                    onInput={useCallback(({target}) => setData(target.value), [])}
+                    onInput={useCallback(({currentTarget}) => setData(currentTarget.value), [])}
                 />
             </label>
             <div><button type="submit">Overwrite state</button></div>

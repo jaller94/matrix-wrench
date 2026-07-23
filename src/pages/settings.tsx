@@ -178,7 +178,7 @@ export const SettingsPage: FC = () => {
                     label="Prefix for external Matrix links"
                     name="external_matrix_links"
                     value={externalMatrixUrl}
-                    onInput={useCallback(({target}) => setExternalMatrixUrl(target.value), [setExternalMatrixUrl])}
+                    onInput={useCallback(({currentTarget}) => setExternalMatrixUrl(currentTarget.value), [setExternalMatrixUrl])}
                 />
                 <ul className="checkbox-list">
                     <li><label>
@@ -186,7 +186,7 @@ export const SettingsPage: FC = () => {
                             name="show_network_log"
                             checked={showNetworkLog}
                             type="checkbox"
-                            onChange={useCallback(({target}) => setShowNetworkLog(target.checked), [setShowNetworkLog])}
+                            onChange={useCallback(({currentTarget}) => setShowNetworkLog(currentTarget.checked), [setShowNetworkLog])}
                         />
                         Show network log
                     </label></li>

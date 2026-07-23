@@ -60,7 +60,7 @@ export const RoomCreation: FC<{
                         label="Room version"
                         title="The room version for the new room (e.g., 11, 12)"
                         value={roomVersion}
-                        onInput={useCallback(({target}) => setRoomVersion(target.value), [])}
+                        onInput={useCallback(({currentTarget}) => setRoomVersion(currentTarget.value), [])}
                     />
                 </div>
                 <div>
@@ -68,7 +68,7 @@ export const RoomCreation: FC<{
                         <textarea
                             disabled={busy || roomVersionBefore12}
                             value={additionalCreatorsString}
-                            onInput={useCallback(({ target }) => setAdditionalCreatorsString(target.value), [])}
+                            onInput={useCallback(({ currentTarget }) => setAdditionalCreatorsString(currentTarget.value), [])}
                         />
                     </label>
                     {roomVersion && parseInt(roomVersion) < 12 && (

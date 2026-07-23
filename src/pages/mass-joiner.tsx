@@ -40,7 +40,7 @@ const SpaceRoomPicker: FC<{
             Room IDs (separated by spaces, new lines, commas or semi-colons)
             <textarea
                 value={roomIdsString}
-                onInput={useCallback(({ target }) => setRoomIdsString(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setRoomIdsString(currentTarget.value), [])}
             />
         </label>
         <button
@@ -69,7 +69,7 @@ const RoomPicker: FC<{
             Room IDs (separated by spaces, new lines, commas or semi-colons)
             <textarea
                 value={roomIdsString}
-                onInput={useCallback(({ target }) => setRoomIdsString(target.value), [])}
+                onInput={useCallback(({currentTarget}) => setRoomIdsString(currentTarget.value), [])}
             />
         </label>
     </>;

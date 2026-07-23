@@ -14,7 +14,7 @@ const AccountCreator: FC<{
             label="Username"
             required
             value={username}
-            onInput={useCallback(({ target }) => setUsername(target.value), [])}
+            onInput={useCallback(({currentTarget}) => setUsername(currentTarget.value), [])}
         />
         <CustomButton
             identity={identity}
