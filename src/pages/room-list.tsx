@@ -329,7 +329,7 @@ export const RoomListPage: FC<RoomListPageProps> = ({ identity }) => {
                 setText(JSON.stringify(result.rows, null, 2));
             }
         } catch(error) {
-            setText(error);
+            setText(error instanceof Error ? error.message : 'An error occurred');
         } finally {
             setBusy(false);
             setProgressValue(undefined);

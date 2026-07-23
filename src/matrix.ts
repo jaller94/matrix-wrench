@@ -4,10 +4,13 @@ import { Identity } from "./app.tsx";
 const dryRun = false;
 
 export class MatrixError extends Error {
-    constructor(content) {
+    public readonly content: any;
+    public readonly errcode: string | undefined;
+
+    constructor(content: any) {
         super(content.error);
-        this.errcode = content.errcode;
         this.content = content;
+        this.errcode = content.errcode;
     }
 }
 
@@ -329,6 +332,18 @@ const zGetMembers = z.looseObject({
  */
 export async function getMembers(identity: Identity, roomId: string) {
     return zGetMembers.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/members`, {
+        method: 'GET',
+    })));
+}
+
+const zProfile = z.looseObject({
+    avatar_url: z.optional(z.string()),
+    displayname: z.optional(z.string()),
+    'm.tz': z.optional(z.string()),
+});
+
+export async function getProfile(identity: Identity, userId: string): Promise<z.infer<typeof zProfile>> {
+    return zProfile.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/profile/${encodeURIComponent(userId)}`, {
         method: 'GET',
     })));
 }

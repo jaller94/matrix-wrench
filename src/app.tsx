@@ -75,7 +75,22 @@ const zIdentity = z.looseObject({
 
 export type Identity = z.infer<typeof zIdentity>;
 
-const NetworkRequests = createContext({
+type NetworkLogRequestEntry = {
+    errcode?: string | null;
+    error?: string | null;
+    id: string;
+    init: RequestInit;
+    isNotJson?: boolean | null;
+    received?: number | null;
+    resource: string;
+    sent: Date;
+    status?: number | null;
+};
+
+const NetworkRequests = createContext<{
+    isShortened: boolean,
+    requests: NetworkLogRequestEntry[],
+}>({
     isShortened: false,
     requests: [],
 });
@@ -567,7 +582,7 @@ const ResponseStatus: FC<{ invalid: boolean, status: number }> = ({invalid, stat
     );
 }
 
-const NetworkLogRequest: FC<{ request: object }> = ({request}) => {
+const NetworkLogRequest: FC<{ request: NetworkLogRequestEntry }> = ({request}) => {
     return (
         <li value={request.id}><details>
             <summary>
@@ -604,7 +619,7 @@ const NetworkLogRequest: FC<{ request: object }> = ({request}) => {
 }
 
 const NetworkRequestsProvider: FC<PropsWithChildren> = ({children}) => {
-    const [state, setState] = useState<{isShortened: boolean, requests: object[]}>({
+    const [state, setState] = useState<{isShortened: boolean, requests: NetworkLogRequestEntry[]}>({
         isShortened: false,
         requests: [],
     });
@@ -638,6 +653,7 @@ const NetworkRequestsProvider: FC<PropsWithChildren> = ({children}) => {
                     ...state.requests[index],
                     errcode: event.detail.errcode || null,
                     error: event.detail.error || null,
+                    isNotJson: event.detail.isNotJson || null,
                     received: new Date(),
                     status: event.detail.status || null,
                 };
@@ -870,12 +886,10 @@ const IdentitySelectorPage = () => {
     </>;
 };
 
-const RoomList: FC<{roomIds: string[], onSelectRoom?: (roomId: string) => void}> = ({roomIds, onSelectRoom}) => {
+const RoomList: FC<{identity: Identity, roomIds: string[], onSelectRoom?: (roomId: string) => void}> = ({identity, roomIds, onSelectRoom}) => {
     const { externalMatrixUrl } = useContext(Settings);
     const handleSelectRoom: MouseEventHandler = useCallback(event => {
-        event.preventDefault();
-        event.stopPropagation();
-        onSelectRoom?.(event.target.dataset.roomId);
+        onSelectRoom?.(event.currentTarget.dataset.roomId);
     }, [onSelectRoom]);
 
     if (roomIds.length === 0) {
@@ -885,13 +899,11 @@ const RoomList: FC<{roomIds: string[], onSelectRoom?: (roomId: string) => void}>
         <ul style={{overflowX: 'auto'}}>
             {roomIds.map(roomId => 
                 <li key={roomId}>
-                    {onSelectRoom ? (
-                        <button
-                            type="button"
-                            data-room-id={roomId}
-                            onClick={handleSelectRoom}
-                        >{roomId}</button>
-                    ) : roomId}
+                    <a
+                        href={`#/${identity.name}/${encodeURIComponent(roomId)}`}
+                        data-room-id={onSelectRoom ? roomId : undefined}
+                        onClick={onSelectRoom ? handleSelectRoom : undefined}
+                    >{roomId}</a>
                     <a
                         href={`${externalMatrixUrl}${encodeURIComponent(roomId)}`}
                         rel="noopener noreferrer"
@@ -925,7 +937,7 @@ const JoinedRoomList: FC<{identity: Identity, onSelectRoom?: (roomId: string) =>
     return <>
         <h3>Joined rooms{Array.isArray(roomIds) && <> ({roomIds.length} rooms)</>}</h3>
         <button disabled={busy} type="button" onClick={handleGet}>Query joined rooms</button>
-        {roomIds && <RoomList roomIds={roomIds} onSelectRoom={onSelectRoom}/>}
+        {roomIds && <RoomList identity={identity} roomIds={roomIds} onSelectRoom={onSelectRoom}/>}
     </>;
 }
 
@@ -936,7 +948,6 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
     const [busy, setBusy] = useState(false);
 
     const handleSelectRoom = useCallback((roomId: string) => {
-        globalThis.location.href = `#/${encodeURIComponent(identity.name)}/${encodeURIComponent(roomId)}`;
         setRecentRooms(recentRooms => ([
             roomId,
             ...recentRooms.filter(r => r !== roomId),
@@ -1034,7 +1045,7 @@ const RoomSelector: FC<{identity: Identity, roomId: string}> = ({identity, roomI
             <aside>
                 {recentRooms.length > 0 && <>
                     <h3>Recent rooms</h3>
-                    <RoomList roomIds={recentRooms} onSelectRoom={handleSelectRoom}/>
+                    <RoomList identity={identity} roomIds={recentRooms} onSelectRoom={handleSelectRoom}/>
                 </>}
                 <JoinedRoomList identity={identity} onSelectRoom={handleSelectRoom}/>
             </aside>
@@ -1959,7 +1970,7 @@ export const MainRouter: FC<{identity: Identity, roomId: string, subpage: string
         return <RoomListPage
             identity={identity}
         />;
-    } else if (roomId === 'user-inspector') {
+    } else if (roomId === 'user') {
         return <UserInspectorPage
             identity={identity}
         />;
