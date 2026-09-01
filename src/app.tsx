@@ -1274,7 +1274,11 @@ const AliasActions: FC<{ identity: Identity, roomId: string }> = ({ identity, ro
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
-        const action = event.submitter.getAttribute('value');
+        const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+        const action = submitter?.getAttribute('value');
+        if (!action) {
+            return;
+        }
         setBusy(true);
         try {
             if (action === 'add') {
@@ -1520,7 +1524,11 @@ const UserActions: FC<{identity: Identity, roomId: string}> = ({identity, roomId
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = useCallback(async event => {
         event.preventDefault();
         event.stopPropagation();
-        const action = event.submitter.getAttribute('value');
+        const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+        const action = submitter?.getAttribute('value');
+        if (!action) {
+            return;
+        }
         setBusy(true);
         try {
             if (action === 'ban') {
