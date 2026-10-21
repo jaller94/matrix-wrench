@@ -13,6 +13,7 @@
 * Fixed: Reduced the bundle size from 0.37 MB to 0.31 MB by importing zod/mini
 * Fixed: Fix parsing of Matrix URIs starting with matrix:roomid/
 * Fixed: The detection of room version 12 and newer in the room summary
+* Fixed: Getting account data was broken, also breaking the Contact List
 
 ## v0.15.1 (2025-11-14)
 *Bye, dad*

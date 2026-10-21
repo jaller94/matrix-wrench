@@ -252,7 +252,7 @@ const zAccountDataContent = z.looseObject({});
  */
 export async function getAccountData(identity: Identity, user: string | undefined, type: string) {
     const userId = user ?? (await whoAmI(identity)).user_id;
-    return zAccountDataContent.parse(doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/user/${encodeURIComponent(userId)}/account_data/${encodeURIComponent(type)}`, {
+    return zAccountDataContent.parse(await doRequest(...auth(identity, `${identity.serverAddress}/_matrix/client/v3/user/${encodeURIComponent(userId)}/account_data/${encodeURIComponent(type)}`, {
         method: 'GET',
     })));
 }
