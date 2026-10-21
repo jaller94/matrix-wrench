@@ -14,9 +14,9 @@ async function *stats(identity: Identity) {
     const contactUserIds = Object.keys(mDirectContent);
     let rows: {
         userId: string,
-        sharedRooms?: Set<string>,
-        names?: Set<string>,
-    }[] = contactUserIds.map(userId => ({userId}));
+        sharedRooms: string[],
+        names: string[],
+    }[] = contactUserIds.map(userId => ({userId, sharedRooms: [], names: []}));
     yield {
         rows,
     };
@@ -25,18 +25,21 @@ async function *stats(identity: Identity) {
     for (const roomId of joinedRooms) {
         try {
             const joinedMembers = new Map(Object.entries((await getJoinedMembers(identity, roomId)).joined));
+            if (!rows.some(user => joinedMembers.has(user.userId))) {
+                continue;
+            }
             rows = rows.map(user => {
                 const contactInThisRoom = joinedMembers.get(user.userId);
                 if (!contactInThisRoom) {
                     return user;
                 }
                 let names = user.names;
-                if (typeof contactInThisRoom.display_name === 'string') {
-                    names = (user.names ?? new Set()).add(contactInThisRoom.display_name);
+                if (typeof contactInThisRoom.display_name === 'string' && !names.includes(contactInThisRoom.display_name)) {
+                    names = [...names, contactInThisRoom.display_name];
                 }
                 return {
                     ...user,
-                    sharedRooms: (user.sharedRooms ?? new Set()).add(roomId),
+                    sharedRooms: [...user.sharedRooms, roomId],
                     names,
                 };
             })
@@ -89,7 +92,7 @@ export const ContactListPage: FC<{ identity: Identity }> = ({identity}) => {
         },
         {
             Header: 'Shared rooms',
-            accessor: 'sharedRoomsCount',
+            accessor: 'sharedRooms.length',
         },
         {
             Header: 'Names',
